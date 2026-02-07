@@ -4,6 +4,7 @@ use v5.42;
 use experimental qw[ class ];
 
 use Test::More;
+use Data::Dumper qw[ Dumper ];
 
 use MXCL::Arena;
 use MXCL::Allocator::Terms;
@@ -48,15 +49,8 @@ diag "COMPILER:";
 diag $_->to_string foreach @$exprs;
 
 diag "ARENA:";
-diag "  - allocated = ", $arena->num_allocated;
-diag "  - alive     = ", $arena->num_pointers;
-{
-    diag "  - by Term Type:";
-    my $report = $arena->term_report;
-    foreach my ($type, $count) (%$report) {
-        diag sprintf "     - %4d = %s", $count, $type;
-    }
-}
+diag format_stats('Terms',  $arena->stats);
+diag format_stats('Hashes', $arena->hashs);
 
 diag "RUNNING:";
 my $result = $machine->run( $env, $exprs );
@@ -65,16 +59,24 @@ diag "RESULT:";
 diag $result ? $result->stack->to_string : 'UNDEFINED';
 
 diag "ARENA:";
-diag "  - allocated = ", $arena->num_allocated;
-diag "  - alive     = ", $arena->num_pointers;
-{
-    diag "  - by Term Type:";
-    my $report = $arena->term_report;
-    foreach my ($type, $count) (%$report) {
-        diag sprintf "     - %4d = %s", $count, $type;
-    }
-}
+diag format_stats('Terms',  $arena->stats);
+diag format_stats('Hashes', $arena->hashs);
 
 pass('...shh');
 
 done_testing;
+
+sub format_stats ($what, $stats) {
+    join "\n" =>
+    ('-' x 60),
+    (sprintf '| %-32s | %5s | %4s | %6s |' => $what, qw[ alive hits misses ]),
+    ('-' x 60),
+    (map {
+        sprintf '| %32s | %5d | %4d | %6d |' => @$_
+    } sort {
+        $b->[1] <=> $a->[1]
+    } map {
+        [ $_ =~ s/^MXCL\:\:Term\:\://r, $stats->{$_}->@{qw[ alive hits misses ]} ]
+    } keys %$stats),
+    ('-' x 60)
+}

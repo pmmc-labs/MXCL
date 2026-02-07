@@ -23,18 +23,6 @@ class MXCL::Machine {
             say "  - ", join "\n  - " => map $_->to_string, @$queue;
             my $k = pop @$queue;
             return $k if $k isa MXCL::Term::Kontinue::Host;
-            # XXX
-            # the host continuation could possibly be a GC point
-            # to reclaim a bunch of Kontinue terms. We'd need to
-            # track the changes between host continuations, maybe both
-            # the Kontinues and the Terms (temps that got created
-            # inside an expression). Then we could GC it as part of
-            # the effect handling, which would be handled in the
-            # layer above this. We might need some form of reference
-            # counting, the $alive counter in the Arena is already
-            # a bit of a start, we can expand it to count hashes.
-            #
-            # It's like GC, but not quite?
             push @$queue => $self->step($k);
         }
     }
