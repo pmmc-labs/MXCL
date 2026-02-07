@@ -22,10 +22,25 @@ my $exprs = $compiler->compile(q[
 
 say $_->to_string foreach @$exprs;
 
-diag "Arena:";
-diag "  - allocated = ", $arena->num_allocated;
-diag "  - alive     = ", $arena->num_pointers;
+diag "ARENA:";
+diag format_stats('Terms',  $arena->stats);
+diag format_stats('Hashes', $arena->hashs);
 
 pass('...shh');
 
 done_testing;
+
+sub format_stats ($what, $stats) {
+    join "\n" =>
+    ('-' x 60),
+    (sprintf '| %-32s | %5s | %4s | %6s |' => $what, qw[ alive hits misses ]),
+    ('-' x 60),
+    (map {
+        sprintf '| %32s | %5d | %4d | %6d |' => @$_
+    } sort {
+        $b->[1] <=> $a->[1]
+    } map {
+        [ $_ =~ s/^MXCL\:\:Term\:\://r, $stats->{$_}->@{qw[ alive hits misses ]} ]
+    } keys %$stats),
+    ('-' x 60)
+}

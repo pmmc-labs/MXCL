@@ -164,9 +164,9 @@ subtest 'Env with shared list structure' => sub {
     is refaddr( $env1->bindings->{xs} ),   refaddr( $list ),  'binding holds the interned list';
 };
 
-diag "Arena:";
-diag "  - allocated = ", $a->arena->num_allocated;
-diag "  - alive     = ", $a->arena->num_pointers;
-
+#diag "Arena:";
+#use Data::Dumper;
+#warn Data::Dumper::Dumper($a->arena->stats);
+#warn Data::Dumper::Dumper($a->arena->hashs);
 
 

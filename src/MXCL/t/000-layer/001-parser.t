@@ -20,5 +20,6 @@ my $compounds = $parser->parse(q[
 
 say $_->to_string foreach @$compounds;
 
+pass('...shhh');
 
 done_testing;

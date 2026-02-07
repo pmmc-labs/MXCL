@@ -6,8 +6,22 @@ use Digest::MD5 ();
 
 class MXCL::Arena {
     field $terms :reader = +{};
+
+    # TODO:
+    # these stats are kind of clumbsy,
+    # they need more thinking, we probably
+    # need a Arena::Stats class that can
+    # tracks things in a smarter way.
+
     field $stats :reader = +{};
     field $hashs :reader = +{};
+
+    # TODO:
+    # add generation counting
+    # - the first generation would be the singletons
+    # - next comes the terms allocated in the compiler
+    # - next comes the start of runtime
+    # - then once at each host continuation
 
     method allocate ($type, %fields) {
         my @names  = sort { $a cmp $b } keys %fields;

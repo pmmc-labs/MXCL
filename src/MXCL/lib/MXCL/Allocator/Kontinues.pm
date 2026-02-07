@@ -21,10 +21,16 @@ class MXCL::Allocator::Kontinues {
 
     ## -------------------------------------------------------------------------
 
+    # XXX - this needs a better name
     method Update ($k, $stack) {
         my %args;
         $args{env}   = $k->env;
         $args{stack} = $stack;
+        # XXX - and I can't decide if this given/when
+        # is really gross, or better than violating
+        # encapsulation and having the class give
+        # me this information, we shall see if we have
+        # to do it again or not.
         given (blessed $k) {
             when ('MXCL::Term::Kontinue::Host') {
                 @args{qw[ effect config ]} = ($k->effect, $k->config)
