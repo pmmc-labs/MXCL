@@ -4,4 +4,6 @@ use experimental qw[ class ];
 
 class MXCL::Term::Tag :isa(MXCL::Term) {
     field $value :param :reader;
+
+    method to_string { $value }
 }

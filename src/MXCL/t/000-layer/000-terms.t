@@ -2,14 +2,15 @@
 
 use v5.42;
 use experimental qw[ class ];
-use Test::More import => [qw[ plan subtest ok is ]];
+use Test::More import => [qw[ plan subtest ok is diag ]];
 use Scalar::Util qw[ refaddr ];
 
 use MXCL::Arena;
+use MXCL::Allocator::Terms;
 
 plan tests => 15;
 
-my $a = MXCL::Arena->new;
+my $a = MXCL::Allocator::Terms->new( arena => MXCL::Arena->new );
 
 # --- singletons ---
 
@@ -162,3 +163,10 @@ subtest 'Env with shared list structure' => sub {
     is $env1->bindings->{xs}->hash,        $list->hash,       'binding preserves list hash';
     is refaddr( $env1->bindings->{xs} ),   refaddr( $list ),  'binding holds the interned list';
 };
+
+diag "Arena:";
+diag "  - allocated = ", $a->arena->num_allocated;
+diag "  - alive     = ", $a->arena->num_pointers;
+
+
+
