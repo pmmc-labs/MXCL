@@ -7,6 +7,6 @@ class MXCL::Term::Kontinue :isa(MXCL::Term) {
     field $env   :param :reader;
 
     method to_string {
-        sprintf 'Kontinue(%s) = %s' => blessed $self, $stack->to_string;
+        sprintf 'Kontinue[ %s ] = %s' => (blessed $self) =~ s/^MXCL\:\:Term\:\:Kontinue\:\://r, $stack->to_string;
     }
 }

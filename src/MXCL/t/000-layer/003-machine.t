@@ -50,7 +50,7 @@ diag $_->to_string foreach @$exprs;
 
 diag "ARENA:";
 diag format_stats('Terms',  $arena->stats);
-diag format_stats('Hashes', $arena->hashs);
+#diag format_stats('Hashes', $arena->hashs);
 
 diag "RUNNING:";
 my $result = $machine->run( $env, $exprs );
@@ -60,7 +60,7 @@ diag $result ? $result->stack->to_string : 'UNDEFINED';
 
 diag "ARENA:";
 diag format_stats('Terms',  $arena->stats);
-diag format_stats('Hashes', $arena->hashs);
+#diag format_stats('Hashes', $arena->hashs);
 
 pass('...shh');
 
