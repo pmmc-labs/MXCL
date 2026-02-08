@@ -30,19 +30,27 @@ my $machine = MXCL::Machine->new(
     kontinues => $konts,
 );
 
+my $add = $terms->NativeApplicative(
+    $terms->Cons( $terms->Sym('n'), $terms->Sym('m')),
+    sub ($n, $m) { $terms->Num( $n->value + $m->value ) }
+);
+
+my $mul = $terms->NativeApplicative(
+    $terms->Cons( $terms->Sym('n'), $terms->Sym('m')),
+    sub ($n, $m) { $terms->Num( $n->value + $m->value ) }
+);
+
 my $env = $terms->Env(
-    '+' => $terms->NativeApplicative(
-        $terms->Cons( $terms->Sym('n'), $terms->Sym('m')),
-        sub ($n, $m) { $terms->Num( $n->value + $m->value ) }
-    ),
-    '*' => $terms->NativeApplicative(
-        $terms->Cons( $terms->Sym('n'), $terms->Sym('m')),
-        sub ($n, $m) { $terms->Num( $n->value + $m->value ) }
-    )
+    '+' => $add,
+    '*' => $mul,
+    'MXCL::Term::Num' => $terms->Opaque($terms->Env(
+        '+' => $add,
+        '*' => $mul,
+    ))
 );
 
 my $exprs = $compiler->compile(q[
-    (+ (+ (+ 5 5) (* 5 4)) (* (+ (+ 2 18) (* 3 8)) (+ (+ 100 76) (* 7 6))))
+    (10 + 20)
 ]);
 
 diag "COMPILER:";

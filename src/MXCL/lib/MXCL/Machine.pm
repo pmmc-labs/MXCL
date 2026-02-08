@@ -79,7 +79,15 @@ class MXCL::Machine {
                     );
                 }
                 else {
-                    die 'TODO - apply expr for '.blessed $call;
+                    my $box    = $env->lookup(blessed $call);
+                    my $name   = $args->head; # should be Sym
+                    my $method = $box->env->lookup( $name->value );
+                    return (
+                        $kontinues->ApplyApplicative( $box->env, $method, $terms->List( $call ) ),
+                        ($args->tail isa MXCL::Term::Nil
+                            ? ()
+                            : $kontinues->EvalRest( $env, $args->tail, $terms->Nil ))
+                    )
                 }
             }
             when ('MXCL::Term::Kontinue::Apply::Applicative') {
