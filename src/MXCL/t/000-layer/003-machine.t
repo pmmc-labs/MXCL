@@ -37,20 +37,26 @@ my $add = $terms->NativeApplicative(
 
 my $mul = $terms->NativeApplicative(
     $terms->Cons( $terms->Sym('n'), $terms->Sym('m')),
-    sub ($n, $m) { $terms->Num( $n->value + $m->value ) }
+    sub ($n, $m) { $terms->Num( $n->value * $m->value ) }
+);
+
+my $numeric = $terms->Env(
+    '+' => $add,
+    '*' => $mul,
 );
 
 my $env = $terms->Env(
     '+' => $add,
     '*' => $mul,
     'MXCL::Term::Num' => $terms->Opaque($terms->Env(
-        '+' => $add,
-        '*' => $mul,
+        $numeric,
+        'add' => $add,
+        'mul' => $mul,
     ))
 );
 
 my $exprs = $compiler->compile(q[
-    (10 + 20)
+    (10 * 20)
 ]);
 
 diag "COMPILER:";

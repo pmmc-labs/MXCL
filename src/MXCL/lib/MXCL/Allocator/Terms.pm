@@ -72,8 +72,16 @@ class MXCL::Allocator::Terms {
         return $self->List(@items);
     }
 
-    method Env (%bindings) {
-        $arena->allocate(MXCL::Term::Env::, bindings => \%bindings )
+    method Env (@args) {
+        my $parent;
+        if ($args[0] isa MXCL::Term::Env) {
+            $parent = shift @args;
+        }
+        my %bindings = @args;
+        $arena->allocate(MXCL::Term::Env::,
+            bindings => \%bindings,
+            ($parent ? (parent => $parent) : ()),
+        );
     }
 
     method Lambda ($params, $body, $env) {
