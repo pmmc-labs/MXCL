@@ -22,9 +22,9 @@ class MXCL::Allocator::Kontinues {
     ## -------------------------------------------------------------------------
 
     # XXX - this needs a better name
-    method Update ($k, $stack) {
+    method Update ($k, $env, $stack) {
         my %args;
-        $args{env}   = $k->env;
+        $args{env}   = $env;
         $args{stack} = $stack;
         # XXX - and I can't decide if this given/when
         # is really gross, or better than violating
@@ -36,7 +36,7 @@ class MXCL::Allocator::Kontinues {
                 @args{qw[ effect config ]} = ($k->effect, $k->config)
             }
             when ('MXCL::Term::Kontinue::Return') {
-                @args{qw[ value ]} = ($k->value)
+                ; # do nothing
             }
             when ('MXCL::Term::Kontinue::Eval::Expr') {
                 @args{qw[ expr ]} = ($k->expr)
@@ -56,6 +56,9 @@ class MXCL::Allocator::Kontinues {
             when ('MXCL::Term::Kontinue::Apply::Applicative') {
                 @args{qw[ call ]} = ($k->call)
             }
+            default {
+                die 'BAD KONTINUE NO UPDATE FOR YOU!';
+            }
         }
         return $arena->allocate(blessed $k, %args);
     }
@@ -73,10 +76,9 @@ class MXCL::Allocator::Kontinues {
 
     ## -------------------------------------------------------------------------
 
-    method Return ($env, $value, $stack) {
+    method Return ($env, $stack) {
         $arena->allocate(MXCL::Term::Kontinue::Return::,
             env   => $env,
-            value => $value,
             stack => $stack,
         )
     }

@@ -32,10 +32,15 @@ class MXCL::Machine {
         say sprintf 'STEP[%03d]' => $steps;
         given (blessed $k) {
             when ('MXCL::Term::Kontinue::Return') {
+                # NOTE:
+                # can mutate Env and Stack of previous K
+                # TODO:
+                # add a LeaveScope kont to un-mutate the Env
                 my $prev = pop @$queue;
                 return $kontinues->Update(
                     $prev,
-                    $terms->Cons( $k->value, $k->stack )
+                    $k->env,
+                    $terms->Append( $prev->stack, $k->stack )
                 );
             }
             when ('MXCL::Term::Kontinue::Eval::Expr') {
@@ -55,7 +60,7 @@ class MXCL::Machine {
                 my $env  = $k->env;
                 return (
                     ($rest->tail->isa('MXCL::Term::Nil')
-                        ? $kontinues->Return( $env, $k->stack->head, $k->stack->tail )
+                        ? $kontinues->Return( $env, $k->stack )
                         : $kontinues->EvalRest( $env, $rest->tail, $k->stack )),
                     $self->evaluate_term( $env, $rest->head ),
                 );
@@ -82,7 +87,7 @@ class MXCL::Machine {
                 my $args = $k->stack;
                 if ($call isa MXCL::Term::Native::Applicative) {
                     my $result = $call->body->( $args->head, $args->tail->head );
-                    return $kontinues->Return( $k->env, $result, $terms->Nil );
+                    return $kontinues->Return( $k->env, $terms->List( $result ) );
                 } else {
                     die 'TODO - apply applicative for '.blessed $call;
                 }
@@ -102,13 +107,13 @@ class MXCL::Machine {
                 my $value = $env->lookup( $expr->value );
                 die "Could not find ".$expr->value." in Env"
                     unless defined $value;
-                return $kontinues->Return( $env, $value, $terms->Nil );
+                return $kontinues->Return( $env, $terms->List( $value ) );
             }
             when ('MXCL::Term::Cons') {
                 return $kontinues->EvalHead( $env, $expr, $terms->Nil );
             }
             default {
-                return $kontinues->Return( $env, $expr, $terms->Nil );
+                return $kontinues->Return( $env, $terms->List( $expr ) );
             }
         }
     }

@@ -57,6 +57,21 @@ class MXCL::Allocator::Terms {
         return $list;
     }
 
+    method Append ($first, $second) {
+        my @items;
+        my $list = $first;
+        until ($list isa MXCL::Term::Nil) {
+            push @items => $list->head;
+            $list = $list->tail;
+        }
+        $list = $second;
+        until ($list isa MXCL::Term::Nil) {
+            push @items => $list->head;
+            $list = $list->tail;
+        }
+        return $self->List(@items);
+    }
+
     method Env (%bindings) {
         $arena->allocate(MXCL::Term::Env::, bindings => \%bindings )
     }
@@ -66,7 +81,9 @@ class MXCL::Allocator::Terms {
     }
 
     method Opaque ($env) {
-        $arena->allocate(MXCL::Term::Opaque::, env  => $env )
+        state $nonce = 0;
+        my $uid = ++$nonce; # unique object identity
+        $arena->allocate(MXCL::Term::Opaque::, env => $env, uid => \$uid );
     }
 
     method NativeApplicative ($params, $body) {

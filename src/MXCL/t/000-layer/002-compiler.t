@@ -20,7 +20,20 @@ my $exprs = $compiler->compile(q[
     ( (1 2 3 4) (1 2 3 4) (1 2 3 4) (1 2 3 4) )
 ]);
 
+my $env = $compiler->alloc->Env();
+
+push @$exprs => my $obj1 = $compiler->alloc->Opaque($env);
+push @$exprs => my $obj2 = $compiler->alloc->Opaque($env);
+
+my $list = $exprs->[0]->head;
+say "YO:", $list->to_string;
+
 say $_->to_string foreach @$exprs;
+
+ok !($obj1->eq($obj2)), '... obj1 and obj2 are not equal';
+isnt $obj1->hash, $obj2->hash, '... obj1 and obj2 are not the same hashes';
+ok $obj1->env->eq($obj2->env), '... obj1 and obj2 envs are equal';
+is $obj1->env->hash, $obj2->env->hash, '... obj1 and obj2 envs are the same hashes';
 
 diag "ARENA:";
 diag format_stats('Terms',  $arena->stats);
