@@ -20,11 +20,15 @@ use MXCL::Term::Env;
 use MXCL::Term::Lambda;
 use MXCL::Term::Opaque;
 
+use MXCL::Term::Ref;
+
 use MXCL::Term::Native::Applicative;
 use MXCL::Term::Native::Operative;
 
 class MXCL::Allocator::Terms {
     field $arena :param :reader;
+
+    field $pointers :reader = +{};
 
     field $nil;
     field $true;
@@ -66,8 +70,15 @@ class MXCL::Allocator::Terms {
     }
 
     ## -------------------------------------------------------------------------
-    ## Opaque and Native Bindings (hashed by identity)
+    ## Ref, Opaque and Native Bindings (hashed by identity)
     ## -------------------------------------------------------------------------
+
+    method Ref ($value) {
+        state $nonce = 0;
+        my $uid = sprintf 'ref:%s:%d' => blessed $value, ++$nonce; # unique ref identity
+        $pointers->{ $uid } = $value;
+        return $arena->allocate(MXCL::Term::Ref::, uid => $uid );
+    }
 
     method Opaque ($env) {
         state $nonce = 0;
@@ -83,6 +94,18 @@ class MXCL::Allocator::Terms {
     method NativeOperative ($params, $body) {
         # the body refaddr is used for identity
         $arena->allocate(MXCL::Term::Native::Operative::, params => $params, body => $body )
+    }
+
+    ## -------------------------------------------------------------------------
+    ## Ref Utils
+    ## -------------------------------------------------------------------------
+
+    method Deref ($ref) {
+        return $pointers->{ $ref->uid }
+    }
+
+    method SetRef ($ref, $value) {
+        $pointers->{ $ref->uid } = $value;
     }
 
     ## -------------------------------------------------------------------------

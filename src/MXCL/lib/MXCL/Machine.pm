@@ -9,6 +9,7 @@ class MXCL::Machine {
 
     field $steps :reader = 0;
     field $queue :reader = +[];
+    field $trace :reader = +[];
 
     method run ($env, $exprs) {
         push @$queue => (
@@ -25,6 +26,7 @@ class MXCL::Machine {
             my $k = pop @$queue;
             return $k if $k isa MXCL::Term::Kontinue::Host;
             push @$queue => $self->step($k);
+            push @$trace => $k;
         }
     }
 

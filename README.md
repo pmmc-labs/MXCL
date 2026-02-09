@@ -3,10 +3,6 @@
 
 ## TODO 
 
-- implements rest of Machine
-    - native operatives
-    - lambdas
-    - etc. 
 
 - the old Machine, formerly a Strand, should just be the capabilities object
     - the distinction didn't make enough sense to justify another layer in the hierarchy
@@ -23,11 +19,7 @@
 - once we have the Runtime 
     - we can set up our root env, and our class hierachy stable reference
     - we create the root env
-    
-    - implement the autoboxing
-        - create the "Num", "Str" and "Bool" Opaque instances in the root environment 
-            - these can be shared for every boxing if the methods are pure and it holds no state
-        
+            
     - bootstrap the basic MOP
         - make Object and Class knot tied
         - stick it in the heirarchy
