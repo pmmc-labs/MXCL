@@ -20,7 +20,7 @@ class MXCL::Machine {
 
     method run_until_host {
         while (@$queue) {
-            say "  - ", join "\n  - " => map $_->to_string, @$queue;
+            say "  - ", join "\n  - " => map blessed $_ ? $_->to_string : $_, @$queue;
             my $k = pop @$queue;
             return $k if $k isa MXCL::Term::Kontinue::Host;
             push @$queue => $self->step($k);
@@ -31,6 +31,9 @@ class MXCL::Machine {
         $steps++;
         say sprintf 'STEP[%03d]' => $steps;
         given (blessed $k) {
+            # ------------------------------------------------------------------
+            # Threading of Env & Stack
+            # ------------------------------------------------------------------
             when ('MXCL::Term::Kontinue::Return') {
                 # NOTE:
                 # can mutate Env and Stack of previous K
@@ -43,6 +46,44 @@ class MXCL::Machine {
                     $terms->Append( $prev->stack, $k->stack )
                 );
             }
+            # ------------------------------------------------------------------
+            # Control Structures
+            # ------------------------------------------------------------------
+            when ('MXCL::Term::Kontinue::IfElse') {
+                my $condition = $k->stack->head;
+                if ($condition->value) {
+                    return # AND short/circuit
+                        refaddr $k->condition == refaddr $k->if_true
+                            ? $kontinues->Return( $k->env, $terms->List( $condition ) )
+                            : $self->evaluate_term( $k->env, $k->if_true  );
+                } else {
+                    return # OR short/circuit
+                        refaddr $k->condition == refaddr $k->if_false
+                            ? $kontinues->Return( $k->env, $terms->List( $condition ) )
+                            : $self->evaluate_term( $k->env, $k->if_false );
+                }
+            }
+            when ('MXCL::Term::Kontinue::DoWhile') {
+                # --------------------------------------------
+                # TODO - need to thread the env here (i think)
+                # --------------------------------------------
+                # my $condition = $k->stack->head;
+                # if (!$condition->value) {
+                #     return
+                #         # 3. re-use this continuation for the next loop
+                #         $k,
+                #         # 2. check the condition again ...
+                #         $kontinues->EvalExpr( $k->env, $k->condition, $terms->Nil ),
+                #         # 1. evaluate the body ...
+                #         $self->evaluate_term( $k->env, $k->body ),
+                #     );
+                # } else {
+                #     # 4. or exit the loop
+                # }
+            }
+            # ------------------------------------------------------------------
+            # Eval
+            # ------------------------------------------------------------------
             when ('MXCL::Term::Kontinue::Eval::Expr') {
                 return $self->evaluate_term( $k->env, $k->expr );
             }
@@ -65,6 +106,9 @@ class MXCL::Machine {
                     $self->evaluate_term( $env, $rest->head ),
                 );
             }
+            # ------------------------------------------------------------------
+            # Appy
+            # ------------------------------------------------------------------
             when ('MXCL::Term::Kontinue::Apply::Expr') {
                 my $call = $k->stack->head;
                 my $args = $k->args;
@@ -77,6 +121,9 @@ class MXCL::Machine {
                             ? ()
                             : $kontinues->EvalRest( $env, $args, $terms->Nil ))
                     );
+                }
+                elsif ($call isa MXCL::Term::Native::Operative) {
+                    return $kontinues->ApplyOperative( $env, $call, $args );
                 }
                 else {
                     my $box    = $env->lookup(blessed $call);
@@ -94,17 +141,23 @@ class MXCL::Machine {
                 my $call = $k->call;
                 my $args = $k->stack;
                 if ($call isa MXCL::Term::Native::Applicative) {
-                    my $result = $call->body->( $args->head, $args->tail->head );
+                    my $result = $call->body->( $terms->Uncons( $args ) );
                     return $kontinues->Return( $k->env, $terms->List( $result ) );
                 } else {
                     die 'TODO - apply applicative for '.blessed $call;
                 }
             }
             when ('MXCL::Term::Kontinue::Apply::Operative') {
-                die 'TODO - Operative';
+                my $call = $k->call;
+                my $args = $k->stack;
+                if ($call isa MXCL::Term::Native::Operative) {
+                    return $call->body->( $k->env, $terms->Uncons( $args ) );
+                } else {
+                    die 'TODO - apply Operative for '.blessed $call;
+                }
             }
             default {
-                die "Unexpected Kontinue ".$k->to_string;
+                die "Unexpected Kontinue ".(blessed $k ? $k->to_string : ($k // 'undef'));
             }
         }
     }

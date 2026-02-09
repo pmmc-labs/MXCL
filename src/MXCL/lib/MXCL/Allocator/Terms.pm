@@ -57,6 +57,15 @@ class MXCL::Allocator::Terms {
         return $list;
     }
 
+    method Uncons ($list) {
+        my @items;
+        until ($list isa MXCL::Term::Nil) {
+            push @items => $list->head;
+            $list = $list->tail;
+        }
+        return @items;
+    }
+
     method Append ($first, $second) {
         my @items;
         my $list = $first;

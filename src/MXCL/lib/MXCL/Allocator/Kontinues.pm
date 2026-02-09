@@ -8,6 +8,9 @@ use MXCL::Term::Kontinue::Host;
 
 use MXCL::Term::Kontinue::Return;
 
+use MXCL::Term::Kontinue::IfElse;
+use MXCL::Term::Kontinue::DoWhile;
+
 use MXCL::Term::Kontinue::Eval::Expr;
 use MXCL::Term::Kontinue::Eval::Head;
 use MXCL::Term::Kontinue::Eval::Rest;
@@ -37,6 +40,12 @@ class MXCL::Allocator::Kontinues {
             }
             when ('MXCL::Term::Kontinue::Return') {
                 ; # do nothing
+            }
+            when ('MXCL::Term::Kontinue::IfElse') {
+                @args{qw[ condition if_true if_false ]} = ($k->condition, $k->if_true, $k->if_false)
+            }
+            when ('MXCL::Term::Kontinue::DoWhile') {
+                @args{qw[ condition body ]} = ($k->condition, $k->body)
             }
             when ('MXCL::Term::Kontinue::Eval::Expr') {
                 @args{qw[ expr ]} = ($k->expr)
@@ -80,6 +89,27 @@ class MXCL::Allocator::Kontinues {
         $arena->allocate(MXCL::Term::Kontinue::Return::,
             env   => $env,
             stack => $stack,
+        )
+    }
+
+    ## -------------------------------------------------------------------------
+
+    method IfElse ($env, $cond, $if_true, $if_false, $stack) {
+        $arena->allocate(MXCL::Term::Kontinue::IfElse::,
+            env       => $env,
+            stack     => $stack,
+            condition => $cond,
+            if_true   => $if_true,
+            if_false  => $if_false,
+        )
+    }
+
+    method DoWhile ($env, $cond, $body, $stack) {
+        $arena->allocate(MXCL::Term::Kontinue::DoWhile::,
+            env       => $env,
+            stack     => $stack,
+            condition => $cond,
+            body      => $body,
         )
     }
 

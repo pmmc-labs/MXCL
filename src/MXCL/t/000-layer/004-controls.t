@@ -31,32 +31,57 @@ my $machine = MXCL::Machine->new(
 );
 
 my $add = $terms->NativeApplicative(
-    $terms->Cons($terms->Sym('n'), $terms->Sym('m')),
+    $terms->Cons( $terms->Sym('n'), $terms->Sym('m')),
     sub ($n, $m) { $terms->Num( $n->value + $m->value ) }
 );
 
 my $mul = $terms->NativeApplicative(
-    $terms->Cons($terms->Sym('n'), $terms->Sym('m')),
+    $terms->Cons( $terms->Sym('n'), $terms->Sym('m')),
     sub ($n, $m) { $terms->Num( $n->value * $m->value ) }
 );
 
+my $eq = $terms->NativeApplicative(
+    $terms->Cons( $terms->Sym('n'), $terms->Sym('m')),
+    sub ($n, $m) { $n->value == $m->value ? $terms->True : $terms->False }
+);
+
+my $if = $terms->NativeOperative(
+    $terms->List(
+        $terms->Sym('env'),
+        $terms->Sym('cond'),
+        $terms->Sym('if-true'),
+        $terms->Sym('if-false')
+    ),
+    sub ($env, $cond, $if_true, $if_false) {
+        # NOTE: this probably needs to derive an Env
+        return (
+            $konts->IfElse( $env, $cond, $if_true, $if_false, $terms->Nil ),
+            $konts->EvalExpr( $env, $cond, $terms->Nil ),
+        )
+    }
+);
+
 my $numeric = $terms->Env(
-    '+' => $add,
-    '*' => $mul,
+    '+'   => $add,
+    '*'   => $mul,
+    'eq?' => $eq,
 );
 
 my $env = $terms->Env(
-    '+' => $add,
-    '*' => $mul,
+    'if'  => $if,
+    'eq?' => $eq,
+    '+'   => $add,
+    '*'   => $mul,
     'MXCL::Term::Num' => $terms->Opaque($terms->Env(
         $numeric,
         'add' => $add,
         'mul' => $mul,
+        '=='  => $eq,
     ))
 );
 
 my $exprs = $compiler->compile(q[
-    ((+ 5 5) + (* 5 4))
+    (if (10 == 11) (+ 100 200) (+ 10 20))
 ]);
 
 diag "COMPILER:";
