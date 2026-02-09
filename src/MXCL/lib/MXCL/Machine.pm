@@ -114,7 +114,7 @@ class MXCL::Machine {
                 my $args = $k->args;
                 my $env  = $k->env;
 
-                if ($call isa MXCL::Term::Native::Applicative) {
+                if ($call isa MXCL::Term::Native::Applicative || $call isa MXCL::Term::Lambda) {
                     return (
                         $kontinues->ApplyApplicative( $env, $call, $terms->Nil ),
                         ($args isa MXCL::Term::Nil
@@ -122,19 +122,16 @@ class MXCL::Machine {
                             : $kontinues->EvalRest( $env, $args, $terms->Nil ))
                     );
                 }
-                elsif ($call isa MXCL::Term::Native::Operative) {
+                elsif ($call isa MXCL::Term::Native::Operative || $call isa MXCL::Term::Opaque) {
                     return $kontinues->ApplyOperative( $env, $call, $args );
                 }
                 else {
                     my $box    = $env->lookup(blessed $call);
                     my $name   = $args->head; # should be Sym
                     my $method = $box->env->lookup( $name->value );
-                    return (
-                        $kontinues->ApplyApplicative( $box->env, $method, $terms->List( $call ) ),
-                        ($args->tail isa MXCL::Term::Nil
-                            ? ()
-                            : $kontinues->EvalRest( $env, $args->tail, $terms->Nil ))
-                    )
+                    return $kontinues->ApplyExpr(
+                        $box->env, $terms->Cons( $call, $args->tail ), $terms->List( $method )
+                    );
                 }
             }
             when ('MXCL::Term::Kontinue::Apply::Applicative') {
@@ -153,7 +150,11 @@ class MXCL::Machine {
                 if ($call isa MXCL::Term::Native::Operative) {
                     return $call->body->( $k->env, $terms->Uncons( $args ) );
                 } else {
-                    die 'TODO - apply Operative for '.blessed $call;
+                    my $name   = $args->head; # should be Sym
+                    my $method = $call->env->lookup( $name->value );
+                    return $kontinues->ApplyExpr(
+                        $call->env, $terms->Cons( $call, $args->tail ), $terms->List( $method )
+                    );
                 }
             }
             default {

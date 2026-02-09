@@ -81,7 +81,7 @@ my $env = $terms->Env(
 );
 
 my $exprs = $compiler->compile(q[
-    (if (10 == 11) (+ 100 200) (+ 10 20))
+    (if ((+ 10 20) == 30) true false)
 ]);
 
 diag "COMPILER:";
