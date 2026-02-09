@@ -100,7 +100,7 @@ class MXCL::Allocator::Terms {
     method Opaque ($env) {
         state $nonce = 0;
         my $uid = ++$nonce; # unique object identity
-        $arena->allocate(MXCL::Term::Opaque::, env => $env, uid => \$uid );
+        $arena->allocate(MXCL::Term::Opaque::, env => $env, uid => $uid );
     }
 
     method NativeApplicative ($params, $body) {

@@ -7,6 +7,6 @@ class MXCL::Term::Opaque :isa(MXCL::Term) {
     field $env :param :reader;
 
     method to_string {
-        sprintf 'opaque<%s>(%s)' => $$uid, $env->hash;
+        sprintf 'opaque<%s>(%s)' => $uid, $env->hash;
     }
 }
