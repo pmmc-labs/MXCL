@@ -49,6 +49,46 @@ class MXCL::Allocator::Terms {
         $arena->allocate(MXCL::Term::Cons::, head => $head, tail => $tail )
     }
 
+    method Env (@args) {
+        my $parent;
+        if ($args[0] isa MXCL::Term::Env) {
+            $parent = shift @args;
+        }
+        my %bindings = @args;
+        $arena->allocate(MXCL::Term::Env::,
+            bindings => \%bindings,
+            ($parent ? (parent => $parent) : ()),
+        );
+    }
+
+    method Lambda ($params, $body, $env) {
+        $arena->allocate(MXCL::Term::Lambda::, params => $params, body => $body, env => $env )
+    }
+
+    ## -------------------------------------------------------------------------
+    ## Opaque and Native Bindings (hashed by identity)
+    ## -------------------------------------------------------------------------
+
+    method Opaque ($env) {
+        state $nonce = 0;
+        my $uid = ++$nonce; # unique object identity
+        $arena->allocate(MXCL::Term::Opaque::, env => $env, uid => $uid );
+    }
+
+    method NativeApplicative ($params, $body) {
+        # the body refaddr is used for identity
+        $arena->allocate(MXCL::Term::Native::Applicative::, params => $params, body => $body )
+    }
+
+    method NativeOperative ($params, $body) {
+        # the body refaddr is used for identity
+        $arena->allocate(MXCL::Term::Native::Operative::, params => $params, body => $body )
+    }
+
+    ## -------------------------------------------------------------------------
+    ## List Utils
+    ## -------------------------------------------------------------------------
+
     method List (@items) {
         my $list = $nil;
         foreach my $item (reverse @items) {
@@ -67,47 +107,29 @@ class MXCL::Allocator::Terms {
     }
 
     method Append ($first, $second) {
-        my @items;
-        my $list = $first;
-        until ($list isa MXCL::Term::Nil) {
-            push @items => $list->head;
-            $list = $list->tail;
-        }
-        $list = $second;
-        until ($list isa MXCL::Term::Nil) {
-            push @items => $list->head;
-            $list = $list->tail;
-        }
-        return $self->List(@items);
+        $self->List( $self->Uncons($first), $self->Uncons($second) )
     }
 
-    method Env (@args) {
-        my $parent;
-        if ($args[0] isa MXCL::Term::Env) {
-            $parent = shift @args;
-        }
-        my %bindings = @args;
-        $arena->allocate(MXCL::Term::Env::,
+    ## -------------------------------------------------------------------------
+    ## Env Utils
+    ## -------------------------------------------------------------------------
+
+    method BindParams ($parent, $params, $args) {
+        my @params = $self->Uncons($params);
+        my @args   = $self->Uncons($args);
+        die "Arity mismatch" if scalar @params != scalar @args;
+        my %bindings = map { $_->value, shift @args } @params;
+        return $arena->allocate(MXCL::Term::Env::,
+            parent   => $parent,
             bindings => \%bindings,
-            ($parent ? (parent => $parent) : ()),
         );
     }
 
-    method Lambda ($params, $body, $env) {
-        $arena->allocate(MXCL::Term::Lambda::, params => $params, body => $body, env => $env )
+    method Derive ($parent, %bindings) {
+        $arena->allocate(MXCL::Term::Env::,
+            parent   => $parent,
+            bindings => \%bindings,
+        );
     }
 
-    method Opaque ($env) {
-        state $nonce = 0;
-        my $uid = ++$nonce; # unique object identity
-        $arena->allocate(MXCL::Term::Opaque::, env => $env, uid => $uid );
-    }
-
-    method NativeApplicative ($params, $body) {
-        $arena->allocate(MXCL::Term::Native::Applicative::, params => $params, body => $body )
-    }
-
-    method NativeOperative ($params, $body) {
-        $arena->allocate(MXCL::Term::Native::Operative::, params => $params, body => $body )
-    }
 }

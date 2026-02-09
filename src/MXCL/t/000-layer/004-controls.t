@@ -61,6 +61,19 @@ my $if = $terms->NativeOperative(
     }
 );
 
+my $lambda = $terms->NativeOperative(
+    $terms->List(
+        $terms->Sym('params'),
+        $terms->Sym('body'),
+    ),
+    sub ($env, $params, $body) {
+        return $konts->Return(
+            $env,
+            $terms->List( $terms->Lambda( $params, $body, $env ) )
+        );
+    }
+);
+
 my $numeric = $terms->Env(
     '+'   => $add,
     '*'   => $mul,
@@ -68,10 +81,13 @@ my $numeric = $terms->Env(
 );
 
 my $env = $terms->Env(
-    'if'  => $if,
+    'if'     => $if,
+    'lambda' => $lambda,
+
     'eq?' => $eq,
     '+'   => $add,
     '*'   => $mul,
+
     'MXCL::Term::Num' => $terms->Opaque($terms->Env(
         $numeric,
         'add' => $add,
@@ -81,7 +97,7 @@ my $env = $terms->Env(
 );
 
 my $exprs = $compiler->compile(q[
-    (if ((+ 10 20) == 30) true false)
+    ((lambda (x y) (x + y)) 10 20)
 ]);
 
 diag "COMPILER:";

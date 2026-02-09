@@ -19,8 +19,9 @@ class MXCL::Machine {
     }
 
     method run_until_host {
+        say sprintf "STEP[%03d]" => $steps;
         while (@$queue) {
-            say "  - ", join "\n  - " => map blessed $_ ? $_->to_string : $_, @$queue;
+            say "  - ", join "\n  - " => map blessed $_ ? $_->to_string : $_, reverse @$queue;
             my $k = pop @$queue;
             return $k if $k isa MXCL::Term::Kontinue::Host;
             push @$queue => $self->step($k);
@@ -29,7 +30,7 @@ class MXCL::Machine {
 
     method step ($k) {
         $steps++;
-        say sprintf 'STEP[%03d]' => $steps;
+        say sprintf "STEP[%03d]\n  ^%s" => $steps, $k->env->to_string;
         given (blessed $k) {
             # ------------------------------------------------------------------
             # Threading of Env & Stack
@@ -62,24 +63,6 @@ class MXCL::Machine {
                             ? $kontinues->Return( $k->env, $terms->List( $condition ) )
                             : $self->evaluate_term( $k->env, $k->if_false );
                 }
-            }
-            when ('MXCL::Term::Kontinue::DoWhile') {
-                # --------------------------------------------
-                # TODO - need to thread the env here (i think)
-                # --------------------------------------------
-                # my $condition = $k->stack->head;
-                # if (!$condition->value) {
-                #     return
-                #         # 3. re-use this continuation for the next loop
-                #         $k,
-                #         # 2. check the condition again ...
-                #         $kontinues->EvalExpr( $k->env, $k->condition, $terms->Nil ),
-                #         # 1. evaluate the body ...
-                #         $self->evaluate_term( $k->env, $k->body ),
-                #     );
-                # } else {
-                #     # 4. or exit the loop
-                # }
             }
             # ------------------------------------------------------------------
             # Eval
@@ -130,7 +113,7 @@ class MXCL::Machine {
                     my $name   = $args->head; # should be Sym
                     my $method = $box->env->lookup( $name->value );
                     return $kontinues->ApplyExpr(
-                        $box->env, $terms->Cons( $call, $args->tail ), $terms->List( $method )
+                        $k->env, $terms->Cons( $call, $args->tail ), $terms->List( $method )
                     );
                 }
             }
@@ -140,8 +123,16 @@ class MXCL::Machine {
                 if ($call isa MXCL::Term::Native::Applicative) {
                     my $result = $call->body->( $terms->Uncons( $args ) );
                     return $kontinues->Return( $k->env, $terms->List( $result ) );
-                } else {
-                    die 'TODO - apply applicative for '.blessed $call;
+                }
+                elsif ($call isa MXCL::Term::Lambda) {
+                    return $kontinues->EvalExpr(
+                        $terms->BindParams( $call->env, $call->params, $args ),
+                        $call->body,
+                        $terms->Nil
+                    );
+                }
+                else {
+                    die 'Unknown Applicative type '.blessed $call;
                 }
             }
             when ('MXCL::Term::Kontinue::Apply::Operative') {
@@ -149,12 +140,16 @@ class MXCL::Machine {
                 my $args = $k->stack;
                 if ($call isa MXCL::Term::Native::Operative) {
                     return $call->body->( $k->env, $terms->Uncons( $args ) );
-                } else {
+                }
+                elsif ($call isa MXCL::Term::Opaque) {
                     my $name   = $args->head; # should be Sym
                     my $method = $call->env->lookup( $name->value );
                     return $kontinues->ApplyExpr(
-                        $call->env, $terms->Cons( $call, $args->tail ), $terms->List( $method )
+                        $k->env, $terms->Cons( $call, $args->tail ), $terms->List( $method )
                     );
+                }
+                else {
+                    die 'Unknown Operative type '.blessed $call;
                 }
             }
             default {

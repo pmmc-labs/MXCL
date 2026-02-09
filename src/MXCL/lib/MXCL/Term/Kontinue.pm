@@ -12,12 +12,16 @@ class MXCL::Term::Kontinue :isa(MXCL::Term) {
             (
                 ($self->isa('MXCL::Term::Kontinue::Eval::Expr') ?
                     ($self->expr->to_string) :
+                ($self->isa('MXCL::Term::Kontinue::Eval::Head') ?
+                    ($self->cons->to_string) :
+                ($self->isa('MXCL::Term::Kontinue::Eval::Rest') ?
+                    ($self->rest->to_string) :
                 ($self->isa('MXCL::Term::Kontinue::Apply::Expr') ?
                     ($self->args->to_string) :
                 ($self->isa('MXCL::Term::Kontinue::Apply::Applicative') ||
                  $self->isa('MXCL::Term::Kontinue::Apply::Operative') ?
                     ($self->call->to_string) :
-                '')))
+                '')))))
             ),
             $stack->to_string;
     }
