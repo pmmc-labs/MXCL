@@ -50,9 +50,18 @@ class MXCL::Arena {
     method construct_hash ($inv, @values) {
         my $type = blessed $inv // $inv;
 
-        if (scalar @values == 1 && ref $values[0] && reftype $values[0] eq 'HASH') {
-            my $hashref = shift @values;
-            @values = map { $_, $hashref->{$_} } sort { $a cmp $b } keys %$hashref;
+        if (scalar @values == 1 && ref $values[0]) {
+            if (reftype $values[0] eq 'HASH') {
+                my $hashref = shift @values;
+                @values = map { $_, $hashref->{$_} } sort { $a cmp $b } keys %$hashref;
+            }
+            elsif (reftype $values[0] eq 'ARRAY') {
+                my $arrayref = shift @values;
+                @values = @$arrayref;
+            }
+            else {
+                die "BAD REF TYPE, NO HASH FOR YOU!";
+            }
         }
 
         return Digest::MD5::md5_hex( $type, map {

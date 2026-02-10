@@ -14,21 +14,19 @@ use MXCL::Term::Num;
 use MXCL::Term::Str;
 use MXCL::Term::Tag;
 
+use MXCL::Term::Array;
+
 use MXCL::Term::Sym;
 use MXCL::Term::Env;
 
 use MXCL::Term::Lambda;
 use MXCL::Term::Opaque;
 
-use MXCL::Term::Ref;
-
 use MXCL::Term::Native::Applicative;
 use MXCL::Term::Native::Operative;
 
 class MXCL::Allocator::Terms {
     field $arena :param :reader;
-
-    field $pointers :reader = +{};
 
     field $nil;
     field $true;
@@ -44,6 +42,8 @@ class MXCL::Allocator::Terms {
     method True  { $true }
     method False { $false }
 
+    method Bool ($value) { $value ? $true : $false }
+
     method Num ($value) { $arena->allocate(MXCL::Term::Num::, value => $value) }
     method Str ($value) { $arena->allocate(MXCL::Term::Str::, value => $value) }
     method Sym ($value) { $arena->allocate(MXCL::Term::Sym::, value => $value) }
@@ -53,32 +53,17 @@ class MXCL::Allocator::Terms {
         $arena->allocate(MXCL::Term::Cons::, head => $head, tail => $tail )
     }
 
-    method Env (@args) {
-        my $parent;
-        if ($args[0] isa MXCL::Term::Env) {
-            $parent = shift @args;
-        }
-        my %bindings = @args;
-        $arena->allocate(MXCL::Term::Env::,
-            bindings => \%bindings,
-            ($parent ? (parent => $parent) : ()),
-        );
-    }
-
     method Lambda ($params, $body, $env) {
         $arena->allocate(MXCL::Term::Lambda::, params => $params, body => $body, env => $env )
     }
 
-    ## -------------------------------------------------------------------------
-    ## Ref, Opaque and Native Bindings (hashed by identity)
-    ## -------------------------------------------------------------------------
-
-    method Ref ($value) {
-        state $nonce = 0;
-        my $uid = sprintf 'ref:%s:%d' => blessed $value, ++$nonce; # unique ref identity
-        $pointers->{ $uid } = $value;
-        return $arena->allocate(MXCL::Term::Ref::, uid => $uid );
+    method Array (@elements) {
+        $arena->allocate(MXCL::Term::Array::, elements => \@elements )
     }
+
+    ## -------------------------------------------------------------------------
+    ## Opaque and Native Bindings (hashed by identity)
+    ## -------------------------------------------------------------------------
 
     method Opaque ($env) {
         state $nonce = 0;
@@ -94,18 +79,6 @@ class MXCL::Allocator::Terms {
     method NativeOperative ($params, $body) {
         # the body refaddr is used for identity
         $arena->allocate(MXCL::Term::Native::Operative::, params => $params, body => $body )
-    }
-
-    ## -------------------------------------------------------------------------
-    ## Ref Utils
-    ## -------------------------------------------------------------------------
-
-    method Deref ($ref) {
-        return $pointers->{ $ref->uid }
-    }
-
-    method SetRef ($ref, $value) {
-        $pointers->{ $ref->uid } = $value;
     }
 
     ## -------------------------------------------------------------------------
@@ -131,28 +104,6 @@ class MXCL::Allocator::Terms {
 
     method Append ($first, $second) {
         $self->List( $self->Uncons($first), $self->Uncons($second) )
-    }
-
-    ## -------------------------------------------------------------------------
-    ## Env Utils
-    ## -------------------------------------------------------------------------
-
-    method BindParams ($parent, $params, $args) {
-        my @params = $self->Uncons($params);
-        my @args   = $self->Uncons($args);
-        die "Arity mismatch" if scalar @params != scalar @args;
-        my %bindings = map { $_->value, shift @args } @params;
-        return $arena->allocate(MXCL::Term::Env::,
-            parent   => $parent,
-            bindings => \%bindings,
-        );
-    }
-
-    method Derive ($parent, %bindings) {
-        $arena->allocate(MXCL::Term::Env::,
-            parent   => $parent,
-            bindings => \%bindings,
-        );
     }
 
 }

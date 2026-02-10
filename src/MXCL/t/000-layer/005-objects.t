@@ -8,6 +8,7 @@ use Data::Dumper qw[ Dumper ];
 
 use MXCL::Arena;
 use MXCL::Allocator::Terms;
+use MXCL::Allocator::Environments;
 use MXCL::Allocator::Kontinues;
 
 use MXCL::Parser;
@@ -18,6 +19,7 @@ use MXCL::Machine;
 my $arena = MXCL::Arena->new;
 
 my $terms = MXCL::Allocator::Terms->new( arena => $arena );
+my $envs  = MXCL::Allocator::Environments->new( arena => $arena );
 my $konts = MXCL::Allocator::Kontinues->new( arena => $arena );
 
 my $compiler = MXCL::Compiler->new(
@@ -26,6 +28,7 @@ my $compiler = MXCL::Compiler->new(
 );
 
 my $machine = MXCL::Machine->new(
+    environs  => $envs,
     terms     => $terms,
     kontinues => $konts,
 );
@@ -74,13 +77,13 @@ my $lambda = $terms->NativeOperative(
     }
 );
 
-my $numeric = $terms->Env(
+my $numeric = $envs->Env(
     '+'   => $add,
     '*'   => $mul,
     'eq?' => $eq,
 );
 
-my $env = $terms->Env(
+my $env = $envs->Env(
     'if'     => $if,
     'lambda' => $lambda,
     'eq?'    => $eq,
@@ -92,16 +95,8 @@ my $env = $terms->Env(
     ),
 
     'gorch' => $terms->Ref( $terms->Num(100) ),
-    'update' => $terms->NativeApplicative(
-        $terms->List( $terms->Sym('x') ),
-        sub ($x) { $terms->SetRef( $x, $terms->Num(200) ) }
-    ),
-    'deref' => $terms->NativeApplicative(
-        $terms->List( $terms->Sym('x') ),
-        sub ($x) { $terms->Deref( $x ) }
-    ),
 
-    'foo' => $terms->Opaque($terms->Env(
+    'foo' => $terms->Opaque($envs->Env(
         bar => $terms->NativeApplicative(
             $terms->Nil,
             sub ($self) { $terms->Str("BAR") }
@@ -110,13 +105,23 @@ my $env = $terms->Env(
             $terms->Nil,
             sub ($self) { $terms->Str("BAZ") }
         )
+    )),
+    'MXCL::Term::Ref' => $terms->Opaque($envs->Env(
+        'set!' => $terms->NativeApplicative(
+            $terms->List( $terms->Sym('ref'), $terms->Sym('value') ),
+            sub ($ref, $value) { $terms->SetRef( $ref, $value ) }
+        ),
+        'get' => $terms->NativeApplicative(
+            $terms->List( $terms->Sym('ref') ),
+            sub ($ref) { $terms->Deref( $ref ) }
+        ),
     ))
 );
 
 my $exprs = $compiler->compile(q[
-    (+ (deref gorch) 10)
-    (update gorch)
-    (deref gorch)
+    (+ (gorch get) 10)
+    (gorch set! 3000)
+    (gorch get)
 ]);
 
 diag "COMPILER:";

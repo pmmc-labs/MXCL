@@ -8,6 +8,7 @@ use Data::Dumper qw[ Dumper ];
 
 use MXCL::Arena;
 use MXCL::Allocator::Terms;
+use MXCL::Allocator::Environments;
 use MXCL::Allocator::Kontinues;
 
 use MXCL::Parser;
@@ -19,6 +20,7 @@ my $arena = MXCL::Arena->new;
 
 my $terms = MXCL::Allocator::Terms->new( arena => $arena );
 my $konts = MXCL::Allocator::Kontinues->new( arena => $arena );
+my $envs  = MXCL::Allocator::Environments->new( arena => $arena );
 
 my $compiler = MXCL::Compiler->new(
     alloc  => $terms,
@@ -26,6 +28,7 @@ my $compiler = MXCL::Compiler->new(
 );
 
 my $machine = MXCL::Machine->new(
+    environs  => $envs,
     terms     => $terms,
     kontinues => $konts,
 );
@@ -40,15 +43,15 @@ my $mul = $terms->NativeApplicative(
     sub ($n, $m) { $terms->Num( $n->value * $m->value ) }
 );
 
-my $numeric = $terms->Env(
+my $numeric = $envs->Env(
     '+' => $add,
     '*' => $mul,
 );
 
-my $env = $terms->Env(
+my $env = $envs->Env(
     '+' => $add,
     '*' => $mul,
-    'MXCL::Term::Num' => $terms->Opaque($terms->Env(
+    'MXCL::Term::Num' => $terms->Opaque($envs->Env(
         $numeric,
         'add' => $add,
         'mul' => $mul,

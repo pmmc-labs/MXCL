@@ -6,6 +6,7 @@ use experimental qw[ class switch ];
 class MXCL::Machine {
     field $terms     :param :reader;
     field $kontinues :param :reader;
+    field $environs  :param :reader;
 
     field $steps :reader = 0;
     field $queue :reader = +[];
@@ -111,9 +112,9 @@ class MXCL::Machine {
                     return $kontinues->ApplyOperative( $env, $call, $args );
                 }
                 else {
-                    my $box    = $env->lookup(blessed $call);
+                    my $trait  = $env->lookup(blessed $call);
                     my $name   = $args->head; # should be Sym
-                    my $method = $box->env->lookup( $name->value );
+                    my $method = $trait->lookup( $name->value );
                     return $kontinues->ApplyExpr(
                         $k->env, $terms->Cons( $call, $args->tail ), $terms->List( $method )
                     );
@@ -128,7 +129,11 @@ class MXCL::Machine {
                 }
                 elsif ($call isa MXCL::Term::Lambda) {
                     return $kontinues->EvalExpr(
-                        $terms->BindParams( $call->env, $call->params, $args ),
+                        $environs->BindParams(
+                            $call->env,
+                            [ $terms->Uncons($call->params) ],
+                            [ $terms->Uncons($args) ]
+                        ),
                         $call->body,
                         $terms->Nil
                     );

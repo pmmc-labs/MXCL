@@ -8,6 +8,7 @@ use Data::Dumper qw[ Dumper ];
 
 use MXCL::Arena;
 use MXCL::Allocator::Terms;
+use MXCL::Allocator::Environments;
 use MXCL::Allocator::Kontinues;
 
 use MXCL::Parser;
@@ -19,6 +20,7 @@ my $arena = MXCL::Arena->new;
 
 my $terms = MXCL::Allocator::Terms->new( arena => $arena );
 my $konts = MXCL::Allocator::Kontinues->new( arena => $arena );
+my $envs  = MXCL::Allocator::Environments->new( arena => $arena );
 
 my $compiler = MXCL::Compiler->new(
     alloc  => $terms,
@@ -26,14 +28,19 @@ my $compiler = MXCL::Compiler->new(
 );
 
 my $machine = MXCL::Machine->new(
+    environs  => $envs,
     terms     => $terms,
     kontinues => $konts,
 );
 
-my $add = $terms->NativeApplicative(
-    $terms->Cons( $terms->Sym('n'), $terms->Sym('m')),
-    sub ($n, $m) { $terms->Num( $n->value + $m->value ) }
-);
+sub lift_native_applicative ($alloc, $params, $body, $returns) {
+    return $alloc->NativeApplicative(
+        $alloc->List( map $alloc->Sym($_), @$params ),
+        sub (@args) { $alloc->$returns( $body->( map $_->value, @args ) ) }
+    )
+}
+
+my $add = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n + $m }, 'Num');
 
 my $mul = $terms->NativeApplicative(
     $terms->Cons( $terms->Sym('n'), $terms->Sym('m')),
@@ -74,13 +81,13 @@ my $lambda = $terms->NativeOperative(
     }
 );
 
-my $numeric = $terms->Env(
+my $numeric = $envs->Env(
     '+'   => $add,
     '*'   => $mul,
     'eq?' => $eq,
 );
 
-my $env = $terms->Env(
+my $env = $envs->Env(
     'if'     => $if,
     'lambda' => $lambda,
 
@@ -88,7 +95,7 @@ my $env = $terms->Env(
     '+'   => $add,
     '*'   => $mul,
 
-    'MXCL::Term::Num' => $terms->Opaque($terms->Env(
+    'MXCL::Term::Num' => $terms->Opaque($envs->Env(
         $numeric,
         'add' => $add,
         'mul' => $mul,
