@@ -8,7 +8,6 @@ use Data::Dumper qw[ Dumper ];
 
 use MXCL::Arena;
 use MXCL::Allocator::Terms;
-use MXCL::Allocator::Environments;
 use MXCL::Allocator::Kontinues;
 use MXCL::Allocator::Traits;
 
@@ -21,7 +20,6 @@ my $arena = MXCL::Arena->new;
 
 my $terms = MXCL::Allocator::Terms->new( arena => $arena );
 my $konts = MXCL::Allocator::Kontinues->new( arena => $arena );
-my $envs  = MXCL::Allocator::Environments->new( arena => $arena );
 my $traits = MXCL::Allocator::Traits->new( arena => $arena );
 
 my $compiler = MXCL::Compiler->new(
@@ -30,7 +28,7 @@ my $compiler = MXCL::Compiler->new(
 );
 
 my $machine = MXCL::Machine->new(
-    environs  => $envs,
+    traits   => $traits,
     terms     => $terms,
     kontinues => $konts,
 );
@@ -69,6 +67,7 @@ my $exprs = $compiler->compile(q[
 ]);
 
 diag "COMPILER:";
+diag $_->pprint foreach @$exprs;
 diag $_->to_string foreach @$exprs;
 
 diag "ARENA:";
@@ -79,7 +78,7 @@ diag "RUNNING:";
 my $result = $machine->run( $env, $exprs );
 
 diag "RESULT:";
-diag $result ? $result->stack->to_string : 'UNDEFINED';
+diag ($result ? $result->stack->to_string : 'UNDEFINED');
 
 diag "ARENA:";
 diag format_stats('Terms',  $arena->stats);

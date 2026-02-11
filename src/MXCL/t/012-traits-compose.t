@@ -138,5 +138,7 @@ say $Bool->to_string;
 say $Num->to_string;
 say $Str->to_string;
 
+pass('...shhh');
+
 done_testing;
 

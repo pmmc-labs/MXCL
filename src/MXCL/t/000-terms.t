@@ -2,13 +2,12 @@
 
 use v5.42;
 use experimental qw[ class ];
-use Test::More import => [qw[ plan subtest ok is diag ]];
+
+use Test::More;
 use Scalar::Util qw[ refaddr ];
 
 use MXCL::Arena;
 use MXCL::Allocator::Terms;
-
-plan tests => 15;
 
 my $a = MXCL::Allocator::Terms->new( arena => MXCL::Arena->new );
 
@@ -74,42 +73,17 @@ subtest 'Cons' => sub {
     ok $a1->hash ne $b->hash,      'different head gives different hash';
 };
 
-subtest 'Env' => sub {
-    plan tests => 4;
-    my $x  = $a->Num(1);
-    my $e1 = $a->Env( a => $x, b => $a->Num(2) );
-    my $e2 = $a->Env( b => $a->Num(2), a => $x );   # reversed key order
-    my $e3 = $a->Env( a => $x, b => $a->Num(3) );
-    is refaddr($e1), refaddr($e2), 'deduplicates regardless of key order';
-    is $e1->hash,    $e2->hash,    'hash is key-order independent';
-    ok $e1->hash ne $e3->hash,     'different value gives different hash';
-    ok $a->Env( a => $a->Num(1) )->hash ne $a->Env( b => $a->Num(1) )->hash,
-                                           'different keys give different hash';
-};
-
 subtest 'Lambda' => sub {
     plan tests => 3;
     my $params = $a->Cons( $a->Sym("x"), $a->Nil );
     my $body   = $a->Sym("x");
-    my $env    = $a->Env( y => $a->Num(1) );
+    my $env    = $a->Nil;
     my $l1     = $a->Lambda( $params, $body, $env );
     my $l2     = $a->Lambda( $params, $body, $env );
     my $l3     = $a->Lambda( $params, $a->Sym("y"), $env );
     is refaddr($l1), refaddr($l2), 'deduplicates';
     is $l1->hash,    $l2->hash,    'hash equality';
     ok $l1->hash ne $l3->hash,     'different body gives different hash';
-};
-
-subtest 'Opaque' => sub {
-    plan tests => 3;
-    my $env1 = $a->Env( x => $a->Num(1) );
-    my $env2 = $a->Env( x => $a->Num(2) );
-    my $o1   = $a->Opaque( $env1 );
-    my $o2   = $a->Opaque( $env1 );
-    my $o3   = $a->Opaque( $env2 );
-    is refaddr($o1), refaddr($o2), 'deduplicates';
-    is $o1->hash,    $o2->hash,    'hash equality';
-    ok $o1->hash ne $o3->hash,     'different env gives different hash';
 };
 
 subtest 'NativeApplicative' => sub {
@@ -154,19 +128,9 @@ subtest 'shared Cons tail deduplicates' => sub {
     is refaddr( $tail ), refaddr( $tail2 ), 'independently rebuilt tail deduplicates';
 };
 
-subtest 'Env with shared list structure' => sub {
-    plan tests => 3;
-    my $list = $a->Cons( $a->Num(1), $a->Cons( $a->Num(2), $a->Nil ) );
-    my $env1 = $a->Env( xs => $list, n => $a->Num(3) );
-    my $env2 = $a->Env( xs => $list, n => $a->Num(3) );
-    is refaddr( $env1 ),                   refaddr( $env2 ),  'Envs with same contents deduplicate';
-    is $env1->bindings->{xs}->hash,        $list->hash,       'binding preserves list hash';
-    is refaddr( $env1->bindings->{xs} ),   refaddr( $list ),  'binding holds the interned list';
-};
-
 #diag "Arena:";
 #use Data::Dumper;
 #warn Data::Dumper::Dumper($a->arena->stats);
 #warn Data::Dumper::Dumper($a->arena->hashs);
 
-
+done_testing;

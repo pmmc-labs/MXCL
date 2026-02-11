@@ -36,7 +36,10 @@ class MXCL::Allocator::Traits {
 
     method BindParams ($parent, $params, $args) {
         die "Arity mismatch" if scalar @$params != scalar @$args;
-        my %bindings = map { $_->value, shift @$args } @$params;
+        my %bindings = map {
+            $_->value,
+            $self->Defined(shift @$args)
+        } @$params;
 
         my $local    = $self->Trait( %bindings );
         my $composed = $self->Compose( $parent, $local );

@@ -8,7 +8,6 @@ use Data::Dumper qw[ Dumper ];
 
 use MXCL::Arena;
 use MXCL::Allocator::Terms;
-use MXCL::Allocator::Environments;
 use MXCL::Allocator::Kontinues;
 use MXCL::Allocator::Traits;
 
@@ -18,7 +17,6 @@ use MXCL::Machine;
 
 my $arena  = MXCL::Arena->new;
 my $terms  = MXCL::Allocator::Terms->new( arena => $arena );
-my $envs   = MXCL::Allocator::Environments->new( arena => $arena );
 my $konts  = MXCL::Allocator::Kontinues->new( arena => $arena );
 my $traits = MXCL::Allocator::Traits->new( arena => $arena );
 
@@ -28,7 +26,7 @@ my $compiler = MXCL::Compiler->new(
 );
 
 my $machine = MXCL::Machine->new(
-    environs  => $envs,
+    traits    => $traits,
     terms     => $terms,
     kontinues => $konts,
 );
@@ -75,8 +73,8 @@ my $EQUALITY = $traits->Trait(
 );
 
 my $env = $traits->Trait(
-    'not' => $not,
-    'MXCL::Term::Num' => $traits->Compose(
+    'not' => $traits->Defined($not),
+    'MXCL::Term::Num' => $traits->Defined($traits->Compose(
         $EQUALITY,
         $traits->Trait(
             '==' => $traits->Defined($eq),
@@ -86,7 +84,7 @@ my $env = $traits->Trait(
             '/'  => $traits->Defined($div),
             '%'  => $traits->Defined($mod),
         )
-    ),
+    )),
 );
 
 my $exprs = $compiler->compile(q[

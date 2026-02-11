@@ -28,7 +28,7 @@ my $compiler = MXCL::Compiler->new(
 );
 
 my $machine = MXCL::Machine->new(
-    environs  => $envs,
+    traits    => $traits,
     terms     => $terms,
     kontinues => $konts,
 );
@@ -67,9 +67,9 @@ my $env = $traits->Trait(
             '%'  => $traits->Defined($mod),
         )
     ),
-    '$ten' => $terms->Opaque($traits->Trait(
+    '$ten' => $traits->Defined($terms->Opaque($traits->Trait(
         'add'  => $traits->Defined(lift_native_applicative_method($terms, [qw[ self m ]], sub ($self, $m) { 10 + $m }, 'Num'))
-    )),
+    ))),
 );
 
 my $exprs = $compiler->compile(q[
