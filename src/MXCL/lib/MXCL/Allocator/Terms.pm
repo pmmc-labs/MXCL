@@ -17,7 +17,6 @@ use MXCL::Term::Tag;
 use MXCL::Term::Array;
 
 use MXCL::Term::Sym;
-use MXCL::Term::Env;
 
 use MXCL::Term::Lambda;
 use MXCL::Term::Opaque;

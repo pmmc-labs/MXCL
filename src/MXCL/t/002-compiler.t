@@ -5,28 +5,21 @@ use experimental qw[ class ];
 
 use Test::More;
 
-use MXCL::Arena;
-use MXCL::Allocator::Terms;
-use MXCL::Allocator::Environments;
-use MXCL::Compiler;
+use MXCL::Context;
 
-my $arena = MXCL::Arena->new;
+my $ctx = MXCL::Context->new;
 
-my $compiler = MXCL::Compiler->new(
-    alloc  => MXCL::Allocator::Terms->new( arena => $arena ),
-    parser => MXCL::Parser->new,
-);
-
-my $envs = MXCL::Allocator::Environments->new( arena => $arena );
+my $arena    = $ctx->arena;
+my $compiler = $ctx->compiler;
 
 my $exprs = $compiler->compile(q[
     ( (1 2 3 4) (1 2 3 4) (1 2 3 4) (1 2 3 4) )
 ]);
 
-my $env = $envs->Env();
+my $env = $ctx->traits->Trait();
 
-push @$exprs => my $obj1 = $compiler->alloc->Opaque($env);
-push @$exprs => my $obj2 = $compiler->alloc->Opaque($env);
+push @$exprs => my $obj1 = $ctx->terms->Opaque($env);
+push @$exprs => my $obj2 = $ctx->terms->Opaque($env);
 
 my $list = $exprs->[0]->head;
 say "YO:", $list->to_string;
@@ -38,9 +31,9 @@ isnt $obj1->hash, $obj2->hash, '... obj1 and obj2 are not the same hashes';
 ok $obj1->env->eq($obj2->env), '... obj1 and obj2 envs are equal';
 is $obj1->env->hash, $obj2->env->hash, '... obj1 and obj2 envs are the same hashes';
 
-my $array1 = $compiler->alloc->Array( $compiler->alloc->Num(1), $compiler->alloc->Num(2), $compiler->alloc->Num(3) );
-my $array2 = $compiler->alloc->Array( $compiler->alloc->Num(1), $compiler->alloc->Num(2), $compiler->alloc->Num(3) );
-my $array3 = $compiler->alloc->Array( $compiler->alloc->Num(1), $compiler->alloc->Num(2), $compiler->alloc->Num(30) );
+my $array1 = $ctx->terms->Array( $ctx->terms->Num(1), $ctx->terms->Num(2), $ctx->terms->Num(3) );
+my $array2 = $ctx->terms->Array( $ctx->terms->Num(1), $ctx->terms->Num(2), $ctx->terms->Num(3) );
+my $array3 = $ctx->terms->Array( $ctx->terms->Num(1), $ctx->terms->Num(2), $ctx->terms->Num(30) );
 
 say $array1->to_string;
 say $array2->to_string;

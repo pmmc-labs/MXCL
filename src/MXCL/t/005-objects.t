@@ -6,28 +6,17 @@ use experimental qw[ class ];
 use Test::More;
 use Data::Dumper qw[ Dumper ];
 
-use MXCL::Arena;
-use MXCL::Allocator::Terms;
-use MXCL::Allocator::References;
-use MXCL::Allocator::Kontinues;
-use MXCL::Allocator::Traits;
-
-use MXCL::Parser;
-use MXCL::Compiler;
-
+use MXCL::Context;
 use MXCL::Machine;
 
-my $arena = MXCL::Arena->new;
+my $ctx = MXCL::Context->new;
 
-my $terms  = MXCL::Allocator::Terms->new( arena => $arena );
-my $konts  = MXCL::Allocator::Kontinues->new( arena => $arena );
-my $refs   = MXCL::Allocator::References->new( arena => $arena );
-my $traits = MXCL::Allocator::Traits->new( arena => $arena );
-
-my $compiler = MXCL::Compiler->new(
-    alloc  => $terms,
-    parser => MXCL::Parser->new,
-);
+my $arena    = $ctx->arena;
+my $terms    = $ctx->terms;
+my $konts    = $ctx->kontinues;
+my $refs     = $ctx->refs;
+my $traits   = $ctx->traits;
+my $compiler = $ctx->compiler;
 
 my $machine = MXCL::Machine->new(
     traits    => $traits,

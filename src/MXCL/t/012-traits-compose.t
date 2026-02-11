@@ -6,15 +6,16 @@ use experimental qw[ class switch ];
 use Test::More;
 use Data::Dumper qw[ Dumper ];
 
-use MXCL::Arena;
-use MXCL::Allocator::Terms;
-use MXCL::Allocator::Kontinues;
-use MXCL::Allocator::Traits;
+use MXCL::Context;
 
-my $arena  = MXCL::Arena->new;
-my $terms  = MXCL::Allocator::Terms->new( arena => $arena );
-my $konts  = MXCL::Allocator::Kontinues->new( arena => $arena );
-my $traits = MXCL::Allocator::Traits->new( arena => $arena );
+my $ctx = MXCL::Context->new;
+
+my $arena    = $ctx->arena;
+my $terms    = $ctx->terms;
+my $konts    = $ctx->kontinues;
+my $refs     = $ctx->refs;
+my $traits   = $ctx->traits;
+my $compiler = $ctx->compiler;
 
 sub lift_native_applicative ($alloc, $params, $body, $returns) {
     return $alloc->NativeApplicative(

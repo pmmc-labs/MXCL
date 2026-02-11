@@ -7,11 +7,10 @@ use Scalar::Util ();
 use MXCL::Parser;
 
 class MXCL::Compiler {
-    field $alloc  :param :reader;
-    field $parser :param :reader;
+    field $context :param :reader;
 
     method compile ($source) {
-        my $compounds = $parser->parse($source);
+        my $compounds = $context->parser->parse($source);
         my $expanded  = $self->expand($compounds);
         return $expanded;
     }
@@ -30,17 +29,17 @@ class MXCL::Compiler {
 
     method expand_token ($token) {
         my $src = $token->source;
-        return $alloc->True  if $src eq 'true';
-        return $alloc->False if $src eq 'false';
+        return $context->terms->True  if $src eq 'true';
+        return $context->terms->False if $src eq 'false';
         if ($src =~ /^\".*\"$/) {
             my $str = substr($src, 1, length($src) - 2);
             $str = "\n" if $str eq "\\n";
             $str = "\t" if $str eq "\\t";
-            return $alloc->Str( $str );
+            return $context->terms->Str( $str );
         }
-        return $alloc->Num( 0+$src ) if Scalar::Util::looks_like_number($src);
-        return $alloc->Tag( substr($src, 1) ) if $src =~ /^\:/;
-        return $alloc->Sym( $src );
+        return $context->terms->Num( 0+$src ) if Scalar::Util::looks_like_number($src);
+        return $context->terms->Tag( substr($src, 1) ) if $src =~ /^\:/;
+        return $context->terms->Sym( $src );
     }
 
     method expand_compound ($compound) {
@@ -52,7 +51,7 @@ class MXCL::Compiler {
             die 'MXCL::Term::Tuple not yet supported' if $open eq "[";
             die 'MXCL::Term::Array not yet supported' if $open eq "@[";
             die 'MXCL::Term::Hash not yet supported'  if $open eq "%{";
-            return $alloc->Nil; # () and {} with no content
+            return $context->terms->Nil; # () and {} with no content
         }
 
         # expand pairs at compile time,
@@ -70,26 +69,26 @@ class MXCL::Compiler {
         my @list = map $self->expand_expression( $_ ), @items;
 
         # expand quoted lists ...
-        unshift @list => $alloc->Sym('quote')
+        unshift @list => $context->terms->Sym('quote')
             if $compound->open->source eq "'";
 
         # expand blocks ...
-        unshift @list => $alloc->Sym('do')
+        unshift @list => $context->terms->Sym('do')
             if $compound->open->source eq "{";
 
         # expand hashes ...
-        unshift @list => $alloc->Sym('hash/new')
+        unshift @list => $context->terms->Sym('hash/new')
             if $compound->open->source eq "%{";
 
         # expand tuples ...
-        unshift @list => $alloc->Sym('tuple/new')
+        unshift @list => $context->terms->Sym('tuple/new')
             if $compound->open->source eq "[";
 
         # expand arrays ...
-        unshift @list => $alloc->Sym('array/new')
+        unshift @list => $context->terms->Sym('array/new')
             if $compound->open->source eq "@[";
 
         # otherwise it is a list ...
-        return $alloc->List( @list );
+        return $context->terms->List( @list );
     }
 }

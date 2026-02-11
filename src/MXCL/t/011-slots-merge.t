@@ -6,15 +6,12 @@ use experimental qw[ class switch ];
 use Test::More;
 use Data::Dumper qw[ Dumper ];
 
-use MXCL::Arena;
-use MXCL::Allocator::Terms;
-use MXCL::Allocator::Environments;
-use MXCL::Allocator::Kontinues;
-use MXCL::Allocator::Traits;
+use MXCL::Context;
 
-my $arena  = MXCL::Arena->new;
-my $terms  = MXCL::Allocator::Terms->new( arena => $arena );
-my $traits = MXCL::Allocator::Traits->new( arena => $arena );
+my $ctx = MXCL::Context->new;
+
+my $terms    = $ctx->terms;
+my $traits   = $ctx->traits;
 
 my $t100  = $terms->Num( 100 );
 my $t1000 = $terms->Num( 1000 );
