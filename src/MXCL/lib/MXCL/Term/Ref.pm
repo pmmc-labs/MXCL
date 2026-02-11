@@ -8,4 +8,6 @@ class MXCL::Term::Ref :isa(MXCL::Term) {
     method to_string {
         sprintf 'ref<%s>' => $uid;
     }
+
+    method pprint { die 'Cannot pprint a Ref' }
 }

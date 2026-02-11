@@ -57,16 +57,18 @@ my $eq  = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n == $m }
 
 
 my $env = $traits->Trait(
-    '==' => $eq,
-    'MXCL::Term::Num' => $traits->Trait(
-        '+'  => $add,
-        '-'  => $sub,
-        '*'  => $mul,
-        '/'  => $div,
-        '%'  => $mod,
+    '==' => $traits->Defined($eq),
+    'MXCL::Term::Num' => $traits->Defined(
+            $traits->Trait(
+            '+'  => $traits->Defined($add),
+            '-'  => $traits->Defined($sub),
+            '*'  => $traits->Defined($mul),
+            '/'  => $traits->Defined($div),
+            '%'  => $traits->Defined($mod),
+        )
     ),
     '$ten' => $terms->Opaque($traits->Trait(
-        'add'  => lift_native_applicative_method($terms, [qw[ self m ]], sub ($self, $m) { 10 + $m }, 'Num')
+        'add'  => $traits->Defined(lift_native_applicative_method($terms, [qw[ self m ]], sub ($self, $m) { 10 + $m }, 'Num'))
     )),
 );
 

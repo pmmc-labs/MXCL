@@ -5,6 +5,8 @@ use experimental qw[ class ];
 class MXCL::Term::Trait::Slot :isa(MXCL::Term) {
     method type { __CLASS__ =~ s/^MXCL\:\:Term\:\:Trait\:\://r }
     method to_string { $self->type }
+
+    method pprint { die 'Cannot pprint a Slot' }
 }
 
 class MXCL::Term::Trait::Slot::Absent :isa(MXCL::Term::Trait::Slot) {

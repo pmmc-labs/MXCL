@@ -19,4 +19,6 @@ class MXCL::Term::Env :isa(MXCL::Term) {
     method to_string {
         sprintf 'e{ %s }' => join ', ' => $self->keys
     }
+
+    method pprint { die 'Cannot pprint a Env' }
 }

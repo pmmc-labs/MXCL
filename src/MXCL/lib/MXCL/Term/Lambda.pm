@@ -10,4 +10,8 @@ class MXCL::Term::Lambda :isa(MXCL::Term) {
     method to_string {
         sprintf '(/lambda %s %s)' => $params->to_string, $body->to_string
     }
+
+    method pprint {
+        sprintf '(lambda %s %s)' => $params->pprint, $body->pprint
+    }
 }

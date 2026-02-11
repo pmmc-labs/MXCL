@@ -9,4 +9,6 @@ class MXCL::Term::Opaque :isa(MXCL::Term) {
     method to_string {
         sprintf 'opaque<%s>(%s)' => $uid, $env->hash;
     }
+
+    method pprint { die 'Cannot pprint a Ref' }
 }

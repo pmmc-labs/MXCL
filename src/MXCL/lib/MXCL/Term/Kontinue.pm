@@ -27,4 +27,6 @@ class MXCL::Term::Kontinue :isa(MXCL::Term) {
             ),
             $stack->to_string;
     }
+
+    method pprint { die 'Cannot pprint a Kontinue' }
 }

@@ -6,7 +6,7 @@ use experimental qw[ class switch ];
 class MXCL::Machine {
     field $terms     :param :reader;
     field $kontinues :param :reader;
-    field $environs  :param :reader;
+    field $traits    :param :reader;
 
     field $steps :reader = 0;
     field $queue :reader = +[];
@@ -112,9 +112,19 @@ class MXCL::Machine {
                     return $kontinues->ApplyOperative( $env, $call, $args );
                 }
                 else {
-                    my $trait  = $env->lookup(blessed $call);
-                    my $name   = $args->head; # should be Sym
-                    my $method = $trait->lookup( $name->value );
+                    my $autobox = $env->lookup(blessed $call);
+
+                    die "Could not find trait to autobox ".blessed $call
+                        unless $autobox isa MXCL::Term::Trait::Slot::Defined;
+
+                    my $trait = $autobox->term;
+                    my $name  = $args->head; # should be Sym
+                    my $slot  = $trait->lookup( $name->value );
+
+                    die "Bad Slot! ".$slot->to_string
+                        unless $slot isa MXCL::Term::Trait::Slot::Defined;
+
+                    my $method = $slot->term;
                     return $kontinues->ApplyExpr(
                         $k->env, $terms->Cons( $call, $args->tail ), $terms->List( $method )
                     );
@@ -129,7 +139,7 @@ class MXCL::Machine {
                 }
                 elsif ($call isa MXCL::Term::Lambda) {
                     return $kontinues->EvalExpr(
-                        $environs->BindParams(
+                        $traits->BindParams(
                             $call->env,
                             [ $terms->Uncons($call->params) ],
                             [ $terms->Uncons($args) ]
@@ -149,8 +159,13 @@ class MXCL::Machine {
                     return $call->body->( $k->env, $terms->Uncons( $args ) );
                 }
                 elsif ($call isa MXCL::Term::Opaque) {
-                    my $name   = $args->head; # should be Sym
-                    my $method = $call->env->lookup( $name->value );
+                    my $name = $args->head; # should be Sym
+                    my $slot = $call->env->lookup( $name->value );
+
+                    die "Bad Slot! ".$slot->to_string
+                        unless $slot isa MXCL::Term::Trait::Slot::Defined;
+
+                    my $method = $slot->term;
                     return $kontinues->ApplyExpr(
                         $k->env, $terms->Cons( $call, $args->tail ), $terms->List( $method )
                     );
@@ -170,8 +185,8 @@ class MXCL::Machine {
             when ('MXCL::Term::Sym') {
                 my $value = $env->lookup( $expr->value );
                 die "Could not find ".$expr->value." in Env"
-                    unless defined $value;
-                return $kontinues->Return( $env, $terms->List( $value ) );
+                    unless $value isa MXCL::Term::Trait::Slot::Defined;
+                return $kontinues->Return( $env, $terms->List( $value->term ) );
             }
             when ('MXCL::Term::Cons') {
                 return $kontinues->EvalHead( $env, $expr, $terms->Nil );

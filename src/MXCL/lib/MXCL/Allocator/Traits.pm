@@ -34,6 +34,19 @@ class MXCL::Allocator::Traits {
     ## Trait Composition
     ## -------------------------------------------------------------------------
 
+    method BindParams ($parent, $params, $args) {
+        die "Arity mismatch" if scalar @$params != scalar @$args;
+        my %bindings = map { $_->value, shift @$args } @$params;
+
+        my $local    = $self->Trait( %bindings );
+        my $composed = $self->Compose( $parent, $local );
+
+        # TODO - check for conflicts!
+
+        return $composed;
+    }
+
+
     method MergeSlots ($s1, $s2) {
         return $s2 if $s1 isa MXCL::Term::Trait::Slot::Absent   && $s2 isa MXCL::Term::Trait::Slot::Defined;
         return $s1 if $s1 isa MXCL::Term::Trait::Slot::Required && $s2 isa MXCL::Term::Trait::Slot::Required;

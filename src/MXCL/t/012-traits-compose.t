@@ -51,10 +51,19 @@ my $str_le   = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n <=
 
 my $EQUALITY = $traits->Trait(
     '==' => $traits->Required,
-    '!=' => $traits->Required,
+    '!=' => $traits->Defined(
+        $terms->NativeOperative(
+            $terms->List( $terms->Sym('n'), $terms->Sym('m') ),
+            sub ($env, $n, $m) {
+                $konts->EvalExpr($env,
+                    # (not (== n m))
+                    $terms->List($terms->Sym('not'), $terms->List( $terms->Sym('=='), $n, $m )))
+            }
+        )
+    )
 );
 
-$my ORDERED = $traits->Trait(
+my $ORDERED = $traits->Trait(
     '==' => $traits->Required,
     '!=' => $traits->Required,
     '>'  => $traits->Required,
@@ -89,7 +98,7 @@ my $Bool = $traits->Compose(
     $EQUALITY,
     $traits->Trait(
         '==' => $traits->Defined($bool_eq),
-        '!=' => $traits->Defined($bool_ne),
+        #'!=' => $traits->Defined($bool_ne),
     )
 );
 
@@ -99,7 +108,7 @@ my $Num = $traits->Compose(
         $EQUALITY,
         $traits->Trait(
             '==' => $traits->Defined($num_eq),
-            '!=' => $traits->Defined($num_ne),
+            #'!=' => $traits->Defined($num_ne),
             '>'  => $traits->Defined($num_gt),
             '>=' => $traits->Defined($num_ge),
             '<'  => $traits->Defined($num_lt),
@@ -114,7 +123,7 @@ my $Str = $traits->Compose(
         $EQUALITY,
         $traits->Trait(
             '==' => $traits->Defined($str_eq),
-            '!=' => $traits->Defined($str_ne),
+            #'!=' => $traits->Defined($str_ne),
             '>'  => $traits->Defined($str_gt),
             '>=' => $traits->Defined($str_ge),
             '<'  => $traits->Defined($str_lt),

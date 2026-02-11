@@ -10,6 +10,7 @@ use MXCL::Arena;
 use MXCL::Allocator::Terms;
 use MXCL::Allocator::Environments;
 use MXCL::Allocator::Kontinues;
+use MXCL::Allocator::Traits;
 
 use MXCL::Parser;
 use MXCL::Compiler;
@@ -21,6 +22,7 @@ my $arena = MXCL::Arena->new;
 my $terms = MXCL::Allocator::Terms->new( arena => $arena );
 my $konts = MXCL::Allocator::Kontinues->new( arena => $arena );
 my $envs  = MXCL::Allocator::Environments->new( arena => $arena );
+my $traits = MXCL::Allocator::Traits->new( arena => $arena );
 
 my $compiler = MXCL::Compiler->new(
     alloc  => $terms,
@@ -33,78 +35,37 @@ my $machine = MXCL::Machine->new(
     kontinues => $konts,
 );
 
-sub lift_native_applicative ($alloc, $params, $body, $returns) {
-    return $alloc->NativeApplicative(
-        $alloc->List( map $alloc->Sym($_), @$params ),
-        sub (@args) { $alloc->$returns( $body->( map $_->value, @args ) ) }
-    )
-}
-
-my $add = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n + $m }, 'Num');
+my $add = $terms->NativeApplicative(
+    $terms->Cons($terms->Sym('n'), $terms->Sym('m')),
+    sub ($n, $m) { $terms->Num( $n->value + $m->value ) }
+);
 
 my $mul = $terms->NativeApplicative(
-    $terms->Cons( $terms->Sym('n'), $terms->Sym('m')),
+    $terms->Cons($terms->Sym('n'), $terms->Sym('m')),
     sub ($n, $m) { $terms->Num( $n->value * $m->value ) }
 );
 
-my $eq = $terms->NativeApplicative(
-    $terms->Cons( $terms->Sym('n'), $terms->Sym('m')),
-    sub ($n, $m) { $n->value == $m->value ? $terms->True : $terms->False }
+my $numeric = $traits->Trait(
+    '+' => $traits->Defined($add),
+    '*' => $traits->Defined($mul),
 );
 
-my $if = $terms->NativeOperative(
-    $terms->List(
-        $terms->Sym('env'),
-        $terms->Sym('cond'),
-        $terms->Sym('if-true'),
-        $terms->Sym('if-false')
-    ),
-    sub ($env, $cond, $if_true, $if_false) {
-        # NOTE: this probably needs to derive an Env
-        return (
-            $konts->IfElse( $env, $cond, $if_true, $if_false, $terms->Nil ),
-            $konts->EvalExpr( $env, $cond, $terms->Nil ),
+my $env = $traits->Trait(
+    '+' => $traits->Defined($add),
+    '*' => $traits->Defined($mul),
+    'MXCL::Term::Num' => $traits->Defined(
+        $traits->Compose(
+            $numeric,
+            $traits->Trait(
+                'add' => $traits->Defined($add),
+                'mul' => $traits->Defined($mul),
+            )
         )
-    }
-);
-
-my $lambda = $terms->NativeOperative(
-    $terms->List(
-        $terms->Sym('params'),
-        $terms->Sym('body'),
-    ),
-    sub ($env, $params, $body) {
-        return $konts->Return(
-            $env,
-            $terms->List( $terms->Lambda( $params, $body, $env ) )
-        );
-    }
-);
-
-my $numeric = $envs->Env(
-    '+'   => $add,
-    '*'   => $mul,
-    'eq?' => $eq,
-);
-
-my $env = $envs->Env(
-    'if'     => $if,
-    'lambda' => $lambda,
-
-    'eq?' => $eq,
-    '+'   => $add,
-    '*'   => $mul,
-
-    'MXCL::Term::Num' => $terms->Opaque($envs->Env(
-        $numeric,
-        'add' => $add,
-        'mul' => $mul,
-        '=='  => $eq,
-    ))
+    )
 );
 
 my $exprs = $compiler->compile(q[
-    ((lambda (x y) (x + y)) 10 20)
+    ((+ 5 5) + (* 5 4))
 ]);
 
 diag "COMPILER:";
