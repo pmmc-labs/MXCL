@@ -52,7 +52,15 @@ class MXCL::Allocator::Traits {
         die "Cannot Merge Slots (".blessed($s1).") and (".blessed($s2).")";
     }
 
-    method Compose ($t1, $t2) {
+    method Compose ($name, $t1, $t2) {
+        my $t1_bindings = $t1->bindings;
+        my $t2_bindings = $t2->bindings;
 
-    }
+        my %bindings = %$t1_bindings;
+        foreach my ($key, $value) (%$t2_bindings) {
+            $bindings{ $key } = $self->MergeSlots($bindings{ $key }, $value);
+        }
+
+        return $self->Trait($name, %bindings);
+     }
 }

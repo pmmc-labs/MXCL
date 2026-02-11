@@ -13,6 +13,9 @@ class MXCL::Term::Trait :isa(MXCL::Term) {
     method entries { map { $_, $bindings->{$_} }  $self->keys }
 
     method to_string {
-        sprintf '%s{ %s }' => $name, join ', ' => $self->keys
+        sprintf '%s{ %s }' => $name->to_string,
+            join ', ' =>
+            map { sprintf '%s : %s' => $_, $bindings->{$_}->to_string }
+            sort { $a cmp $b } keys %$bindings;
     }
 }
