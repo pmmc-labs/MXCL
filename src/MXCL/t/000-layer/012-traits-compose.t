@@ -47,14 +47,14 @@ my $str_ge   = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n >=
 my $str_lt   = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n <  $m }, 'Bool');
 my $str_le   = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n <= $m }, 'Bool');
 
-my $env = $traits->Trait();
+# ... CORE trait signatures
 
 my $EQUALITY = $traits->Trait(
     '==' => $traits->Required,
     '!=' => $traits->Required,
 );
 
-my $COMPARE = $traits->Trait(
+$my ORDERED = $traits->Trait(
     '==' => $traits->Required,
     '!=' => $traits->Required,
     '>'  => $traits->Required,
@@ -63,20 +63,27 @@ my $COMPARE = $traits->Trait(
     '<=' => $traits->Required,
 );
 
+# ... Operative Functors
+
 my $EQ = $terms->NativeOperative(
     $terms->List( $terms->Sym('T') ),
     sub ($env, $t) {
-        return $konts->Return(
-            $env,
-            $terms->List(
-                $traits->Compose(
-                    $EQUALITY,
-                    $t
-                )
-            )
-        )
+        return $konts->Return( $env, $terms->List(
+            $traits->Compose($EQUALITY, $t)
+        ))
     }
 );
+
+my $ORD = $terms->NativeOperative(
+    $terms->List( $terms->Sym('T') ),
+    sub ($env, $t) {
+        return $konts->Return( $env, $terms->List(
+            $traits->Compose($ORDERED, $t)
+        ))
+    }
+);
+
+# ... composed core traits ....
 
 my $Bool = $traits->Compose(
     $EQUALITY,
@@ -86,8 +93,41 @@ my $Bool = $traits->Compose(
     )
 );
 
+my $Num = $traits->Compose(
+    $ORDERED,
+    $traits->Compose(
+        $EQUALITY,
+        $traits->Trait(
+            '==' => $traits->Defined($num_eq),
+            '!=' => $traits->Defined($num_ne),
+            '>'  => $traits->Defined($num_gt),
+            '>=' => $traits->Defined($num_ge),
+            '<'  => $traits->Defined($num_lt),
+            '<=' => $traits->Defined($num_le),
+        )
+    )
+);
+
+my $Str = $traits->Compose(
+    $ORDERED,
+    $traits->Compose(
+        $EQUALITY,
+        $traits->Trait(
+            '==' => $traits->Defined($str_eq),
+            '!=' => $traits->Defined($str_ne),
+            '>'  => $traits->Defined($str_gt),
+            '>=' => $traits->Defined($str_ge),
+            '<'  => $traits->Defined($str_lt),
+            '<=' => $traits->Defined($str_le),
+        )
+    )
+);
+
+
 say $EQUALITY->to_string;
 say $Bool->to_string;
+say $Num->to_string;
+say $Str->to_string;
 
 done_testing;
 
