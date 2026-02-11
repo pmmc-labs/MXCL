@@ -14,11 +14,8 @@ class MXCL::Allocator::Traits {
     ## Traits
     ## -------------------------------------------------------------------------
 
-    method Trait ($name, %bindings) {
-        $arena->allocate(MXCL::Term::Trait::,
-            name     => $name,
-            bindings => \%bindings,
-        );
+    method Trait (%bindings) {
+        $arena->allocate(MXCL::Term::Trait::, bindings => \%bindings);
     }
 
     ## -------------------------------------------------------------------------
@@ -49,18 +46,36 @@ class MXCL::Allocator::Traits {
                 return $self->Conflict($s1, $s2);
             }
         }
-        die "Cannot Merge Slots (".blessed($s1).") and (".blessed($s2).")";
+        die "Cannot Merge Slots (".(blessed($s1) // '???').") and (".(blessed($s2) // '???').")";
     }
 
-    method Compose ($name, $t1, $t2) {
+    method Compose ($t1, $t2) {
         my $t1_bindings = $t1->bindings;
         my $t2_bindings = $t2->bindings;
 
-        my %bindings = %$t1_bindings;
-        foreach my ($key, $value) (%$t2_bindings) {
-            $bindings{ $key } = $self->MergeSlots($bindings{ $key }, $value);
+        my %merged   = ($t1_bindings->%*, $t2_bindings->%*);
+        my @all_keys = keys %merged;
+
+        #say "      t1: ", join ', ' => keys $t1_bindings->%*;
+        #say "      t2: ", join ', ' => keys $t2_bindings->%*;
+        #say "ALL KEYS: ", join ', ' => @all_keys;
+
+        my %bindings;
+        foreach my $key (@all_keys) {
+            if (exists $t1_bindings->{$key} && exists $t2_bindings->{$key}) {
+                $bindings{ $key } = $self->MergeSlots( $t1_bindings->{$key}, $t2_bindings->{$key} );
+            }
+            elsif (exists $t1_bindings->{$key} && !(exists $t2_bindings->{$key})) {
+                $bindings{ $key } = $t1_bindings->{$key};
+            }
+            elsif (exists $t2_bindings->{$key} && !(exists $t1_bindings->{$key})) {
+                $bindings{ $key } = $t2_bindings->{$key};
+            }
+            else {
+                die "WTF, this can't happen!";
+            }
         }
 
-        return $self->Trait($name, %bindings);
+        return $self->Trait(%bindings);
      }
 }

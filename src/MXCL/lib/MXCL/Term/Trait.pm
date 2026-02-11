@@ -3,7 +3,6 @@ use v5.42;
 use experimental qw[ class ];
 
 class MXCL::Term::Trait :isa(MXCL::Term) {
-    field $name     :param :reader;
     field $bindings :param :reader;
 
     method lookup ($key) { $bindings->{ $key } }
@@ -13,7 +12,7 @@ class MXCL::Term::Trait :isa(MXCL::Term) {
     method entries { map { $_, $bindings->{$_} }  $self->keys }
 
     method to_string {
-        sprintf '%s{ %s }' => $name->to_string,
+        sprintf '{ %s }' =>
             join ', ' =>
             map { sprintf '%s : %s' => $_, $bindings->{$_}->to_string }
             sort { $a cmp $b } keys %$bindings;

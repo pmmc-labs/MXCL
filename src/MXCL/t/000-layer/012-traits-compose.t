@@ -47,12 +47,20 @@ my $str_ge   = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n >=
 my $str_lt   = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n <  $m }, 'Bool');
 my $str_le   = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n <= $m }, 'Bool');
 
-my $env = $traits->Trait('FakeEnv');
+my $env = $traits->Trait();
 
 my $EQUALITY = $traits->Trait(
-    $terms->Sym('EQUALITY'),
     '==' => $traits->Required,
     '!=' => $traits->Required,
+);
+
+my $COMPARE = $traits->Trait(
+    '==' => $traits->Required,
+    '!=' => $traits->Required,
+    '>'  => $traits->Required,
+    '>=' => $traits->Required,
+    '<'  => $traits->Required,
+    '<=' => $traits->Required,
 );
 
 my $EQ = $terms->NativeOperative(
@@ -62,7 +70,6 @@ my $EQ = $terms->NativeOperative(
             $env,
             $terms->List(
                 $traits->Compose(
-                    $terms->Sym(sprintf 'Eq[%s]' => $t->name->value),
                     $EQUALITY,
                     $t
                 )
@@ -72,10 +79,8 @@ my $EQ = $terms->NativeOperative(
 );
 
 my $Bool = $traits->Compose(
-    $terms->Sym('Eq[Bool]'),
     $EQUALITY,
     $traits->Trait(
-        $terms->Sym('Bool'),
         '==' => $traits->Defined($bool_eq),
         '!=' => $traits->Defined($bool_ne),
     )
