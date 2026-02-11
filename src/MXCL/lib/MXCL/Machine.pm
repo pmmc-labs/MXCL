@@ -4,9 +4,7 @@ use experimental qw[ class switch ];
 
 
 class MXCL::Machine {
-    field $terms     :param :reader;
-    field $kontinues :param :reader;
-    field $traits    :param :reader;
+    field $context :param :reader;
 
     field $steps :reader = 0;
     field $queue :reader = +[];
@@ -14,8 +12,8 @@ class MXCL::Machine {
 
     method run ($env, $exprs) {
         push @$queue => (
-            $kontinues->Host($env, 'HALT', +{}, $terms->Nil),
-            reverse map $kontinues->EvalExpr($env, $_, $terms->Nil), @$exprs
+            $context->kontinues->Host($env, 'HALT', +{}, $context->terms->Nil),
+            reverse map $context->kontinues->EvalExpr($env, $_, $context->terms->Nil), @$exprs
         );
         return $self->run_until_host;
     }
@@ -44,10 +42,10 @@ class MXCL::Machine {
                 # TODO:
                 # add a LeaveScope kont to un-mutate the Env
                 my $prev = pop @$queue;
-                return $kontinues->Update(
+                return $context->kontinues->Update(
                     $prev,
                     $k->env,
-                    $terms->Append( $prev->stack, $k->stack )
+                    $context->terms->Append( $prev->stack, $k->stack )
                 );
             }
             # ------------------------------------------------------------------
@@ -58,12 +56,12 @@ class MXCL::Machine {
                 if ($condition->value) {
                     return # AND short/circuit
                         refaddr $k->condition == refaddr $k->if_true
-                            ? $kontinues->Return( $k->env, $terms->List( $condition ) )
+                            ? $context->kontinues->Return( $k->env, $context->terms->List( $condition ) )
                             : $self->evaluate_term( $k->env, $k->if_true  );
                 } else {
                     return # OR short/circuit
                         refaddr $k->condition == refaddr $k->if_false
-                            ? $kontinues->Return( $k->env, $terms->List( $condition ) )
+                            ? $context->kontinues->Return( $k->env, $context->terms->List( $condition ) )
                             : $self->evaluate_term( $k->env, $k->if_false );
                 }
             }
@@ -78,7 +76,7 @@ class MXCL::Machine {
                 my $env  = $k->env;
 
                 return (
-                    $kontinues->ApplyExpr( $env, $cons->tail, $terms->Nil ),
+                    $context->kontinues->ApplyExpr( $env, $cons->tail, $context->terms->Nil ),
                     $self->evaluate_term( $env, $cons->head ),
                 );
             }
@@ -87,8 +85,8 @@ class MXCL::Machine {
                 my $env  = $k->env;
                 return (
                     ($rest->tail->isa('MXCL::Term::Nil')
-                        ? $kontinues->Return( $env, $k->stack )
-                        : $kontinues->EvalRest( $env, $rest->tail, $k->stack )),
+                        ? $context->kontinues->Return( $env, $k->stack )
+                        : $context->kontinues->EvalRest( $env, $rest->tail, $k->stack )),
                     $self->evaluate_term( $env, $rest->head ),
                 );
             }
@@ -102,14 +100,14 @@ class MXCL::Machine {
 
                 if ($call isa MXCL::Term::Native::Applicative || $call isa MXCL::Term::Lambda) {
                     return (
-                        $kontinues->ApplyApplicative( $env, $call, $terms->Nil ),
+                        $context->kontinues->ApplyApplicative( $env, $call, $context->terms->Nil ),
                         ($args isa MXCL::Term::Nil
                             ? ()
-                            : $kontinues->EvalRest( $env, $args, $terms->Nil ))
+                            : $context->kontinues->EvalRest( $env, $args, $context->terms->Nil ))
                     );
                 }
                 elsif ($call isa MXCL::Term::Native::Operative || $call isa MXCL::Term::Opaque) {
-                    return $kontinues->ApplyOperative( $env, $call, $args );
+                    return $context->kontinues->ApplyOperative( $env, $call, $args );
                 }
                 else {
                     my $autobox = $env->lookup(blessed $call);
@@ -125,8 +123,8 @@ class MXCL::Machine {
                         unless $slot isa MXCL::Term::Trait::Slot::Defined;
 
                     my $method = $slot->term;
-                    return $kontinues->ApplyExpr(
-                        $k->env, $terms->Cons( $call, $args->tail ), $terms->List( $method )
+                    return $context->kontinues->ApplyExpr(
+                        $k->env, $context->terms->Cons( $call, $args->tail ), $context->terms->List( $method )
                     );
                 }
             }
@@ -134,18 +132,18 @@ class MXCL::Machine {
                 my $call = $k->call;
                 my $args = $k->stack;
                 if ($call isa MXCL::Term::Native::Applicative) {
-                    my $result = $call->body->( $terms->Uncons( $args ) );
-                    return $kontinues->Return( $k->env, $terms->List( $result ) );
+                    my $result = $call->body->( $context->terms->Uncons( $args ) );
+                    return $context->kontinues->Return( $k->env, $context->terms->List( $result ) );
                 }
                 elsif ($call isa MXCL::Term::Lambda) {
-                    return $kontinues->EvalExpr(
-                        $traits->BindParams(
+                    return $context->kontinues->EvalExpr(
+                        $context->traits->BindParams(
                             $call->env,
-                            [ $terms->Uncons($call->params) ],
-                            [ $terms->Uncons($args) ]
+                            [ $context->terms->Uncons($call->params) ],
+                            [ $context->terms->Uncons($args) ]
                         ),
                         $call->body,
-                        $terms->Nil
+                        $context->terms->Nil
                     );
                 }
                 else {
@@ -156,7 +154,7 @@ class MXCL::Machine {
                 my $call = $k->call;
                 my $args = $k->stack;
                 if ($call isa MXCL::Term::Native::Operative) {
-                    return $call->body->( $k->env, $terms->Uncons( $args ) );
+                    return $call->body->( $k->env, $context->terms->Uncons( $args ) );
                 }
                 elsif ($call isa MXCL::Term::Opaque) {
                     my $name = $args->head; # should be Sym
@@ -166,8 +164,8 @@ class MXCL::Machine {
                         unless $slot isa MXCL::Term::Trait::Slot::Defined;
 
                     my $method = $slot->term;
-                    return $kontinues->ApplyExpr(
-                        $k->env, $terms->Cons( $call, $args->tail ), $terms->List( $method )
+                    return $context->kontinues->ApplyExpr(
+                        $k->env, $context->terms->Cons( $call, $args->tail ), $context->terms->List( $method )
                     );
                 }
                 else {
@@ -186,13 +184,13 @@ class MXCL::Machine {
                 my $value = $env->lookup( $expr->value );
                 die "Could not find ".$expr->value." in Env"
                     unless $value isa MXCL::Term::Trait::Slot::Defined;
-                return $kontinues->Return( $env, $terms->List( $value->term ) );
+                return $context->kontinues->Return( $env, $context->terms->List( $value->term ) );
             }
             when ('MXCL::Term::Cons') {
-                return $kontinues->EvalHead( $env, $expr, $terms->Nil );
+                return $context->kontinues->EvalHead( $env, $expr, $context->terms->Nil );
             }
             default {
-                return $kontinues->Return( $env, $terms->List( $expr ) );
+                return $context->kontinues->Return( $env, $context->terms->List( $expr ) );
             }
         }
     }

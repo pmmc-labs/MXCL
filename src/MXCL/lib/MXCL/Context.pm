@@ -24,12 +24,12 @@ class MXCL::Context {
 
     ADJUST {
         $arena     = MXCL::Arena->new;
+        $parser    = MXCL::Parser->new;
+        $compiler  = MXCL::Compiler->new( context => $self );
         $terms     = MXCL::Allocator::Terms->new( arena => $arena );
         $traits    = MXCL::Allocator::Traits->new( arena => $arena );
         $refs      = MXCL::Allocator::References->new( arena => $arena );
         $kontinues = MXCL::Allocator::Kontinues->new( arena => $arena );
-        $parser    = MXCL::Parser->new;
-        $compiler  = MXCL::Compiler->new( context => $self );
     }
 
 }

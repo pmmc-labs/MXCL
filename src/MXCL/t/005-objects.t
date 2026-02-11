@@ -18,11 +18,7 @@ my $refs     = $ctx->refs;
 my $traits   = $ctx->traits;
 my $compiler = $ctx->compiler;
 
-my $machine = MXCL::Machine->new(
-    traits    => $traits,
-    terms     => $terms,
-    kontinues => $konts,
-);
+my $machine = MXCL::Machine->new( context => $ctx );
 
 my $add = $traits->Defined($terms->NativeApplicative(
     $terms->Cons( $terms->Sym('n'), $terms->Sym('m')),
