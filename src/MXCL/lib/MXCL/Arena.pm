@@ -50,7 +50,7 @@ class MXCL::Arena {
     method construct_hash ($inv, @values) {
         my $type = blessed $inv // $inv;
 
-        if (scalar @values == 1 && ref $values[0]) {
+        if (scalar @values == 1 && ref $values[0] && !(blessed $values[0])) {
             if (reftype $values[0] eq 'HASH') {
                 my $hashref = shift @values;
                 @values = map { $_, $hashref->{$_} } sort { $a cmp $b } keys %$hashref;
@@ -60,7 +60,7 @@ class MXCL::Arena {
                 @values = @$arrayref;
             }
             else {
-                die "BAD REF TYPE, NO HASH FOR YOU!";
+                die "BAD REF TYPE, NO HASH FOR YOU! ",join ', ' => @values;
             }
         }
 

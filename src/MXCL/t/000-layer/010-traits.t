@@ -56,7 +56,7 @@ my $mod = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n % $m },
 my $eq  = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n == $m }, 'Bool');
 
 
-my $env = $envs->Env(
+my $env = $traits->Trait('main::',
     '==' => $eq,
     'MXCL::Term::Num' => $traits->Trait('Numeric',
         '+'  => $add,
