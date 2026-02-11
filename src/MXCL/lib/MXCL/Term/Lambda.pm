@@ -7,8 +7,8 @@ class MXCL::Term::Lambda :isa(MXCL::Term) {
     field $body   :param :reader;
     field $env    :param :reader;
 
-    method to_string {
-        sprintf '(/lambda %s %s)' => $params->to_string, $body->to_string
+    method stringify {
+        sprintf '(/lambda %s %s)' => $params->stringify, $body->stringify
     }
 
     method pprint {

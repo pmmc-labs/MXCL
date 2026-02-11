@@ -9,7 +9,7 @@ class MXCL::Term::Array :isa(MXCL::Term) {
 
     method at ($index) { $elements->[$index] }
 
-    method to_string {
-        sprintf '[%s]' => join ', ' => map $_->to_string, @$elements
+    method stringify {
+        sprintf '[%s]' => join ', ' => map $_->stringify, @$elements
     }
 }

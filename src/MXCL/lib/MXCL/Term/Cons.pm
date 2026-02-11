@@ -16,8 +16,8 @@ class MXCL::Term::Cons :isa(MXCL::Term) {
         return @items;
     }
 
-    method to_string {
-        sprintf '(%s %s)' => $head->to_string, $tail->to_string
+    method stringify {
+        sprintf '(%s %s)' => $head->stringify, $tail->stringify
     }
 
     method pprint {

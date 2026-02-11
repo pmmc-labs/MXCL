@@ -6,7 +6,7 @@ class MXCL::Term::Native::Operative :isa(MXCL::Term) {
     field $params :param :reader;
     field $body   :param :reader;
 
-    method to_string { 'native:operative' }
+    method stringify { 'native:operative' }
 
     method pprint { die 'Cannot pprint a Native::Operative' }
 }

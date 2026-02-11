@@ -14,9 +14,9 @@ class MXCL::Term {
 
     method eq ($other) { $hash eq $other->hash }
 
-    method to_string  { die "No to_string specified for ".$self->type }
-    method to_number  { die "No to_number specified for ".$self->type }
-    method to_boolean { die "No to_boolean specified for ".$self->type }
+    method stringify  { die "No stringify specified for ".$self->type }
+    method numify  { die "No numify specified for ".$self->type }
+    method boolify { die "No boolify specified for ".$self->type }
 
-    method pprint { $self->to_string }
+    method pprint { $self->stringify }
 }

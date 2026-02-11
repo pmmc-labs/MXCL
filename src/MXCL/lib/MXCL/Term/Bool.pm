@@ -5,5 +5,5 @@ use experimental qw[ class ];
 class MXCL::Term::Bool :isa(MXCL::Term) {
     field $value :param :reader;
 
-    method to_string { $value ? 'true' : 'false' }
+    method stringify { $value ? 'true' : 'false' }
 }

@@ -5,7 +5,7 @@ use experimental qw[ class ];
 class MXCL::Term::Ref :isa(MXCL::Term) {
     field $uid :param :reader;
 
-    method to_string {
+    method stringify {
         sprintf 'ref<%s>' => $uid;
     }
 

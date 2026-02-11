@@ -134,10 +134,10 @@ my $Str = $traits->Compose(
 );
 
 
-say $EQUALITY->to_string;
-say $Bool->to_string;
-say $Num->to_string;
-say $Str->to_string;
+say $EQUALITY->stringify;
+say $Bool->stringify;
+say $Num->stringify;
+say $Str->stringify;
 
 pass('...shhh');
 

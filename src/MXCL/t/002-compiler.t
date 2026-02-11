@@ -22,9 +22,9 @@ push @$exprs => my $obj1 = $ctx->terms->Opaque($env);
 push @$exprs => my $obj2 = $ctx->terms->Opaque($env);
 
 my $list = $exprs->[0]->head;
-say "YO:", $list->to_string;
+say "YO:", $list->stringify;
 
-say $_->to_string foreach @$exprs;
+say $_->stringify foreach @$exprs;
 
 ok !($obj1->eq($obj2)), '... obj1 and obj2 are not equal';
 isnt $obj1->hash, $obj2->hash, '... obj1 and obj2 are not the same hashes';
@@ -35,9 +35,9 @@ my $array1 = $ctx->terms->Array( $ctx->terms->Num(1), $ctx->terms->Num(2), $ctx-
 my $array2 = $ctx->terms->Array( $ctx->terms->Num(1), $ctx->terms->Num(2), $ctx->terms->Num(3) );
 my $array3 = $ctx->terms->Array( $ctx->terms->Num(1), $ctx->terms->Num(2), $ctx->terms->Num(30) );
 
-say $array1->to_string;
-say $array2->to_string;
-say $array3->to_string;
+say $array1->stringify;
+say $array2->stringify;
+say $array3->stringify;
 
 is $array1->hash, $array2->hash, '... these arrays are equal';
 ok $array1->eq($array2), '... these arrays are equal';

@@ -54,7 +54,7 @@ my $exprs = $compiler->compile(q[
 
 diag "COMPILER:";
 diag $_->pprint foreach @$exprs;
-diag $_->to_string foreach @$exprs;
+diag $_->stringify foreach @$exprs;
 
 diag "ARENA:";
 diag format_stats('Terms',  $arena->stats);
@@ -64,7 +64,7 @@ diag "RUNNING:";
 my $result = $machine->run( $env, $exprs );
 
 diag "RESULT:";
-diag ($result ? $result->stack->to_string : 'UNDEFINED');
+diag ($result ? $result->stack->stringify : 'UNDEFINED');
 
 diag "ARENA:";
 diag format_stats('Terms',  $arena->stats);

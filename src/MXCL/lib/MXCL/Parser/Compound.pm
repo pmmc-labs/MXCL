@@ -15,7 +15,7 @@ class MXCL::Parser::Compound {
 
     method push (@items) { push @$items => @items; $self }
 
-    method to_string {
-        sprintf 'Compound:%s %s %s' => $open->source, (join ', ' => map $_->to_string, @$items), $close->source
+    method stringify {
+        sprintf 'Compound:%s %s %s' => $open->source, (join ', ' => map $_->stringify, @$items), $close->source
     }
 }

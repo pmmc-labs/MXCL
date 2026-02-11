@@ -18,7 +18,7 @@ my $compounds = $parser->parse(q[
     (lambda (x y) (+ x y))
 ]);
 
-say $_->to_string foreach @$compounds;
+say $_->stringify foreach @$compounds;
 
 pass('...shhh');
 

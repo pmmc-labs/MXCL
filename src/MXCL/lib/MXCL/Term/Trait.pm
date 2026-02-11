@@ -11,10 +11,10 @@ class MXCL::Term::Trait :isa(MXCL::Term) {
     method values  { map {     $bindings->{$_} } $self->keys }
     method entries { map { $_, $bindings->{$_} }  $self->keys }
 
-    method to_string {
+    method stringify {
         sprintf '{ %s }' =>
             join ', ' =>
-            map { sprintf '%s : %s' => $_, $bindings->{$_}->to_string }
+            map { sprintf '%s : %s' => $_, $bindings->{$_}->stringify }
             sort { $a cmp $b } keys %$bindings;
     }
 }

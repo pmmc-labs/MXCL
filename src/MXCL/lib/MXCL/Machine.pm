@@ -21,7 +21,7 @@ class MXCL::Machine {
     method run_until_host {
         say sprintf "STEP[%03d]" => $steps;
         while (@$queue) {
-            say "  - ", join "\n  - " => map blessed $_ ? $_->to_string : $_, reverse @$queue;
+            say "  - ", join "\n  - " => map blessed $_ ? $_->stringify : $_, reverse @$queue;
             my $k = pop @$queue;
             return $k if $k isa MXCL::Term::Kontinue::Host;
             push @$queue => $self->step($k);
@@ -31,7 +31,7 @@ class MXCL::Machine {
 
     method step ($k) {
         $steps++;
-        say sprintf "STEP[%03d]\n  ^%s" => $steps, $k->env->to_string;
+        say sprintf "STEP[%03d]\n  ^%s" => $steps, $k->env->stringify;
         given (blessed $k) {
             # ------------------------------------------------------------------
             # Threading of Env & Stack
@@ -119,7 +119,7 @@ class MXCL::Machine {
                     my $name  = $args->head; # should be Sym
                     my $slot  = $trait->lookup( $name->value );
 
-                    die "Bad Slot! ".$slot->to_string
+                    die "Bad Slot! ".$slot->stringify
                         unless $slot isa MXCL::Term::Trait::Slot::Defined;
 
                     my $method = $slot->term;
@@ -160,7 +160,7 @@ class MXCL::Machine {
                     my $name = $args->head; # should be Sym
                     my $slot = $call->env->lookup( $name->value );
 
-                    die "Bad Slot! ".$slot->to_string
+                    die "Bad Slot! ".$slot->stringify
                         unless $slot isa MXCL::Term::Trait::Slot::Defined;
 
                     my $method = $slot->term;
@@ -173,7 +173,7 @@ class MXCL::Machine {
                 }
             }
             default {
-                die "Unexpected Kontinue ".(blessed $k ? $k->to_string : ($k // 'undef'));
+                die "Unexpected Kontinue ".(blessed $k ? $k->stringify : ($k // 'undef'));
             }
         }
     }

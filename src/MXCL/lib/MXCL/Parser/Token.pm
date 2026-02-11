@@ -9,5 +9,5 @@ class MXCL::Parser::Token {
     field $line   :param :reader = -1;
     field $pos    :param :reader = -1;
 
-    method to_string { $source }
+    method stringify { $source }
 }
