@@ -8,14 +8,12 @@ use MXCL::Term;
 
 use MXCL::Term::Nil;
 use MXCL::Term::Cons;
+use MXCL::Term::Array;
 
 use MXCL::Term::Bool;
 use MXCL::Term::Num;
 use MXCL::Term::Str;
 use MXCL::Term::Tag;
-
-use MXCL::Term::Array;
-
 use MXCL::Term::Sym;
 
 use MXCL::Term::Lambda;

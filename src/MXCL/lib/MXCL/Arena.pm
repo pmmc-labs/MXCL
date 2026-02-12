@@ -7,43 +7,75 @@ use Digest::MD5 ();
 class MXCL::Arena {
     field $terms :reader = +{};
 
-    # TODO:
-    # these stats are kind of clumbsy,
-    # they need more thinking, we probably
-    # need a Arena::Stats class that can
-    # tracks things in a smarter way.
+    # TODO - this could be done better
+    field $generations :reader = +[];
+    field $current_gen :reader = 0;
 
-    field $stats :reader = +{};
-    field $hashs :reader = +{};
+    # FIXME - these started out as stats
+    # trackers, but are not being used in
+    # commit tracking, so these will need
+    # work, but are fine-ish for now.
+    field $statz :reader = +{};
+    field $typez :reader = +{};
+    field $hashz :reader = +{};
 
-    # TODO:
-    # add generation counting
-    # - the first generation would be the singletons
-    # - next comes the terms allocated in the compiler
-    # - next comes the start of runtime
-    # - then once at each host continuation
+    # ... commits
+
+    method commit_generation ($label) {
+        # track the commits ...
+        push @$generations => +{
+            label  => $label,
+            # NOTE: this is not ideal, we should
+            # do it properly, but these two thing
+            # track enough information for now
+            statz  => +{ %$statz },
+            typez  => +{ %$typez },
+            hashz  => +{ %$hashz },
+        };
+
+        # clear them each generation
+        # so that we are just track
+        # the new changes ...
+        $statz->%* = ();
+        $typez->%* = ();
+        $hashz->%* = ();
+
+        # get the next gen marker
+        $current_gen = scalar @$generations;
+        $self;
+    }
 
     method allocate ($type, %fields) {
         my @names  = sort { $a cmp $b } keys %fields;
         my @values = @fields{ @names };
         my $hash   = $self->construct_hash($type, @values);
 
-        $stats->{$type}{alive}++;
-        $stats->{$type}{hits}   //= 0;
-        $stats->{$type}{misses} //= 0;
+        $statz->{alive}++;
+        $statz->{types}{$type}++;
+        $statz->{hashes}{$hash}++;
 
-        $hashs->{$hash}{alive}++;
-        $hashs->{$hash}{hits}   //= 0;
-        $hashs->{$hash}{misses} //= 0;
+        $typez->{$type}{alive}++;
+        $typez->{$type}{hits}   //= 0;
+        $typez->{$type}{misses} //= 0;
+
+        $hashz->{$hash}{alive}++;
+        $hashz->{$hash}{hits}   //= 0;
+        $hashz->{$hash}{misses} //= 0;
 
         if (exists $terms->{ $hash }) {
-            $stats->{$type}{hits}++;
-            $hashs->{$hash}{hits}++;
+            $statz->{hits}++;
+            $typez->{$type}{hits}++;
+            $hashz->{$hash}{hits}++;
             return $terms->{ $hash };
         } else {
-            $stats->{$type}{misses}++;
-            $hashs->{$hash}{misses}++;
-            return $terms->{ $hash } = $type->new( hash => $hash, %fields );
+            $statz->{misses}++;
+            $typez->{$type}{misses}++;
+            $hashz->{$hash}{misses}++;
+            return $terms->{ $hash } = $type->new(
+                hash => $hash,
+                gen  => $current_gen,
+                %fields
+            );
         }
     }
 

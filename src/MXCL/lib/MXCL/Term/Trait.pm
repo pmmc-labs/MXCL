@@ -7,9 +7,9 @@ class MXCL::Term::Trait :isa(MXCL::Term) {
 
     method lookup ($key) { $bindings->{ $key } }
 
-    method keys    { sort { $a cmp $b } keys %$bindings }
-    method values  { map {     $bindings->{$_} } $self->keys }
-    method entries { map { $_, $bindings->{$_} }  $self->keys }
+    # TODO:
+    # need methods to ask if this trait is resolved or now
+    # and maybe even methods to resolve conflicts, etc.
 
     method stringify {
         sprintf '{ %s }' =>

@@ -130,7 +130,7 @@ subtest 'shared Cons tail deduplicates' => sub {
 
 #diag "Arena:";
 #use Data::Dumper;
-#warn Data::Dumper::Dumper($a->arena->stats);
-#warn Data::Dumper::Dumper($a->arena->hashs);
+#warn Data::Dumper::Dumper($a->arena->typez);
+#warn Data::Dumper::Dumper($a->arena->hashz);
 
 done_testing;

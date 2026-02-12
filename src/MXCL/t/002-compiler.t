@@ -45,8 +45,8 @@ isnt $array1->hash, $array3->hash, '... these arrays are NOT equal';
 ok !($array1->eq($array3)), '... these arrays are NOT equal';
 
 diag "ARENA:";
-diag format_stats('Terms',  $arena->stats);
-diag format_stats('Hashes', $arena->hashs);
+diag format_stats('Terms',  $arena->typez);
+diag format_stats('Hashes', $arena->hashz);
 
 pass('...shh');
 

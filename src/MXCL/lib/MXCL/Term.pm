@@ -6,6 +6,7 @@ class MXCL::Term {
     use overload '""' => 'pprint';
 
     field $hash :param :reader;
+    field $gen  :param :reader;
 
     method type {
         my $type = __CLASS__ =~ s/^MXCL\:\:Term\:\://r;

@@ -115,8 +115,8 @@ diag "COMPILER:";
 diag $_->stringify foreach @$exprs;
 
 diag "ARENA:";
-diag format_stats('Terms',  $arena->stats);
-#diag format_stats('Hashes', $arena->hashs);
+diag format_stats('Terms',  $arena->typez);
+#diag format_stats('Hashes', $arena->hashz);
 
 diag "RUNNING:";
 my $result = $machine->run( $env, $exprs );
@@ -125,8 +125,8 @@ diag "RESULT:";
 diag $result ? $result->stack->stringify : 'UNDEFINED';
 
 diag "ARENA:";
-diag format_stats('Terms',  $arena->stats);
-#diag format_stats('Hashes', $arena->hashs);
+diag format_stats('Terms',  $arena->typez);
+#diag format_stats('Hashes', $arena->hashz);
 
 diag "TRACE:";
 diag join "\n" => map { $_->stringify, $_->env->stringify } $machine->trace->@*;

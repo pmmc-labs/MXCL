@@ -18,7 +18,6 @@ class MXCL::Context {
     field $traits    :reader;
     field $refs      :reader;
     field $kontinues :reader;
-
     field $parser    :reader;
     field $compiler  :reader;
 
@@ -30,6 +29,8 @@ class MXCL::Context {
         $traits    = MXCL::Allocator::Traits->new( arena => $arena );
         $refs      = MXCL::Allocator::References->new( arena => $arena );
         $kontinues = MXCL::Allocator::Kontinues->new( arena => $arena );
+
+        $arena->commit_generation('context initialized');
     }
 
 }

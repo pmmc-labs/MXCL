@@ -4,8 +4,6 @@ use experimental qw[ class ];
 
 use Scalar::Util ();
 
-use MXCL::Parser;
-
 class MXCL::Compiler {
     field $context :param :reader;
 
@@ -49,8 +47,9 @@ class MXCL::Compiler {
         # expand empty compounds based on delimiter type
         if (scalar @items == 0) {
             die 'MXCL::Term::Tuple not yet supported' if $open eq "[";
-            die 'MXCL::Term::Array not yet supported' if $open eq "@[";
             die 'MXCL::Term::Hash not yet supported'  if $open eq "%{";
+            # FIXME - return an empty Array here
+            die 'MXCL::Term::Array not yet supported' if $open eq "@[";
             return $context->terms->Nil; # () and {} with no content
         }
 
@@ -84,7 +83,9 @@ class MXCL::Compiler {
         unshift @list => $context->terms->Sym('tuple/new')
             if $compound->open->source eq "[";
 
-        # expand arrays ...
+        # TODO:
+        # don't expand the arrays, return an Array term
+        # similar to how Lists work below.
         unshift @list => $context->terms->Sym('array/new')
             if $compound->open->source eq "@[";
 

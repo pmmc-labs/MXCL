@@ -15,6 +15,11 @@ class MXCL::Allocator::Traits {
     ## -------------------------------------------------------------------------
 
     method Trait (%bindings) {
+        # NOTE:
+        # might helpful to check all the bindings
+        # and see if they are Slots, and if not
+        # then wrap them in Defined(), this would
+        # simplify the construction I think
         $arena->allocate(MXCL::Term::Trait::, bindings => \%bindings);
     }
 
@@ -22,6 +27,8 @@ class MXCL::Allocator::Traits {
     ## Slots
     ## -------------------------------------------------------------------------
 
+    # TODO:
+    # make these singletons
     method Absent   { $arena->allocate(MXCL::Term::Trait::Slot::Absent::) }
     method Required { $arena->allocate(MXCL::Term::Trait::Slot::Required::) }
     method Excluded { $arena->allocate(MXCL::Term::Trait::Slot::Excluded::) }
@@ -31,7 +38,10 @@ class MXCL::Allocator::Traits {
     method Alias    ($sym, $term) { $arena->allocate(MXCL::Term::Trait::Slot::Alias::, symbol => $sym, term => $term) }
 
     ## -------------------------------------------------------------------------
-    ## Trait Composition
+    ## Environment Extension
+    ## -------------------------------------------------------------------------
+    ## Note, this probably should be named differently or something
+    ## it is meh for now ...
     ## -------------------------------------------------------------------------
 
     method BindParams ($parent, $params, $args) {
@@ -49,8 +59,14 @@ class MXCL::Allocator::Traits {
         return $composed;
     }
 
+    ## -------------------------------------------------------------------------
+    ## Trait Composition
+    ## -------------------------------------------------------------------------
 
     method MergeSlots ($s1, $s2) {
+        # TODO:
+        # - This does not handle Conflict or Alias
+        # - and Excluded returns an Excluded, hmmm, that seems odd
         return $s2 if $s1 isa MXCL::Term::Trait::Slot::Absent   && $s2 isa MXCL::Term::Trait::Slot::Defined;
         return $s1 if $s1 isa MXCL::Term::Trait::Slot::Required && $s2 isa MXCL::Term::Trait::Slot::Required;
         return $s2 if $s1 isa MXCL::Term::Trait::Slot::Required && $s2 isa MXCL::Term::Trait::Slot::Defined;
@@ -78,6 +94,9 @@ class MXCL::Allocator::Traits {
 
         my %bindings;
         foreach my $key (@all_keys) {
+            # TODO:
+            # fix this, it should actually turn the
+            # missing keys into Absent slots instead
             if (exists $t1_bindings->{$key} && exists $t2_bindings->{$key}) {
                 $bindings{ $key } = $self->MergeSlots( $t1_bindings->{$key}, $t2_bindings->{$key} );
             }
