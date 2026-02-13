@@ -57,9 +57,9 @@ class MXCL::Machine {
                 );
             }
             when ('MXCL::Term::Kontinue::Define') {
-                my $value = $k->stack->head;
-                my $name  = $k->name->value;
-                my $local = $context->traits->Compose(
+                my $lambda = $k->stack->head;
+                my $name   = $k->name->value;
+                my $local  = $context->traits->Compose(
                     # FIXME - this naming is horrible
                     $context->terms->Sym("Scope[".$k->env->name->stringify." + declare:${name}]"),
                     $k->env,
@@ -67,7 +67,7 @@ class MXCL::Machine {
                         # FIXME - this naming is either worse, or better, hmmm
                         $context->terms->Sym($name),
                         $name,
-                        $context->traits->Defined( $value )
+                        $context->traits->Defined( $lambda )
                     )
                 );
                 return $context->kontinues->Return(

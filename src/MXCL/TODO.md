@@ -2,6 +2,13 @@
 
 <!----------------------------------------------------------------------------->
 
+## Big stuff to Solve
+
+- Lambda's are not recursive
+    - Y-combinator? 
+
+<!----------------------------------------------------------------------------->
+
 ## Parser
 
 - strip comments
@@ -33,6 +40,9 @@
 <!----------------------------------------------------------------------------->
 
 ## Traits
+
+- implement the Difference operations to "diff" two roles
+    - this can be useful in the debugger and in other testing
 
 - add methods to check for state of the trait (resolved, still requires, etc)
 

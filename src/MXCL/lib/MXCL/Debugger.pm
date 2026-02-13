@@ -6,6 +6,9 @@ use experimental qw[ class switch ];
 
 use P5::TUI::Table;
 
+# FIXME:
+# remove the P5::TUI::Table dependency
+
 class MXCL::Debugger {
     field $machine :param :reader;
 

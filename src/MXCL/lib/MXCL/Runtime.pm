@@ -100,10 +100,10 @@ class MXCL::Runtime {
                 { name => 'lhs' },
                 { name => 'rhs' },
             ],
-            impl => sub ($ctx, $lhs, $rhs) {
+            impl => sub ($env, $lhs, $rhs) {
                 return (
-                    $konts->IfElse( $ctx, $lhs, $rhs, $lhs, $terms->Nil ),
-                    $konts->EvalExpr( $ctx, $lhs, $terms->Nil ),
+                    $konts->IfElse( $env, $lhs, $rhs, $lhs, $terms->Nil ),
+                    $konts->EvalExpr( $env, $lhs, $terms->Nil ),
                 )
             }
         );
@@ -114,10 +114,10 @@ class MXCL::Runtime {
                 { name => 'lhs' },
                 { name => 'rhs' },
             ],
-            impl => sub ($ctx, $lhs, $rhs) {
+            impl => sub ($env, $lhs, $rhs) {
                 return (
-                    $konts->IfElse( $ctx, $lhs, $lhs, $rhs, $terms->Nil ),
-                    $konts->EvalExpr( $ctx, $lhs, $terms->Nil ),
+                    $konts->IfElse( $env, $lhs, $lhs, $rhs, $terms->Nil ),
+                    $konts->EvalExpr( $env, $lhs, $terms->Nil ),
                 )
             }
         );
@@ -133,10 +133,10 @@ class MXCL::Runtime {
                 { name => 'if-true'  },
                 { name => 'if-false' },
             ],
-            impl => sub ($ctx, $cond, $if_true, $if_false) {
+            impl => sub ($env, $cond, $if_true, $if_false) {
                 return (
-                    $konts->IfElse( $ctx, $cond, $if_true, $if_false, $terms->Nil ),
-                    $konts->EvalExpr( $ctx, $cond, $terms->Nil ),
+                    $konts->IfElse( $env, $cond, $if_true, $if_false, $terms->Nil ),
+                    $konts->EvalExpr( $env, $cond, $terms->Nil ),
                 )
             }
         );
@@ -151,10 +151,10 @@ class MXCL::Runtime {
                 { name => 'params' },
                 { name => 'body'   },
             ],
-            impl => sub ($ctx, $params, $body) {
+            impl => sub ($env, $params, $body) {
                 return $konts->Return(
-                    $ctx,
-                    $terms->List( $terms->Lambda( $params, $body, $ctx ) )
+                    $env,
+                    $terms->List( $terms->Lambda( $params, $body, $env ) )
                 );
             }
         );
@@ -166,11 +166,11 @@ class MXCL::Runtime {
                 { name => 'params' },
                 { name => 'body'   },
             ],
-            impl => sub ($ctx, $name, $params, $body) {
+            impl => sub ($env, $name, $params, $body) {
                 return $konts->Define(
-                    $ctx,
+                    $env,
                     $name,
-                    $terms->List( $terms->Lambda( $params, $body, $ctx ) )
+                    $terms->List( $terms->Lambda( $params, $body, $env ) )
                 );
             }
         );
