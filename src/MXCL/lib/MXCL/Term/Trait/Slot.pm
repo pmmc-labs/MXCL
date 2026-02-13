@@ -25,7 +25,8 @@ class MXCL::Term::Trait::Slot::Defined :isa(MXCL::Term::Trait::Slot) {
     field $term :param :reader;
 
     method stringify {
-        sprintf '%s[%s]' => $self->type, $term->stringify
+        #sprintf '%s[%s]' => $self->type, $term->stringify
+        $term->stringify
     }
 }
 

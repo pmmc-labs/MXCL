@@ -9,7 +9,7 @@ class MXCL::Term::Kontinue :isa(MXCL::Term) {
     method type { __CLASS__ =~ s/^MXCL\:\:Term\:\:Kontinue\:\://r }
 
     method stringify {
-        sprintf 'Kontinue[%s] %s => %s' =>
+        sprintf 'Kontinue[%s] %s => %s <%s>' =>
             (blessed $self) =~ s/^MXCL\:\:Term\:\:Kontinue\:\://r,
             (
                 ($self->isa('MXCL::Term::Kontinue::Eval::Expr') ?
@@ -23,9 +23,12 @@ class MXCL::Term::Kontinue :isa(MXCL::Term) {
                 ($self->isa('MXCL::Term::Kontinue::Apply::Applicative') ||
                  $self->isa('MXCL::Term::Kontinue::Apply::Operative') ?
                     ($self->call->stringify) :
-                '')))))
+                $self->isa('MXCL::Term::Kontinue::Define') ?
+                    ($self->name->stringify) :
+                '#')))))
             ),
-            $stack->stringify;
+            $stack->stringify,
+            $self->env->hash;
     }
 
     #method pprint { die 'Cannot pprint a Kontinue' }

@@ -51,6 +51,13 @@ class MXCL::Runtime {
         ## ---------------------------------------------------------------------
         ## Type Predicates
         ## ---------------------------------------------------------------------
+        ## TODO:
+        ## - add predicates for Native::* and Kontinue::* perhaps?
+        ## - ponder an `type-of?`
+        ##      - should it accept a Sym/Tag and I check against it?
+        ##      - or should I register "types" in the base scope which resolve
+        ##        to some kind of singleton Term we can check against?
+        ## ---------------------------------------------------------------------
 
         my $is_nil    = type_predicate('nil?',    'MXCL::Term::Nil');
         my $is_bool   = type_predicate('bool?',   'MXCL::Term::Bool');
@@ -152,12 +159,29 @@ class MXCL::Runtime {
             }
         );
 
+        my $define = $natives->Operative(
+            name => 'define',
+            signature => [
+                { name => 'name' },
+                { name => 'params' },
+                { name => 'body'   },
+            ],
+            impl => sub ($ctx, $name, $params, $body) {
+                return $konts->Define(
+                    $ctx,
+                    $name,
+                    $terms->List( $terms->Lambda( $params, $body, $ctx ) )
+                );
+            }
+        );
+
         ## ---------------------------------------------------------------------
         ## Base Scope ...
         ## ---------------------------------------------------------------------
 
         $base_scope = $traits->Trait(
             $terms->Sym('::'),
+            'define'   => $traits->Defined($define),
             'lambda'   => $traits->Defined($lambda),
             'if'       => $traits->Defined($if),
 

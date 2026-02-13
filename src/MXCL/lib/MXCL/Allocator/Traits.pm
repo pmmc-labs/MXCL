@@ -38,28 +38,6 @@ class MXCL::Allocator::Traits {
     method Alias    ($sym, $term) { $arena->allocate(MXCL::Term::Trait::Slot::Alias::, symbol => $sym, term => $term) }
 
     ## -------------------------------------------------------------------------
-    ## Environment Extension
-    ## -------------------------------------------------------------------------
-    ## Note, this probably should be named differently or something
-    ## it is meh for now ...
-    ## -------------------------------------------------------------------------
-
-    method BindParams ($name, $parent, $params, $args) {
-        die "Arity mismatch" if scalar @$params != scalar @$args;
-        my %bindings = map {
-            $_->value,
-            $self->Defined(shift @$args)
-        } @$params;
-
-        my $local    = $self->Trait( $name, %bindings );
-        my $composed = $self->Compose( $name, $parent, $local );
-
-        # TODO - check for conflicts!
-
-        return $composed;
-    }
-
-    ## -------------------------------------------------------------------------
     ## Trait Composition
     ## -------------------------------------------------------------------------
 

@@ -19,6 +19,8 @@ use MXCL::Term::Kontinue::Apply::Expr;
 use MXCL::Term::Kontinue::Apply::Operative;
 use MXCL::Term::Kontinue::Apply::Applicative;
 
+use MXCL::Term::Kontinue::Define;
+
 class MXCL::Allocator::Kontinues {
     field $arena :param :reader;
 
@@ -39,7 +41,7 @@ class MXCL::Allocator::Kontinues {
                 @args{qw[ effect config ]} = ($k->effect, $k->config)
             }
             when ('MXCL::Term::Kontinue::Return') {
-                ; # do nothing
+                $args{env} = $k->env; # preserve the env
             }
             when ('MXCL::Term::Kontinue::IfElse') {
                 @args{qw[ condition if_true if_false ]} = ($k->condition, $k->if_true, $k->if_false)
@@ -65,6 +67,9 @@ class MXCL::Allocator::Kontinues {
             when ('MXCL::Term::Kontinue::Apply::Applicative') {
                 @args{qw[ call ]} = ($k->call)
             }
+            when ('MXCL::Term::Kontinue::Define') {
+                @args{qw[ name ]} = ($k->name)
+            }
             default {
                 die 'BAD KONTINUE NO UPDATE FOR YOU!';
             }
@@ -89,6 +94,16 @@ class MXCL::Allocator::Kontinues {
         $arena->allocate(MXCL::Term::Kontinue::Return::,
             env   => $env,
             stack => $stack,
+        )
+    }
+
+    ## -------------------------------------------------------------------------
+
+    method Define ($env, $name, $stack) {
+        $arena->allocate(MXCL::Term::Kontinue::Define::,
+            env   => $env,
+            stack => $stack,
+            name  => $name,
         )
     }
 

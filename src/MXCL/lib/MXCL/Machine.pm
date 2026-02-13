@@ -1,7 +1,10 @@
 
 use v5.42;
+use utf8;
+use open ':std', ':encoding(UTF-8)';
 use experimental qw[ class switch ];
 
+use P5::TUI::Table;
 
 class MXCL::Machine {
     field $context :param :reader;
@@ -19,19 +22,62 @@ class MXCL::Machine {
     }
 
     method run_until_host {
-        say sprintf "STEP[%03d]" => $steps;
+        my $k;
         while (@$queue) {
-            say "  - ", join "\n  - " => map blessed $_ ? $_->stringify : $_, reverse @$queue;
-            my $k = pop @$queue;
-            return $k if $k isa MXCL::Term::Kontinue::Host;
+            $k = pop @$queue;
+            last if $k isa MXCL::Term::Kontinue::Host;
             push @$queue => $self->step($k);
             push @$trace => $k;
         }
+        $self->DEBUG_STEP($k, true);
+        return $k;
+    }
+
+    method DEBUG_STEP ($k, $final=false) {
+        my @rows = map {
+            [
+                $_,
+                $k->env->bindings->{$_}->stringify
+            ]
+        } sort { $a cmp $b }
+          keys $k->env->bindings->%*;
+
+        my $env_table = P5::TUI::Table->new(
+            column_spec => [
+                {
+                    name  => $k->env->hash,
+                    width => 32,
+                    align => -1,     # right-aligned
+                    color => { fg => 'cyan', bg => undef }
+                },
+                {
+                    name  => $k->env->name->stringify,
+                    width => '100%',  # Percentage of available space
+                    align => 1,      # Left-aligned
+                    color => { fg => 'white', bg => undef }
+                },
+            ],
+            rows => \@rows
+        );
+
+        my $lines = $env_table->draw( width => '80%', height => (2 * scalar @rows) );
+
+        say '-' x 120;
+        if ($final) {
+            say sprintf "DONE[%03d]" => $steps;
+        } else {
+            say sprintf "STEP[%03d]" => $steps;
+        }
+        say " -> ", $k->pprint;
+        if (@$queue) {
+            say "  - ", join "\n  - " => map blessed $_ ? $_->pprint : $_, reverse @$queue;
+        }
+        say for $lines->@*;
     }
 
     method step ($k) {
         $steps++;
-        say sprintf "STEP[%03d]\n  ^%s" => $steps, $k->env->stringify;
+        $self->DEBUG_STEP($k);
         given (blessed $k) {
             # ------------------------------------------------------------------
             # Threading of Env & Stack
@@ -39,13 +85,33 @@ class MXCL::Machine {
             when ('MXCL::Term::Kontinue::Return') {
                 # NOTE:
                 # can mutate Env and Stack of previous K
-                # TODO:
-                # add a LeaveScope kont to un-mutate the Env
+                # unless previous K is a Return, in which
+                # case it will preserve the Env of the
+                # previous K rather than overrite it
                 my $prev = pop @$queue;
                 return $context->kontinues->Update(
                     $prev,
                     $k->env,
                     $context->terms->Append( $prev->stack, $k->stack )
+                );
+            }
+            when ('MXCL::Term::Kontinue::Define') {
+                my $value = $k->stack->head;
+                my $name  = $k->name->value;
+                my $local = $context->traits->Compose(
+                    # FIXME - this naming is horrible
+                    $context->terms->Sym("Scope[Parent]"),
+                    $k->env,
+                    $context->traits->Trait(
+                        # FIXME - this naming is either worse, or better, hmmm
+                        $context->terms->Sym("Scope[declare:${name}]"),
+                        $name,
+                        $context->traits->Defined( $value )
+                    )
+                );
+                return $context->kontinues->Return(
+                    $local,
+                    $context->terms->Nil,
                 );
             }
             # ------------------------------------------------------------------
@@ -136,15 +202,34 @@ class MXCL::Machine {
                     return $context->kontinues->Return( $k->env, $context->terms->List( $result ) );
                 }
                 elsif ($call isa MXCL::Term::Lambda) {
-                    return $context->kontinues->EvalExpr(
-                        $context->traits->BindParams(
-                            $context->terms->Sym( join ':' => $call->env->name->value, 'local' ),
-                            $call->env,
-                            [ $context->terms->Uncons($call->params) ],
-                            [ $context->terms->Uncons($args) ]
-                        ),
-                        $call->body,
-                        $context->terms->Nil
+                    my @params = $context->terms->Uncons($call->params);
+                    my @args   = $context->terms->Uncons($args);
+                    die "Arity mismatch" if scalar @params != scalar @args;
+
+                    my $local = $context->traits->Compose(
+                        $context->terms->Sym('Scope[Lambda]'),
+                        $call->env,
+                        $context->traits->Trait(
+                            $context->terms->Sym(
+                                sprintf 'Scope[%s]' =>
+                                    join ', ' => map {
+                                        sprintf 'arg:%s' => $_->value
+                                    } @params
+                            ),
+                            map {
+                                $_->value,
+                                $context->traits->Defined(shift @args)
+                            } @params
+                        )
+                    );
+
+                    return (
+                        $context->kontinues->Return( $k->env, $context->terms->Nil ),
+                        $context->kontinues->EvalExpr(
+                            $local,
+                            $call->body,
+                            $context->terms->Nil
+                        )
                     );
                 }
                 else {

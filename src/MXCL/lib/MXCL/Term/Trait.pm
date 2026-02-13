@@ -17,7 +17,6 @@ class MXCL::Term::Trait :isa(MXCL::Term) {
         sprintf '%s{ %s }' =>
             $name,
             join ', ' =>
-            map { sprintf '%s : %s' => $_, $bindings->{$_}->stringify }
             sort { $a cmp $b } keys %$bindings;
     }
 }
