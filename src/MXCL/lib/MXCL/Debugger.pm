@@ -12,24 +12,38 @@ class MXCL::Debugger {
     method DEBUG_STEP ($k, $final=false) {
         my @rows = map {
             [
+                (sprintf '%03d' => $k->env->bindings->{$_}->gen),
                 $_,
-                $k->env->bindings->{$_}->stringify
+                $k->env->bindings->{$_}->stringify,
+                $k->env->bindings->{$_}->hash
             ]
-        } sort { $a cmp $b }
+        } sort { $k->env->bindings->{$b}->gen <=> $k->env->bindings->{$a}->gen }
           keys $k->env->bindings->%*;
 
         my $env_table = P5::TUI::Table->new(
             column_spec => [
                 {
-                    name  => $k->env->hash,
-                    width => 32,
-                    align => -1,     # right-aligned
-                    color => { fg => 'cyan', bg => undef }
+                    name  => (sprintf '%03d' => $k->env->gen),
+                    width => 3,
+                    align => 1,
+                    color => { fg => 'green', bg => undef }
                 },
                 {
                     name  => $k->env->name->stringify,
-                    width => '100%',  # Percentage of available space
-                    align => 1,      # Left-aligned
+                    width => '40%',
+                    align => 1,
+                    color => { fg => 'cyan', bg => undef }
+                },
+                {
+                    name  => '',
+                    width => '60%',
+                    align => 1,
+                    color => { fg => 'white', bg => undef }
+                },
+                {
+                    name  => $k->env->hash,
+                    width => '32',
+                    align => 1,
                     color => { fg => 'white', bg => undef }
                 },
             ],
