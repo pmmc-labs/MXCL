@@ -16,32 +16,28 @@ my $terms    = $ctx->terms;
 my $konts    = $ctx->kontinues;
 my $refs     = $ctx->refs;
 my $traits   = $ctx->traits;
+my $natives  = $ctx->natives;
 my $compiler = $ctx->compiler;
 
 my $machine = MXCL::Machine->new( context => $ctx );
 
-sub lift_native_applicative ($alloc, $params, $body, $returns) {
-    return $alloc->NativeApplicative(
-        $alloc->List( map $alloc->Sym($_), @$params ),
-        sub (@args) { $alloc->$returns( $body->( map $_->value, @args ) ) }
+sub lift_native_applicative ($name, $params, $returns, $impl) {
+    return $natives->Applicative(
+        name      => $name,
+        signature => $params,
+        returns   => $returns,
+        impl      => $impl,
     )
 }
 
-sub lift_native_applicative_method ($alloc, $params, $body, $returns) {
-    return $alloc->NativeApplicative(
-        $alloc->List( map $alloc->Sym($_), @$params ),
-        sub ($self, @args) { $alloc->$returns( $body->( $self, map $_->value, @args ) ) }
-    )
-}
+my $add = lift_native_applicative('+', [{ name => 'n', coerce => 'numify' }, { name => 'm', coerce => 'numify' }], 'Num', sub ($n, $m) { $n + $m });
+my $sub = lift_native_applicative('-', [{ name => 'n', coerce => 'numify' }, { name => 'm', coerce => 'numify' }], 'Num', sub ($n, $m) { $n - $m });
+my $mul = lift_native_applicative('*', [{ name => 'n', coerce => 'numify' }, { name => 'm', coerce => 'numify' }], 'Num', sub ($n, $m) { $n * $m });
+my $div = lift_native_applicative('/', [{ name => 'n', coerce => 'numify' }, { name => 'm', coerce => 'numify' }], 'Num', sub ($n, $m) { $n / $m });
+my $mod = lift_native_applicative('%', [{ name => 'n', coerce => 'numify' }, { name => 'm', coerce => 'numify' }], 'Num', sub ($n, $m) { $n % $m });
 
-my $add = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n + $m }, 'Num');
-my $sub = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n - $m }, 'Num');
-my $mul = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n * $m }, 'Num');
-my $div = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n / $m }, 'Num');
-my $mod = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n % $m }, 'Num');
-
-my $eq  = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n == $m }, 'Bool');
-
+my $eq  = lift_native_applicative('==',  [{ name => 'n', coerce => 'numify' }, { name => 'm', coerce => 'numify' }], 'Bool', sub ($n, $m) { $n == $m });
+my $not = lift_native_applicative('not', [{ name => 'n' } ], 'Bool', sub ($n) { !$n });
 
 my $env = $traits->Trait(
     '==' => $traits->Defined($eq),
@@ -54,9 +50,20 @@ my $env = $traits->Trait(
             '%'  => $traits->Defined($mod),
         )
     ),
-    '$ten' => $traits->Defined($terms->Opaque($traits->Trait(
-        'add'  => $traits->Defined(lift_native_applicative_method($terms, [qw[ self m ]], sub ($self, $m) { 10 + $m }, 'Num'))
-    ))),
+    '$ten' => $traits->Defined(
+        $terms->Opaque(
+            $traits->Trait(
+                'add'  => $traits->Defined(
+                    lift_native_applicative(
+                        '$ten:add',
+                        [{ name => 'self' }, { name => 'm', coerce => 'numify' }],
+                        'Num',
+                        sub ($self, $m) { 10 + $m }
+                    )
+                )
+            )
+        )
+    ),
 );
 
 my $exprs = $compiler->compile(q[

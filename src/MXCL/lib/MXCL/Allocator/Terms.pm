@@ -19,9 +19,6 @@ use MXCL::Term::Sym;
 use MXCL::Term::Lambda;
 use MXCL::Term::Opaque;
 
-use MXCL::Term::Native::Applicative;
-use MXCL::Term::Native::Operative;
-
 class MXCL::Allocator::Terms {
     field $arena :param :reader;
 
@@ -59,23 +56,13 @@ class MXCL::Allocator::Terms {
     }
 
     ## -------------------------------------------------------------------------
-    ## Opaque and Native Bindings (hashed by identity)
+    ## Opaques (hashed by identity)
     ## -------------------------------------------------------------------------
 
     method Opaque ($env) {
         state $nonce = 0;
         my $uid = ++$nonce; # unique object identity
         $arena->allocate(MXCL::Term::Opaque::, env => $env, uid => $uid );
-    }
-
-    method NativeApplicative ($params, $body) {
-        # the body refaddr is used for identity
-        $arena->allocate(MXCL::Term::Native::Applicative::, params => $params, body => $body )
-    }
-
-    method NativeOperative ($params, $body) {
-        # the body refaddr is used for identity
-        $arena->allocate(MXCL::Term::Native::Operative::, params => $params, body => $body )
     }
 
     ## -------------------------------------------------------------------------

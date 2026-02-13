@@ -6,4 +6,5 @@ class MXCL::Term::Num :isa(MXCL::Term) {
     field $value :param :reader;
 
     method stringify { "${value}" }
+    method numify { $value }
 }

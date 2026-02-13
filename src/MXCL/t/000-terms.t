@@ -86,30 +86,6 @@ subtest 'Lambda' => sub {
     ok $l1->hash ne $l3->hash,     'different body gives different hash';
 };
 
-subtest 'NativeApplicative' => sub {
-    plan tests => 3;
-    my $params = $a->Cons( $a->Sym("x"), $a->Nil );
-    my $body   = sub { $_[0] };
-    my $na1    = $a->NativeApplicative( $params, $body );
-    my $na2    = $a->NativeApplicative( $params, $body );
-    my $na3    = $a->NativeApplicative( $params, sub { $_[0] } );
-    is refaddr($na1), refaddr($na2), 'deduplicates with same code ref';
-    is $na1->hash,    $na2->hash,    'hash equality';
-    ok $na1->hash ne $na3->hash,     'different code ref gives different hash';
-};
-
-subtest 'NativeOperative' => sub {
-    plan tests => 3;
-    my $params = $a->Cons( $a->Sym("x"), $a->Nil );
-    my $body   = sub { $_[0] };
-    my $no1    = $a->NativeOperative( $params, $body );
-    my $no2    = $a->NativeOperative( $params, $body );
-    my $no3    = $a->NativeOperative( $params, sub { $_[0] } );
-    is refaddr($no1), refaddr($no2), 'deduplicates with same code ref';
-    is $no1->hash,    $no2->hash,    'hash equality';
-    ok $no1->hash ne $no3->hash,     'different code ref gives different hash';
-};
-
 # --- cross-cutting / compound ---
 
 subtest 'type tag distinguishes Sym from Str' => sub {

@@ -313,10 +313,4 @@ MXCL builds on and acknowledges:
 - **CRDTs** — Conflict-free replicated data types
 - **Local-first software** — Ownership, offline capability, collaboration
 
----
 
-## About
-
-MXCL continues work begun in conversations with Matt Trout. The name honors his contributions to the Perl community and to the early explorations that shaped this research direction.
-
-Post Modern Media Computing Labs launches March 15, 2025 — the 20th anniversary of Moose's first CPAN upload.

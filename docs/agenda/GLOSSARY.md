@@ -442,7 +442,3 @@ Collaboration is opt-in and controlled, not cloud-by-default. CRDTs at the geome
 - **As We May Think** (Bush, 1945) — The Memex and augmented intellect
 - **Augmenting Human Intellect** (Engelbart, 1962) — The conceptual framework
 
-### MXCL-Adjacent Research
-
-- [Matt Trout's talks and writings](https://shadow.cat/blog/matt-s-trout/) — Context for the "Matt" in MXCL
-- [Moose documentation](https://metacpan.org/pod/Moose) — The Perl object system that informs MXCL's MOP

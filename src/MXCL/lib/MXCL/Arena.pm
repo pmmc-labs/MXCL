@@ -46,7 +46,7 @@ class MXCL::Arena {
     }
 
     method allocate ($type, %fields) {
-        my @names  = sort { $a cmp $b } keys %fields;
+        my @names  = sort { $a cmp $b } grep !/^__/, keys %fields;
         my @values = @fields{ @names };
         my $hash   = $self->construct_hash($type, @values);
 

@@ -3,16 +3,16 @@ use v5.42;
 use experimental qw[ class ];
 
 class MXCL::Term::Native::Operative :isa(MXCL::Term) {
-    field $params :param :reader;
-    field $body   :param :reader;
+    field $name    :param :reader;
+    field $params  :param :reader;
+    field $__body  :param :reader(body);
 
-    method stringify { 'native:operative' }
+    method stringify {
+        sprintf 'native:applicative[%s](%s)' =>
+            $name->stringify,
+            join ', ' => map $_->stringify, $params->uncons
+        ;
+    }
 
-    method pprint { die 'Cannot pprint a Native::Operative' }
-
-    # TODO:
-    # this class needs a $name parameter for two reasons:
-    # - it helps identify what it is in a trace
-    # - it can print the name in the pprint function
-    #   which should still make the pprint valid
+    method pprint { $name }
 }

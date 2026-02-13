@@ -26,8 +26,10 @@
 
 - add methods to check for state of the trait (resolved, still requires, etc)
 
-- think about how to handle DOES queries?
-    - just Compose and inspect what comes out?
+- add provenance tracking 
+    - flatten a list of all traits that were included (recursively)
+    - do NOT include this in the hash
+    - figure out the details for Alias/Exclude on this
 
 - does the trait hold a ref to the things it is made from?
 
@@ -62,6 +64,8 @@
     - it was the old stats collection, repurposed
     - works for now, but needs improvement
 
+- need a better API to allocate
+    - allows things to be include which are not to be hashed
 
 ## Add Native Registery
 

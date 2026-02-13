@@ -16,53 +16,62 @@ my $terms    = $ctx->terms;
 my $konts    = $ctx->kontinues;
 my $refs     = $ctx->refs;
 my $traits   = $ctx->traits;
+my $natives  = $ctx->natives;
 my $compiler = $ctx->compiler;
 
 my $machine = MXCL::Machine->new( context => $ctx );
 
-my $add = $traits->Defined($terms->NativeApplicative(
-    $terms->Cons( $terms->Sym('n'), $terms->Sym('m')),
-    sub ($n, $m) { $terms->Num( $n->value + $m->value ) }
-));
+my $add = $natives->Applicative(
+    name      => 'add',
+    signature => [{ name => 'n', coerce => 'numify' }, { name => 'm', coerce => 'numify' }],
+    returns   => 'Num',
+    impl      => sub ($n, $m) { $n + $m }
+);
 
-my $mul = $traits->Defined($terms->NativeApplicative(
-    $terms->Cons( $terms->Sym('n'), $terms->Sym('m')),
-    sub ($n, $m) { $terms->Num( $n->value * $m->value ) }
-));
+my $mul = $natives->Applicative(
+    name      => 'mul',
+    signature => [{ name => 'n', coerce => 'numify' }, { name => 'm', coerce => 'numify' }],
+    returns   => 'Num',
+    impl      => sub ($n, $m) { $n * $m }
+);
 
-my $eq = $traits->Defined($terms->NativeApplicative(
-    $terms->Cons( $terms->Sym('n'), $terms->Sym('m')),
-    sub ($n, $m) { $n->value == $m->value ? $terms->True : $terms->False }
-));
+my $eq = $natives->Applicative(
+    name      => 'eq',
+    signature => [{ name => 'n', coerce => 'numify' }, { name => 'm', coerce => 'numify' }],
+    returns   => 'Bool',
+    impl      => sub ($n, $m) { $n == $m }
+);
 
-my $if = $traits->Defined($terms->NativeOperative(
-    $terms->List(
-        $terms->Sym('env'),
-        $terms->Sym('cond'),
-        $terms->Sym('if-true'),
-        $terms->Sym('if-false')
-    ),
-    sub ($env, $cond, $if_true, $if_false) {
+my $if = $natives->Operative(
+    name => 'if',
+    signature => [
+        { name => 'ctx'      },
+        { name => 'cond'     },
+        { name => 'if-true'  },
+        { name => 'if-false' },
+    ],
+    impl => sub ($ctx, $cond, $if_true, $if_false) {
         # NOTE: this probably needs to derive an Env
         return (
-            $konts->IfElse( $env, $cond, $if_true, $if_false, $terms->Nil ),
-            $konts->EvalExpr( $env, $cond, $terms->Nil ),
+            $konts->IfElse( $ctx, $cond, $if_true, $if_false, $terms->Nil ),
+            $konts->EvalExpr( $ctx, $cond, $terms->Nil ),
         )
     }
-));
+);
 
-my $lambda = $traits->Defined($terms->NativeOperative(
-    $terms->List(
-        $terms->Sym('params'),
-        $terms->Sym('body'),
-    ),
-    sub ($env, $params, $body) {
+my $lambda = $natives->Operative(
+    name => 'lambda',
+    signature => [
+        { name => 'params' },
+        { name => 'body'   },
+    ],
+    impl => sub ($ctx, $params, $body) {
         return $konts->Return(
-            $env,
-            $terms->List( $terms->Lambda( $params, $body, $env ) )
+            $ctx,
+            $terms->List( $terms->Lambda( $params, $body, $ctx ) )
         );
     }
-));
+);
 
 my $numeric = $traits->Trait(
     '+'   => $add,
@@ -71,38 +80,52 @@ my $numeric = $traits->Trait(
 );
 
 my $env = $traits->Trait(
-    'if'     => $if,
-    'lambda' => $lambda,
-    'eq?'    => $eq,
-    '+'      => $add,
-    '*'      => $mul,
-    '~'      => $traits->Defined($terms->NativeApplicative(
-        $terms->Cons( $terms->Sym('n'), $terms->Sym('m')),
-        sub ($n, $m) { $terms->Str( $n->value . $m->value ) }
-    )),
-
-    'gorch' => $traits->Defined($refs->Ref( $terms->Num(100) )),
-
-    'foo' => $traits->Defined($terms->Opaque($traits->Trait(
-        bar => $terms->NativeApplicative(
-            $terms->Nil,
-            sub ($self) { $terms->Str("BAR") }
-        ),
-        baz => $terms->NativeApplicative(
-            $terms->Nil,
-            sub ($self) { $terms->Str("BAZ") }
+    'if'     => $traits->Defined($if),
+    'lambda' => $traits->Defined($lambda),
+    'eq?'    => $traits->Defined($eq),
+    '+'      => $traits->Defined($add),
+    '*'      => $traits->Defined($mul),
+    'gorch'  => $traits->Defined( $refs->Ref( $terms->Num(100) )),
+    'foo' => $traits->Defined(
+        $terms->Opaque(
+            $traits->Trait(
+                bar => $traits->Defined(
+                    $natives->Applicative(
+                        name      => 'foo:bar',
+                        signature => [{ name => 'self' }],
+                        returns   => 'Str',
+                        impl      => sub ($) { "BAR" }
+                    )
+                ),
+                baz => $traits->Defined(
+                        $natives->Applicative(
+                        name      => 'foo:baz',
+                        signature => [{ name => 'self' }],
+                        returns   => 'Str',
+                        impl      => sub ($) { "BAZ" }
+                    )
+                )
+            )
         )
-    ))),
-    'MXCL::Term::Ref' => $traits->Defined($traits->Trait(
-        'set!' => $traits->Defined($terms->NativeApplicative(
-            $terms->List( $terms->Sym('ref'), $terms->Sym('value') ),
-            sub ($ref, $value) { $refs->SetRef( $ref, $value ) }
-        )),
-        'get' => $traits->Defined($terms->NativeApplicative(
-            $terms->List( $terms->Sym('ref') ),
-            sub ($ref) { $refs->Deref( $ref ) }
-        )),
-    ))
+    ),
+    'MXCL::Term::Ref' => $traits->Defined(
+        $traits->Trait(
+            'set!' => $traits->Defined(
+                $natives->Applicative(
+                    name      => 'foo:baz',
+                    signature => [{ name => 'ref' }, { name => 'value' }],
+                    impl      => sub ($ref, $value) { $refs->SetRef( $ref, $value ) }
+                )
+            ),
+            'get' => $traits->Defined(
+                $natives->Applicative(
+                    name      => 'foo:baz',
+                    signature => [{ name => 'ref' }],
+                    impl      => sub ($ref) { $refs->Deref( $ref ) }
+                )
+            ),
+        )
+    )
 );
 
 my $exprs = $compiler->compile(q[

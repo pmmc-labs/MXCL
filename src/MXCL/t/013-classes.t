@@ -16,40 +16,71 @@ my $terms    = $ctx->terms;
 my $konts    = $ctx->kontinues;
 my $refs     = $ctx->refs;
 my $traits   = $ctx->traits;
+my $natives  = $ctx->natives;
 my $compiler = $ctx->compiler;
 
 my $machine = MXCL::Machine->new( context => $ctx );
 
-sub lift_native_applicative ($alloc, $params, $body, $returns) {
-    return $alloc->NativeApplicative(
-        $alloc->List( map $alloc->Sym($_), @$params ),
-        sub (@args) { $alloc->$returns( $body->( map $_->value, @args ) ) }
+sub lift_native_applicative ($name, $params, $returns, $impl) {
+    return $natives->Applicative(
+        name      => $name,
+        signature => $params,
+        returns   => $returns,
+        impl      => $impl,
     )
 }
 
-sub lift_native_applicative_method ($alloc, $params, $body, $returns) {
-    return $alloc->NativeApplicative(
-        $alloc->List( map $alloc->Sym($_), @$params ),
-        sub ($self, @args) { $alloc->$returns( $body->( $self, map $_->value, @args ) ) }
-    )
-}
+my $add = lift_native_applicative('+', [{ name => 'n', coerce => 'numify' }, { name => 'm', coerce => 'numify' }], 'Num', sub ($n, $m) { $n + $m });
+my $sub = lift_native_applicative('-', [{ name => 'n', coerce => 'numify' }, { name => 'm', coerce => 'numify' }], 'Num', sub ($n, $m) { $n - $m });
+my $mul = lift_native_applicative('*', [{ name => 'n', coerce => 'numify' }, { name => 'm', coerce => 'numify' }], 'Num', sub ($n, $m) { $n * $m });
+my $div = lift_native_applicative('/', [{ name => 'n', coerce => 'numify' }, { name => 'm', coerce => 'numify' }], 'Num', sub ($n, $m) { $n / $m });
+my $mod = lift_native_applicative('%', [{ name => 'n', coerce => 'numify' }, { name => 'm', coerce => 'numify' }], 'Num', sub ($n, $m) { $n % $m });
 
-my $add = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n + $m }, 'Num');
-my $sub = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n - $m }, 'Num');
-my $mul = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n * $m }, 'Num');
-my $div = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n / $m }, 'Num');
-my $mod = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n % $m }, 'Num');
+my $eq  = lift_native_applicative('==',  [{ name => 'n', coerce => 'numify' }, { name => 'm', coerce => 'numify' }], 'Bool', sub ($n, $m) { $n == $m });
+my $not = lift_native_applicative('not', [{ name => 'n' } ], 'Bool', sub ($n) { !$n });
 
-my $eq  = lift_native_applicative($terms, [qw[ n m ]], sub ($n, $m) { $n == $m }, 'Bool');
-my $not = lift_native_applicative($terms, [qw[ n ]], sub ($n) { !$n }, 'Bool');
+my $if = $natives->Operative(
+    name => 'if',
+    signature => [
+        { name => 'ctx'      },
+        { name => 'cond'     },
+        { name => 'if-true'  },
+        { name => 'if-false' },
+    ],
+    impl => sub ($ctx, $cond, $if_true, $if_false) {
+        # NOTE: this probably needs to derive an Env
+        return (
+            $konts->IfElse( $ctx, $cond, $if_true, $if_false, $terms->Nil ),
+            $konts->EvalExpr( $ctx, $cond, $terms->Nil ),
+        )
+    }
+);
+
+my $lambda = $natives->Operative(
+    name => 'lambda',
+    signature => [
+        { name => 'params' },
+        { name => 'body'   },
+    ],
+    impl => sub ($ctx, $params, $body) {
+        return $konts->Return(
+            $ctx,
+            $terms->List( $terms->Lambda( $params, $body, $ctx ) )
+        );
+    }
+);
 
 my $EQUALITY = $traits->Trait(
     '==' => $traits->Required,
     '!=' => $traits->Defined(
-        $terms->NativeOperative(
-            $terms->List( $terms->Sym('n'), $terms->Sym('m') ),
-            sub ($env, $n, $m) {
-                $konts->EvalExpr($env,
+        $natives->Operative(
+            name => '!=',
+            signature => [
+                { name => 'n' },
+                { name => 'm' },
+            ],
+            impl => sub ($ctx, $n, $m) {
+                $konts->EvalExpr($ctx,
                     # (not (n == m))
                     $terms->List($terms->Sym('not'), $terms->List( $n, $terms->Sym('=='), $m )),
                     $terms->Nil
@@ -60,7 +91,9 @@ my $EQUALITY = $traits->Trait(
 );
 
 my $env = $traits->Trait(
-    'not' => $traits->Defined($not),
+    'lambda' => $traits->Defined($lambda),
+    'if'     => $traits->Defined($if),
+    'not'    => $traits->Defined($not),
     'MXCL::Term::Num' => $traits->Defined($traits->Compose(
         $EQUALITY,
         $traits->Trait(
@@ -77,7 +110,7 @@ my $env = $traits->Trait(
 $arena->commit_generation('environment initialized');
 
 my $exprs = $compiler->compile(q[
-    (10 != 10)
+    ((lambda (x y) (x + y)) 10 20)
 ]);
 
 $arena->commit_generation('program compiled');
@@ -106,7 +139,7 @@ diag join "\n" => map { $_->stringify, $_->env->stringify } $machine->trace->@*;
 
 pass('...shh');
 
-warn Dumper $arena->generations;
+#warn Dumper $arena->generations;
 
 done_testing;
 

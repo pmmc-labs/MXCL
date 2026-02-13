@@ -3,7 +3,8 @@ use v5.42;
 use experimental qw[ class ];
 
 class MXCL::Term::Trait :isa(MXCL::Term) {
-    field $bindings :param :reader;
+    field $bindings     :param :reader;
+    field $__provenance :param :reader(provenance) = +[];
 
     method lookup ($key) { $bindings->{ $key } }
 

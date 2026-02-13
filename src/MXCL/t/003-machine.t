@@ -15,18 +15,23 @@ my $arena    = $ctx->arena;
 my $terms    = $ctx->terms;
 my $konts    = $ctx->kontinues;
 my $traits   = $ctx->traits;
+my $natives  = $ctx->natives;
 my $compiler = $ctx->compiler;
 
 my $machine = MXCL::Machine->new( context => $ctx );
 
-my $add = $terms->NativeApplicative(
-    $terms->Cons($terms->Sym('n'), $terms->Sym('m')),
-    sub ($n, $m) { $terms->Num( $n->value + $m->value ) }
+my $add = $natives->Applicative(
+    name      => 'add',
+    signature => [{ name => 'n', coerce => 'numify' }, { name => 'm', coerce => 'numify' }],
+    returns   => 'Num',
+    impl      => sub ($n, $m) { $n + $m }
 );
 
-my $mul = $terms->NativeApplicative(
-    $terms->Cons($terms->Sym('n'), $terms->Sym('m')),
-    sub ($n, $m) { $terms->Num( $n->value * $m->value ) }
+my $mul = $natives->Applicative(
+    name      => 'mul',
+    signature => [{ name => 'n', coerce => 'numify' }, { name => 'm', coerce => 'numify' }],
+    returns   => 'Num',
+    impl      => sub ($n, $m) { $n * $m }
 );
 
 my $numeric = $traits->Trait(
