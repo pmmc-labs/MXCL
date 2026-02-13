@@ -1,10 +1,8 @@
 
 use v5.42;
-use utf8;
-use open ':std', ':encoding(UTF-8)';
 use experimental qw[ class switch ];
 
-use P5::TUI::Table;
+use MXCL::Debugger;
 
 class MXCL::Machine {
     field $context :param :reader;
@@ -12,6 +10,11 @@ class MXCL::Machine {
     field $steps :reader = 0;
     field $queue :reader = +[];
     field $trace :reader = +[];
+    field $debug :reader = undef;
+
+    ADJUST {
+        $debug = MXCL::Debugger->new( machine => $self );
+    }
 
     method run ($env, $exprs) {
         push @$queue => (
@@ -29,55 +32,13 @@ class MXCL::Machine {
             push @$queue => $self->step($k);
             push @$trace => $k;
         }
-        $self->DEBUG_STEP($k, true);
+        $debug->DEBUG_STEP($k, true);
         return $k;
-    }
-
-    method DEBUG_STEP ($k, $final=false) {
-        my @rows = map {
-            [
-                $_,
-                $k->env->bindings->{$_}->stringify
-            ]
-        } sort { $a cmp $b }
-          keys $k->env->bindings->%*;
-
-        my $env_table = P5::TUI::Table->new(
-            column_spec => [
-                {
-                    name  => $k->env->hash,
-                    width => 32,
-                    align => -1,     # right-aligned
-                    color => { fg => 'cyan', bg => undef }
-                },
-                {
-                    name  => $k->env->name->stringify,
-                    width => '100%',  # Percentage of available space
-                    align => 1,      # Left-aligned
-                    color => { fg => 'white', bg => undef }
-                },
-            ],
-            rows => \@rows
-        );
-
-        my $lines = $env_table->draw( width => '80%', height => (2 * scalar @rows) );
-
-        say '-' x 120;
-        if ($final) {
-            say sprintf "DONE[%03d]" => $steps;
-        } else {
-            say sprintf "STEP[%03d]" => $steps;
-        }
-        say " -> ", $k->pprint;
-        if (@$queue) {
-            say "  - ", join "\n  - " => map blessed $_ ? $_->pprint : $_, reverse @$queue;
-        }
-        say for $lines->@*;
     }
 
     method step ($k) {
         $steps++;
-        $self->DEBUG_STEP($k);
+        $debug->DEBUG_STEP( $k );
         given (blessed $k) {
             # ------------------------------------------------------------------
             # Threading of Env & Stack
