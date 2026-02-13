@@ -61,11 +61,11 @@ class MXCL::Machine {
                 my $name  = $k->name->value;
                 my $local = $context->traits->Compose(
                     # FIXME - this naming is horrible
-                    $context->terms->Sym("Scope[Parent]"),
+                    $context->terms->Sym("Scope[".$k->env->name->stringify." + declare:${name}]"),
                     $k->env,
                     $context->traits->Trait(
                         # FIXME - this naming is either worse, or better, hmmm
-                        $context->terms->Sym("Scope[declare:${name}]"),
+                        $context->terms->Sym($name),
                         $name,
                         $context->traits->Defined( $value )
                     )
@@ -167,16 +167,13 @@ class MXCL::Machine {
                     my @args   = $context->terms->Uncons($args);
                     die "Arity mismatch" if scalar @params != scalar @args;
 
+                    my $args_string = sprintf '(%s)' => join ', ' => map $_->value, @params;
+
                     my $local = $context->traits->Compose(
-                        $context->terms->Sym('Scope[Lambda]'),
+                        $context->terms->Sym("Scope[Lambda + args:${args_string}]"),
                         $call->env,
                         $context->traits->Trait(
-                            $context->terms->Sym(
-                                sprintf 'Scope[%s]' =>
-                                    join ', ' => map {
-                                        sprintf 'arg:%s' => $_->value
-                                    } @params
-                            ),
+                            $context->terms->Sym($args_string),
                             map {
                                 $_->value,
                                 $context->traits->Defined(shift @args)
