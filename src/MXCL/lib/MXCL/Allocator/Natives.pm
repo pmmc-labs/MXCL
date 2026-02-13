@@ -55,7 +55,7 @@ class MXCL::Allocator::Natives {
                 my @coerced;
                 foreach my $coerce (@coercions) {
                     my $arg = shift @args;
-                    if (not defined $coerce) {
+                    if (not(defined $coerce)) {
                         push @coerced => $arg;
                     } else {
                         push @coerced => $arg->$coerce();
@@ -110,7 +110,7 @@ class MXCL::Allocator::Natives {
         my $bound     = Sub::Util::set_subname(
             (sprintf 'operative:%s' => $name),
             sub ($ctx, @args) {
-                die "ARITY MISMATCH in ${name} expected ${arity} and got ".scalar(@args)
+                die "ARITY MISMATCH in '${name}' expected ${arity} and got ".scalar(@args)
                     if $arity != scalar @args;
                 return $body->( $ctx, @args );
             }

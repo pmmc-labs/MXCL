@@ -27,6 +27,10 @@ class MXCL::Compiler {
 
     method expand_token ($token) {
         my $src = $token->source;
+        # XXX - in theory, these can also be in the Env
+        # so you could use #t or something if you want
+        # ... not really worth it for now, but something
+        # to think about later
         return $context->terms->True  if $src eq 'true';
         return $context->terms->False if $src eq 'false';
         if ($src =~ /^\".*\"$/) {

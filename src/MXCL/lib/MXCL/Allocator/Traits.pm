@@ -14,13 +14,13 @@ class MXCL::Allocator::Traits {
     ## Traits
     ## -------------------------------------------------------------------------
 
-    method Trait (%bindings) {
+    method Trait ($name, %bindings) {
         # NOTE:
         # might helpful to check all the bindings
         # and see if they are Slots, and if not
         # then wrap them in Defined(), this would
         # simplify the construction I think
-        $arena->allocate(MXCL::Term::Trait::, bindings => \%bindings);
+        $arena->allocate(MXCL::Term::Trait::, name => $name, bindings => \%bindings);
     }
 
     ## -------------------------------------------------------------------------
@@ -44,15 +44,15 @@ class MXCL::Allocator::Traits {
     ## it is meh for now ...
     ## -------------------------------------------------------------------------
 
-    method BindParams ($parent, $params, $args) {
+    method BindParams ($name, $parent, $params, $args) {
         die "Arity mismatch" if scalar @$params != scalar @$args;
         my %bindings = map {
             $_->value,
             $self->Defined(shift @$args)
         } @$params;
 
-        my $local    = $self->Trait( %bindings );
-        my $composed = $self->Compose( $parent, $local );
+        my $local    = $self->Trait( $name, %bindings );
+        my $composed = $self->Compose( $name, $parent, $local );
 
         # TODO - check for conflicts!
 
@@ -81,7 +81,7 @@ class MXCL::Allocator::Traits {
         die "Cannot Merge Slots (".(blessed($s1) // '???').") and (".(blessed($s2) // '???').")";
     }
 
-    method Compose ($t1, $t2) {
+    method Compose ($name, $t1, $t2) {
         my $t1_bindings = $t1->bindings;
         my $t2_bindings = $t2->bindings;
 
@@ -111,6 +111,6 @@ class MXCL::Allocator::Traits {
             }
         }
 
-        return $self->Trait(%bindings);
+        return $self->Trait($name, %bindings);
      }
 }

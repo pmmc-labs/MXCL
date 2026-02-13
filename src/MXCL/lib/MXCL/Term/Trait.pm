@@ -3,6 +3,7 @@ use v5.42;
 use experimental qw[ class ];
 
 class MXCL::Term::Trait :isa(MXCL::Term) {
+    field $name         :param :reader;
     field $bindings     :param :reader;
     field $__provenance :param :reader(provenance) = +[];
 
@@ -13,7 +14,8 @@ class MXCL::Term::Trait :isa(MXCL::Term) {
     # and maybe even methods to resolve conflicts, etc.
 
     method stringify {
-        sprintf '{ %s }' =>
+        sprintf '%s{ %s }' =>
+            $name,
             join ', ' =>
             map { sprintf '%s : %s' => $_, $bindings->{$_}->stringify }
             sort { $a cmp $b } keys %$bindings;

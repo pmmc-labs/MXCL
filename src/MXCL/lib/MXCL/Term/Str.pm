@@ -5,5 +5,9 @@ use experimental qw[ class ];
 class MXCL::Term::Str :isa(MXCL::Term) {
     field $value :param :reader;
 
-    method stringify { sprintf '"%s"' => $value }
+    method stringify { $value }
+
+    method boolify { $value ne '' }
+
+    method pprint { sprintf '"%s"' => $value }
 }

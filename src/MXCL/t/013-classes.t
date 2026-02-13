@@ -69,7 +69,10 @@ my $lambda = $natives->Operative(
     }
 );
 
+my $ROOT_ENV = $traits->Trait($terms->Sym('ROOT_ENV'));
+
 my $EQUALITY = $traits->Trait(
+    $terms->Sym('EQUALITY'),
     '==' => $traits->Required,
     '!=' => $traits->Defined(
         $natives->Operative(
@@ -90,12 +93,15 @@ my $EQUALITY = $traits->Trait(
 );
 
 my $env = $traits->Trait(
+    $terms->Sym('ENV'),
     'lambda' => $traits->Defined($lambda),
     'if'     => $traits->Defined($if),
     'not'    => $traits->Defined($not),
     'MXCL::Term::Num' => $traits->Defined($traits->Compose(
+        $terms->Sym('EQUALITY<NUM>'),
         $EQUALITY,
         $traits->Trait(
+            $terms->Sym('Num'),
             '==' => $traits->Defined($eq),
             '+'  => $traits->Defined($add),
             '-'  => $traits->Defined($sub),
@@ -109,7 +115,7 @@ my $env = $traits->Trait(
 $arena->commit_generation('environment initialized');
 
 my $exprs = $ctx->compile_source(q[
-    ((lambda (x y) (x + y)) 10 20)
+    (((lambda (x y) (x + y)) 10 20) != 30)
 ]);
 
 diag "COMPILER:";

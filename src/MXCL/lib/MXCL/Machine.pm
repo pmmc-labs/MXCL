@@ -138,6 +138,7 @@ class MXCL::Machine {
                 elsif ($call isa MXCL::Term::Lambda) {
                     return $context->kontinues->EvalExpr(
                         $context->traits->BindParams(
+                            $context->terms->Sym( join ':' => $call->env->name->value, 'local' ),
                             $call->env,
                             [ $context->terms->Uncons($call->params) ],
                             [ $context->terms->Uncons($args) ]

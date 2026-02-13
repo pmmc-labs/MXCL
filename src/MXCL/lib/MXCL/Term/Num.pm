@@ -7,4 +7,5 @@ class MXCL::Term::Num :isa(MXCL::Term) {
 
     method stringify { "${value}" }
     method numify { $value }
+    method boolify { $value != 0 }
 }

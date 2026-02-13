@@ -5,4 +5,5 @@ use experimental qw[ class ];
 class MXCL::Term::Nil :isa(MXCL::Term) {
 
     method stringify { '()' }
+    method boolify { false }
 }
