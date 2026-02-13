@@ -1,5 +1,7 @@
 # TODO
 
+<!----------------------------------------------------------------------------->
+
 ## Parser
 
 - strip comments
@@ -12,9 +14,13 @@
 - add generation metadata 
     - see Arena TODO below
     
+<!----------------------------------------------------------------------------->    
+    
 ## Compiler
 
 - handle the parser changes
+
+<!----------------------------------------------------------------------------->
 
 ## Terms
 
@@ -22,7 +28,11 @@
 - Remove all the Pair references, we don't need them
 - Create a Hash term
 
-### Traits
+- standardize on `->unbox` name for all unboxing methods
+
+<!----------------------------------------------------------------------------->
+
+## Traits
 
 - add methods to check for state of the trait (resolved, still requires, etc)
 
@@ -45,6 +55,8 @@
 - handle Alias, and the other thing 
     - see TODOs
 
+<!----------------------------------------------------------------------------->
+
 ## Context
 
 - add Builder to construct Kontinue queues with
@@ -56,6 +68,8 @@
 
 - think about commits, etc. 
 
+<!----------------------------------------------------------------------------->
+
 ## Arena
     
 - add a way to walk the hashes
@@ -64,24 +78,13 @@
     - it was the old stats collection, repurposed
     - works for now, but needs improvement
 
-- need a better API to allocate
-    - allows things to be include which are not to be hashed
+<!----------------------------------------------------------------------------->
 
-## Add Native Registery
+## Machine
 
-- stores native functions 
-    - which have full FFI binding specs
-    - which is what we hash to get a stable hash
-    - the CODE ref is incidental
-    
+- Applicatives should get the ctx variable as the first arg
+    - this will allow it to do allocation, etc. 
+    - the lifted native subs should never see it
 
 
-
-
-
-
-
-
-
-
-
+<!----------------------------------------------------------------------------->

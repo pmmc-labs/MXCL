@@ -17,8 +17,7 @@ my $konts    = $ctx->kontinues;
 my $traits   = $ctx->traits;
 my $natives  = $ctx->natives;
 my $compiler = $ctx->compiler;
-
-my $machine = MXCL::Machine->new( context => $ctx );
+my $machine  = $ctx->machine;
 
 my $add = $natives->Applicative(
     name      => 'add',
@@ -53,7 +52,7 @@ my $env = $traits->Trait(
     )
 );
 
-my $exprs = $compiler->compile(q[
+my $exprs = $ctx->compile_source(q[
     ((+ 5 5) + (* 5 4))
 ]);
 
@@ -61,35 +60,19 @@ diag "COMPILER:";
 diag $_->pprint foreach @$exprs;
 diag $_->stringify foreach @$exprs;
 
-diag "ARENA:";
-diag format_stats('Terms',  $arena->typez);
-#diag format_stats('Hashes', $arena->hashz);
+
 
 diag "RUNNING:";
-my $result = $machine->run( $env, $exprs );
+my $result = $ctx->evaluate( $env, $exprs );
+
 
 diag "RESULT:";
 diag ($result ? $result->stack->stringify : 'UNDEFINED');
 
-diag "ARENA:";
-diag format_stats('Terms',  $arena->typez);
-#diag format_stats('Hashes', $arena->hashz);
+
 
 pass('...shh');
 
 done_testing;
 
-sub format_stats ($what, $stats) {
-    join "\n" =>
-    ('-' x 60),
-    (sprintf '| %-32s | %5s | %4s | %6s |' => $what, qw[ alive hits misses ]),
-    ('-' x 60),
-    (map {
-        sprintf '| %32s | %5d | %4d | %6d |' => @$_
-    } sort {
-        $b->[1] <=> $a->[1]
-    } map {
-        [ $_ =~ s/^MXCL\:\:Term\:\://r, $stats->{$_}->@{qw[ alive hits misses ]} ]
-    } keys %$stats),
-    ('-' x 60)
-}
+

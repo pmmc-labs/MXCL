@@ -12,7 +12,7 @@ my $ctx = MXCL::Context->new;
 my $arena    = $ctx->arena;
 my $compiler = $ctx->compiler;
 
-my $exprs = $compiler->compile(q[
+my $exprs = $ctx->compile_source(q[
     ( (1 2 3 4) (1 2 3 4) (1 2 3 4) (1 2 3 4) )
 ]);
 
@@ -44,25 +44,8 @@ ok $array1->eq($array2), '... these arrays are equal';
 isnt $array1->hash, $array3->hash, '... these arrays are NOT equal';
 ok !($array1->eq($array3)), '... these arrays are NOT equal';
 
-diag "ARENA:";
-diag format_stats('Terms',  $arena->typez);
-diag format_stats('Hashes', $arena->hashz);
-
 pass('...shh');
 
 done_testing;
 
-sub format_stats ($what, $stats) {
-    join "\n" =>
-    ('-' x 60),
-    (sprintf '| %-32s | %5s | %4s | %6s |' => $what, qw[ alive hits misses ]),
-    ('-' x 60),
-    (map {
-        sprintf '| %32s | %5d | %4d | %6d |' => @$_
-    } sort {
-        $b->[1] <=> $a->[1]
-    } map {
-        [ $_ =~ s/^MXCL\:\:Term\:\://r, $stats->{$_}->@{qw[ alive hits misses ]} ]
-    } keys %$stats),
-    ('-' x 60)
-}
+

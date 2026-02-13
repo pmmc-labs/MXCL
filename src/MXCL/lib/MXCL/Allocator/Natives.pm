@@ -12,7 +12,7 @@ use MXCL::Term::Native::Operative;
 class MXCL::Allocator::Natives {
     field $arena :param :reader;
 
-    # FIXME : make the context accessible instead ...
+    # FIXME : make the context accessible in the Native Applicables instead!
     field $terms :param :reader;
 
     # store the lifted, and orig-impls
@@ -41,9 +41,13 @@ class MXCL::Allocator::Natives {
         my $arity       = scalar @coercions;
         my $constructor = defined $returns
             ? ($terms->can( $returns ) || die "Cannot find ${returns} in Terms")
+            # if $returns has not been defined, it means we
+            # do not need to inflate, so we use this little
+            # hack to make things work, probably should all
+            # be re-thought, but this works for now.
             : sub ($, $result) { $result };
 
-        my $bound       = Sub::Util::set_subname(
+        my $bound = Sub::Util::set_subname(
             (sprintf 'applicative:%s' => $name),
             sub (@args) {
                 die "ARITY MISMATCH in ${name} expected ${arity} and got ".scalar(@args)
@@ -84,7 +88,10 @@ class MXCL::Allocator::Natives {
     }
 
     ## -------------------------------------------------------------------------
-    ## Applicatives
+    ## Operatives
+    ## -------------------------------------------------------------------------
+    ## Note the lack of a `returns` here, since these will always return
+    ## Kontinue objects
     ## -------------------------------------------------------------------------
     ## {
     ##     name => 'add',
@@ -96,11 +103,11 @@ class MXCL::Allocator::Natives {
     ## }
     ##
     method Operative (%binding) {
-        my $name        = $binding{name};
-        my @signature   = $binding{signature}->@*;
-        my $body        = $binding{impl};
-        my $arity       = scalar @signature;
-        my $bound       = Sub::Util::set_subname(
+        my $name      = $binding{name};
+        my @signature = $binding{signature}->@*;
+        my $body      = $binding{impl};
+        my $arity     = scalar @signature;
+        my $bound     = Sub::Util::set_subname(
             (sprintf 'operative:%s' => $name),
             sub ($ctx, @args) {
                 die "ARITY MISMATCH in ${name} expected ${arity} and got ".scalar(@args)

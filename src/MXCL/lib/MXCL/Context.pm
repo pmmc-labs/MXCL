@@ -24,12 +24,14 @@ class MXCL::Context {
 
     field $parser    :reader;
     field $compiler  :reader;
+    field $machine   :reader;
 
     ADJUST {
         $arena     = MXCL::Arena->new;
 
         $parser    = MXCL::Parser->new;
         $compiler  = MXCL::Compiler->new( context => $self );
+        $machine   = MXCL::Machine->new( context => $self );
 
         $terms     = MXCL::Allocator::Terms->new( arena => $arena );
         $traits    = MXCL::Allocator::Traits->new( arena => $arena );
@@ -37,10 +39,22 @@ class MXCL::Context {
         $kontinues = MXCL::Allocator::Kontinues->new( arena => $arena );
         $natives   = MXCL::Allocator::Natives->new(
             arena => $arena,
-            terms => $terms,
+            terms => $terms, # FIXME - see TODO.md
         );
 
         $arena->commit_generation('context initialized');
     }
 
+
+    method compile_source ($source) {
+        my $exprs = $compiler->compile( $source );
+        $arena->commit_generation('program compiled');
+        return $exprs;
+    }
+
+    method evaluate ( $env, $exprs ) {
+        my $result = $machine->run( $env, $exprs );
+        $arena->commit_generation('program executed');
+        return $result;
+    }
 }

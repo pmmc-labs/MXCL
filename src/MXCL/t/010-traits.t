@@ -18,8 +18,7 @@ my $refs     = $ctx->refs;
 my $traits   = $ctx->traits;
 my $natives  = $ctx->natives;
 my $compiler = $ctx->compiler;
-
-my $machine = MXCL::Machine->new( context => $ctx );
+my $machine  = $ctx->machine;
 
 sub lift_native_applicative ($name, $params, $returns, $impl) {
     return $natives->Applicative(
@@ -66,26 +65,23 @@ my $env = $traits->Trait(
     ),
 );
 
-my $exprs = $compiler->compile(q[
+my $exprs = $ctx->compile_source(q[
     ($ten add (4 * 5))
 ]);
 
 diag "COMPILER:";
 diag $_->stringify foreach @$exprs;
 
-diag "ARENA:";
-diag format_stats('Terms',  $arena->typez);
-#diag format_stats('Hashes', $arena->hashz);
+
 
 diag "RUNNING:";
-my $result = $machine->run( $env, $exprs );
+my $result = $ctx->evaluate( $env, $exprs );
+
 
 diag "RESULT:";
 diag $result ? $result->stack->stringify : 'UNDEFINED';
 
-diag "ARENA:";
-diag format_stats('Terms',  $arena->typez);
-#diag format_stats('Hashes', $arena->hashz);
+
 
 diag "TRACE:";
 diag join "\n" => map { $_->stringify, $_->env->stringify } $machine->trace->@*;
@@ -94,17 +90,4 @@ pass('...shh');
 
 done_testing;
 
-sub format_stats ($what, $stats) {
-    join "\n" =>
-    ('-' x 60),
-    (sprintf '| %-32s | %5s | %4s | %6s |' => $what, qw[ alive hits misses ]),
-    ('-' x 60),
-    (map {
-        sprintf '| %32s | %5d | %4d | %6d |' => @$_
-    } sort {
-        $b->[1] <=> $a->[1]
-    } map {
-        [ $_ =~ s/^MXCL\:\:Term\:\://r, $stats->{$_}->@{qw[ alive hits misses ]} ]
-    } keys %$stats),
-    ('-' x 60)
-}
+

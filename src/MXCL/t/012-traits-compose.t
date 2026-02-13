@@ -17,6 +17,7 @@ my $refs     = $ctx->refs;
 my $traits   = $ctx->traits;
 my $natives  = $ctx->natives;
 my $compiler = $ctx->compiler;
+my $machine  = $ctx->machine;
 
 sub lift_native_applicative ($name, $params, $returns, $impl) {
     return $natives->Applicative(
