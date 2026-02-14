@@ -24,9 +24,10 @@ class MXCL::Term::Trait::Slot::Excluded :isa(MXCL::Term::Trait::Slot) {
 class MXCL::Term::Trait::Slot::Defined :isa(MXCL::Term::Trait::Slot) {
     field $term :param :reader;
 
-    method stringify {
-        #sprintf '%s[%s]' => $self->type, $term->stringify
-        $term->stringify
+    method stringify { $term->stringify }
+
+    method pprint {
+        sprintf '%s[%s]' => $self->type, $term->stringify
     }
 }
 

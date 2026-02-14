@@ -57,19 +57,20 @@ class MXCL::Machine {
                 );
             }
             when ('MXCL::Term::Kontinue::Define') {
-                my $lambda = $k->stack->head;
                 my $name   = $k->name->value;
-                my $local  = $context->traits->Compose(
+                my $lambda = $k->stack->head;
+
+                my $local = $context->traits->Compose(
                     # FIXME - this naming is horrible
                     $context->terms->Sym("Scope[".$k->env->name->stringify." + declare:${name}]"),
                     $k->env,
                     $context->traits->Trait(
                         # FIXME - this naming is either worse, or better, hmmm
                         $context->terms->Sym($name),
-                        $name,
-                        $context->traits->Defined( $lambda )
+                        $name, $context->traits->Defined( $lambda )
                     )
                 );
+
                 return $context->kontinues->Return(
                     $local,
                     $context->terms->Nil,
@@ -181,10 +182,21 @@ class MXCL::Machine {
                         )
                     );
 
+                    # FIXME - this is kinda gross cause it
+                    # is mushing in the upper execution
+                    # environment, which could be anything
+                    # so this should really be something more
+                    # disciplined and formalized-ish
+                    my $let_rec = $context->traits->Compose(
+                        $context->terms->Sym("Scope[".($k->env->name->stringify)." + Lambda + args:${args_string}]"),
+                        $k->env,
+                        $local
+                    );
+
                     return (
                         $context->kontinues->Return( $k->env, $context->terms->Nil ),
                         $context->kontinues->EvalExpr(
-                            $local,
+                            $let_rec,
                             $call->body,
                             $context->terms->Nil
                         )

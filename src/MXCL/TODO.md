@@ -4,8 +4,18 @@
 
 ## Big stuff to Solve
 
-- Lambda's are not recursive
-    - Y-combinator? 
+- Recrusive functions are kind of gross 
+    - they are handled in Machine by explictly mixing in the current execution 
+      Env with the Lambda + Args Env. This is sloppy for sure, but it should 
+      work out if done correctly/carefully. 
+      
+- Conflicts in Env composition
+    - these hold both values, so the Env lookup can handle it
+        - send all reads to the right one
+    - this keeps the trait composition clean
+        - but makes use of the meta-properties
+    - we can also make use of Alias as well perhaps?
+        - perhaps also Absent, Required, etc. 
 
 <!----------------------------------------------------------------------------->
 

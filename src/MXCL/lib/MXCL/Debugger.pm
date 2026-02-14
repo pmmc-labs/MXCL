@@ -32,14 +32,14 @@ class MXCL::Debugger {
                     color => { fg => 'green', bg => undef }
                 },
                 {
-                    name  => $k->env->name->stringify,
-                    width => '40%',
+                    name  => '',
+                    width => '20%',
                     align => 1,
                     color => { fg => 'cyan', bg => undef }
                 },
                 {
-                    name  => '',
-                    width => '60%',
+                    name  => $k->env->name->stringify,
+                    width => '80%',
                     align => 1,
                     color => { fg => 'white', bg => undef }
                 },
