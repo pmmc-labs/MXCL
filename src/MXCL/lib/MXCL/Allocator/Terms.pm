@@ -47,8 +47,9 @@ class MXCL::Allocator::Terms {
         $arena->allocate(MXCL::Term::Cons::, head => $head, tail => $tail )
     }
 
-    method Lambda ($params, $body, $env) {
-        $arena->allocate(MXCL::Term::Lambda::, params => $params, body => $body, env => $env )
+    method Lambda ($params, $body, $env, $name=undef) {
+        $name //= $self->Sym('__SUB__');
+        $arena->allocate(MXCL::Term::Lambda::, name => $name, params => $params, body => $body, env => $env )
     }
 
     method Array (@elements) {

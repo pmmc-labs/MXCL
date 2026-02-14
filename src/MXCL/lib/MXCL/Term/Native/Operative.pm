@@ -8,7 +8,7 @@ class MXCL::Term::Native::Operative :isa(MXCL::Term) {
     field $__body  :param :reader(body);
 
     method stringify {
-        sprintf 'native:applicative[%s](%s)' =>
+        sprintf 'native:operative[%s](%s)' =>
             $name->stringify,
             join ', ' => map $_->stringify, $params->uncons
         ;

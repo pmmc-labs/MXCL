@@ -10,26 +10,31 @@ class MXCL::Term::Kontinue :isa(MXCL::Term) {
 
     method stringify {
         sprintf 'Kontinue[%s] %s => %s <%s>' =>
-            (blessed $self) =~ s/^MXCL\:\:Term\:\:Kontinue\:\://r,
-            (
-                ($self->isa('MXCL::Term::Kontinue::Eval::Expr') ?
-                    ($self->expr->stringify) :
-                ($self->isa('MXCL::Term::Kontinue::Eval::Head') ?
-                    ($self->cons->stringify) :
-                ($self->isa('MXCL::Term::Kontinue::Eval::Rest') ?
-                    ($self->rest->stringify) :
-                ($self->isa('MXCL::Term::Kontinue::Apply::Expr') ?
-                    ($self->args->stringify) :
-                ($self->isa('MXCL::Term::Kontinue::Apply::Applicative') ||
-                 $self->isa('MXCL::Term::Kontinue::Apply::Operative') ?
-                    ($self->call->stringify) :
-                $self->isa('MXCL::Term::Kontinue::Define') ?
-                    ($self->name->stringify) :
-                '#')))))
-            ),
+            $self->type,
             $stack->stringify,
             $self->env->hash;
     }
 
-    #method pprint { die 'Cannot pprint a Kontinue' }
+    method pprint {
+        sprintf 'Kontinue[%s] %s => %s <%s>' =>
+            $self->type,
+            (
+                ($self->isa('MXCL::Term::Kontinue::Eval::Expr') ?
+                    ($self->expr->pprint) :
+                ($self->isa('MXCL::Term::Kontinue::Eval::Head') ?
+                    ($self->cons->pprint) :
+                ($self->isa('MXCL::Term::Kontinue::Eval::Rest') ?
+                    ($self->rest->pprint) :
+                ($self->isa('MXCL::Term::Kontinue::Apply::Expr') ?
+                    ($self->args->pprint) :
+                ($self->isa('MXCL::Term::Kontinue::Apply::Applicative') ||
+                 $self->isa('MXCL::Term::Kontinue::Apply::Operative') ?
+                    ($self->call->pprint) :
+                $self->isa('MXCL::Term::Kontinue::Define') ?
+                    ($self->name->pprint) :
+                '#')))))
+            ),
+            $stack->pprint,
+            $self->env->hash;
+    }
 }

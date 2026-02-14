@@ -17,7 +17,7 @@ class MXCL::Debugger {
             [
                 (sprintf '%03d' => $k->env->bindings->{$_}->gen),
                 $_,
-                $k->env->bindings->{$_}->stringify,
+                $k->env->bindings->{$_}->pprint,
                 $k->env->bindings->{$_}->hash
             ]
         } sort { $k->env->bindings->{$b}->gen <=> $k->env->bindings->{$a}->gen }
@@ -38,7 +38,7 @@ class MXCL::Debugger {
                     color => { fg => 'cyan', bg => undef }
                 },
                 {
-                    name  => $k->env->name->stringify,
+                    name  => $k->env->name->pprint,
                     width => '80%',
                     align => 1,
                     color => { fg => 'white', bg => undef }
@@ -53,7 +53,7 @@ class MXCL::Debugger {
             rows => \@rows
         );
 
-        my $lines = $env_table->draw( width => '80%', height => (2 * scalar @rows) );
+        my $lines = $env_table->draw( width => '100%', height => (2 * scalar @rows) );
 
         say '-' x 120;
         if ($final) {

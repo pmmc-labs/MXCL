@@ -2,57 +2,45 @@
 
 <!----------------------------------------------------------------------------->
 
-## Big stuff to Solve
+## Scopes
 
-- Recrusive functions are kind of gross 
-    - they are handled in Machine by explictly mixing in the current execution 
-      Env with the Lambda + Args Env. This is sloppy for sure, but it should 
-      work out if done correctly/carefully. 
-      
-- Conflicts in Env composition
-    - these hold both values, so the Env lookup can handle it
-        - send all reads to the right one
-    - this keeps the trait composition clean
-        - but makes use of the meta-properties
-    - we can also make use of Alias as well perhaps?
-        - perhaps also Absent, Required, etc. 
-
-<!----------------------------------------------------------------------------->
-
-## Parser
-
-- strip comments
-- switch the sugar around a bit
-    - @[] becomes +[]
-    - %{} becomes +{}
-    - {} stays as is
-    - remove the tuple parsing
+- Scope composition needs refinement too
+    - add Required methods for params
+    - add Required methods for recursive calls
+    - if we traverse the tree we can find free variables
+        - and choose to not add recursive name if not needed
+        - and maybe only include the Defined values that are needed?
+    - we can just deal with Conflicts as shadows
+        - or we could Exclude the params/recursive names from 
+          the parent before we compose them, to ensure no conflicts
+            - that said, I kinda like the Conflict as Override thing
+    - there can be no Absent methods at this point
+    - and Alias does not really make a lot of sense
     
-- add generation metadata 
-    - see Arena TODO below
-    
-<!----------------------------------------------------------------------------->    
-    
-## Compiler
-
-- handle the parser changes
-
-<!----------------------------------------------------------------------------->
-
-## Terms
-
-- Remove all the Tuple references, we have immutable Arrays
-- Remove all the Pair references, we don't need them
-- Create a Hash term
-
-- standardize on `->unbox` name for all unboxing methods
+- Machine needs to handle things other than Defined in composed Scopes
+    - Conflicts 
+        - these hold both values
+            - send all reads to the right one
+        - this keeps the trait composition clean
+    - Absent
+        - should probably throw an error
+    - Required
+        - unsatisfied requirements are bad
+    - Excluded
+    - Alias 
+        - not sure these makes a lot of sense here
+            - and would be unlikely to be returned from Lookup
+            - as they would have already been resolved
 
 <!----------------------------------------------------------------------------->
 
 ## Traits
 
-- implement the Difference operations to "diff" two roles
-    - this can be useful in the debugger and in other testing
+- Trait composition is hackish at best for now
+    - only does union
+    - need difference, etc. 
+
+- lookup() should return Absent if it finds nothing
 
 - add methods to check for state of the trait (resolved, still requires, etc)
 
@@ -60,8 +48,6 @@
     - flatten a list of all traits that were included (recursively)
     - do NOT include this in the hash
     - figure out the details for Alias/Exclude on this
-
-- does the trait hold a ref to the things it is made from?
 
 ### Slots
 
@@ -72,7 +58,7 @@
     - we can replace a node with an equivalent compiled node
         - this is where zk proofs could come in handy
 
-- handle Alias, and the other thing 
+- handle Alias, Exclude and the other thing 
     - see TODOs
 
 <!----------------------------------------------------------------------------->
@@ -108,3 +94,34 @@
 
 
 <!----------------------------------------------------------------------------->
+
+## Parser
+
+- strip comments
+- switch the sugar around a bit
+    - @[] becomes +[]
+    - %{} becomes +{}
+    - {} stays as is
+    - remove the tuple parsing
+    
+- add generation metadata 
+    - see Arena TODO below
+    
+<!----------------------------------------------------------------------------->    
+    
+## Compiler
+
+- handle the parser changes
+
+<!----------------------------------------------------------------------------->
+
+## Terms
+
+- Remove all the Tuple references, we have immutable Arrays
+- Remove all the Pair references, we don't need them
+- Create a Hash term
+
+- standardize on `->unbox` name for all unboxing methods
+
+<!----------------------------------------------------------------------------->
+

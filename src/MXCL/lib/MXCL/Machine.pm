@@ -175,10 +175,13 @@ class MXCL::Machine {
                         $call->env,
                         $context->traits->Trait(
                             $context->terms->Sym($args_string),
+                            # Define a recursive self call ...
+                            $call->name, $context->traits->Defined($call),
+                            # include the params ...
                             map {
                                 $_->value,
                                 $context->traits->Defined(shift @args)
-                            } @params
+                            } @params,
                         )
                     );
 

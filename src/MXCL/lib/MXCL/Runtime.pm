@@ -170,9 +170,125 @@ class MXCL::Runtime {
                 return $konts->Define(
                     $env,
                     $name,
-                    $terms->List( $terms->Lambda( $params, $body, $env ) )
+                    $terms->List( $terms->Lambda( $params, $body, $env, $name ) )
                 );
             }
+        );
+
+        ## ---------------------------------------------------------------------
+        ## Core Traits
+        ## ---------------------------------------------------------------------
+
+        my $EQ = $traits->Trait(
+            $terms->Sym('EQ'),
+            '==' => $traits->Required,
+            '!=' => $traits->Defined(
+                $natives->Operative(
+                    name => '!=', signature => [{ name => 'n' },{ name => 'm' }],
+                    impl => sub ($ctx, $n, $m) {
+                        $konts->EvalExpr($ctx,
+                            # (not (n == m))
+                            $terms->List($terms->Sym('not'), $terms->List( $n, $terms->Sym('=='), $m )),
+                            $terms->Nil
+                        )
+                    }
+                )
+            )
+        );
+
+        my $ORD = $traits->Trait(
+            $terms->Sym('ORD'),
+            '==' => $traits->Required,
+            '>'  => $traits->Required,
+            '>=' => $traits->Defined(
+                $natives->Operative(
+                    name => '>=', signature => [{ name => 'n' },{ name => 'm' }],
+                    impl => sub ($ctx, $n, $m) {
+                        $konts->EvalExpr($ctx,
+                            # ((n > m) || (n == m))
+                            $terms->List(
+                                $terms->List( $n, $terms->Sym('>'), $m ),
+                                $terms->Sym('||'),
+                                $terms->List( $n, $terms->Sym('=='), $m )
+                            ),
+                            $terms->Nil
+                        )
+                    }
+                )
+            ),
+            '<' => $traits->Defined(
+                $natives->Operative(
+                    name => '<', signature => [{ name => 'n' },{ name => 'm' }],
+                    impl => sub ($ctx, $n, $m) {
+                        $konts->EvalExpr($ctx,
+                            # (not (n > m))
+                            $terms->List($terms->Sym('not'), $terms->List( $n, $terms->Sym('>'), $m )),
+                            $terms->Nil
+                        )
+                    }
+                )
+            ),
+            '<=' => $traits->Defined(
+                $natives->Operative(
+                    name => '<=', signature => [{ name => 'n' },{ name => 'm' }],
+                    impl => sub ($ctx, $n, $m) {
+                        $konts->EvalExpr($ctx,
+                            # ((n < m) || (n == m))
+                            $terms->List(
+                                $terms->List( $n, $terms->Sym('<'), $m ),
+                                $terms->Sym('||'),
+                                $terms->List( $n, $terms->Sym('=='), $m )
+                            ),
+                            $terms->Nil
+                        )
+                    }
+                )
+            )
+        );
+
+        my $Bool = $traits->Compose(
+            $terms->Sym('Bool:EQ'),
+            $EQ,
+            $traits->Trait(
+                $terms->Sym('Bool'),
+                '==' => $traits->Defined($eq),
+                '&&' => $traits->Defined($and),
+                '||' => $traits->Defined($or),
+            )
+        );
+
+        my $Num = $traits->Compose(
+            $terms->Sym('Num:EQ::ORD'),
+            $ORD,
+            $traits->Compose(
+                $terms->Sym('Num:EQ'),
+                $EQ,
+                $traits->Trait(
+                    $terms->Sym('Num'),
+                    '==' => $traits->Defined(binary_op('==:num', 'numify', 'Bool', sub ($n, $m) { $n == $m })),
+                    '>'  => $traits->Defined(binary_op('>:num',  'numify', 'Bool', sub ($n, $m) { $n >  $m })),
+                    '+'  => $traits->Defined($add),
+                    '-'  => $traits->Defined($sub),
+                    '*'  => $traits->Defined($mul),
+                    '/'  => $traits->Defined($div),
+                    '%'  => $traits->Defined($mod),
+                )
+            )
+        );
+
+        my $Str = $traits->Compose(
+            $terms->Sym('Str:EQ::ORD'),
+            $ORD,
+            $traits->Compose(
+                $terms->Sym('Str:EQ'),
+                $EQ,
+                $traits->Trait(
+                    $terms->Sym('Str'),
+                    '==' => $traits->Defined(binary_op('==:str', 'stringify', 'Bool', sub ($n, $m) { $n eq $m })),
+                    '>'  => $traits->Defined(binary_op('>:str',  'stringify', 'Bool', sub ($n, $m) { $n gt $m })),
+                    '~'  => $traits->Defined($concat),
+                )
+            )
         );
 
         ## ---------------------------------------------------------------------
@@ -208,6 +324,11 @@ class MXCL::Runtime {
             'mod'      => $traits->Defined($mod),
 
             'concat'   => $traits->Defined($concat),
+
+            # core types ...
+            'MXCL::Term::Bool' => $traits->Defined($Bool),
+            'MXCL::Term::Num'  => $traits->Defined($Num),
+            'MXCL::Term::Str'  => $traits->Defined($Str),
         );
     }
 
