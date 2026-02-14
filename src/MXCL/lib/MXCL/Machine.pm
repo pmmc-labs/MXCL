@@ -187,16 +187,16 @@ class MXCL::Machine {
                     # environment, which could be anything
                     # so this should really be something more
                     # disciplined and formalized-ish
-                    my $let_rec = $context->traits->Compose(
-                        $context->terms->Sym("Scope[".($k->env->name->stringify)." + Lambda + args:${args_string}]"),
-                        $k->env,
-                        $local
-                    );
+                    #my $let_rec = $context->traits->Compose(
+                    #    $context->terms->Sym("Scope[".($k->env->name->stringify)." + Lambda + args:${args_string}]"),
+                    #    $k->env,
+                    #    $local
+                    #);
 
                     return (
                         $context->kontinues->Return( $k->env, $context->terms->Nil ),
                         $context->kontinues->EvalExpr(
-                            $let_rec,
+                            $local,
                             $call->body,
                             $context->terms->Nil
                         )
