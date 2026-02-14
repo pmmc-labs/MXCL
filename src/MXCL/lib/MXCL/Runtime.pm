@@ -77,18 +77,6 @@ class MXCL::Runtime {
         my $eq = binary_op('eq?', '*', 'Bool', sub ($n, $m) { $n->eq($m) });
 
         ## ---------------------------------------------------------------------
-        ## Some basic builtins, might remove these, but meh, they work
-        ## ---------------------------------------------------------------------
-
-        my $add = binary_op('add', 'numify', 'Num', sub ($n, $m) { $n + $m });
-        my $sub = binary_op('sub', 'numify', 'Num', sub ($n, $m) { $n - $m });
-        my $mul = binary_op('mul', 'numify', 'Num', sub ($n, $m) { $n * $m });
-        my $div = binary_op('div', 'numify', 'Num', sub ($n, $m) { $n / $m });
-        my $mod = binary_op('mod', 'numify', 'Num', sub ($n, $m) { $n % $m });
-
-        my $concat = binary_op('concat', 'stringify', 'Str', sub ($n, $m) { $n . $m });
-
-        ## ---------------------------------------------------------------------
         ## Boolean builtins, these should exist
         ## ---------------------------------------------------------------------
 
@@ -126,6 +114,23 @@ class MXCL::Runtime {
         ## Control structures
         ## ---------------------------------------------------------------------
 
+        my $do = $natives->Operative(
+            name => 'do',
+            signature => [{ name => '@' }],
+            impl => sub ($env, @exprs) {
+                return reverse map {
+                    # FIXME:
+                    # We need to add a Drop-Stack/End-Statement kontinue
+                    # here to prevent the last value of the expression
+                    # from going on the stack of the next one.
+                    #
+                    # But make sure the last value is preserved
+                    # so that we can return it.
+                    $context->kontinues->EvalExpr($env, $_, $context->terms->Nil)
+                } @exprs
+            }
+        );
+
         my $if = $natives->Operative(
             name => 'if',
             signature => [
@@ -136,6 +141,22 @@ class MXCL::Runtime {
             impl => sub ($env, $cond, $if_true, $if_false) {
                 return (
                     $konts->IfElse( $env, $cond, $if_true, $if_false, $terms->Nil ),
+                    $konts->EvalExpr( $env, $cond, $terms->Nil ),
+                )
+            }
+        );
+
+        # TODO - test this, without mutable variables
+        # this is not a very useful thing.
+        my $while = $natives->Operative(
+            name => 'while',
+            signature => [
+                { name => 'cond' },
+                { name => 'body' },
+            ],
+            impl => sub ($env, $cond, $body) {
+                return (
+                    $konts->DoWhile( $env, $cond, $body, $terms->Nil ),
                     $konts->EvalExpr( $env, $cond, $terms->Nil ),
                 )
             }
@@ -184,7 +205,7 @@ class MXCL::Runtime {
             '==' => $traits->Required,
             '!=' => $traits->Defined(
                 $natives->Operative(
-                    name => '!=', signature => [{ name => 'n' },{ name => 'm' }],
+                    name => '!=:EQ', signature => [{ name => 'n' },{ name => 'm' }],
                     impl => sub ($ctx, $n, $m) {
                         $konts->EvalExpr($ctx,
                             # (not (n == m))
@@ -202,7 +223,7 @@ class MXCL::Runtime {
             '>'  => $traits->Required,
             '>=' => $traits->Defined(
                 $natives->Operative(
-                    name => '>=', signature => [{ name => 'n' },{ name => 'm' }],
+                    name => '>=:ORD', signature => [{ name => 'n' },{ name => 'm' }],
                     impl => sub ($ctx, $n, $m) {
                         $konts->EvalExpr($ctx,
                             # ((n > m) || (n == m))
@@ -218,7 +239,7 @@ class MXCL::Runtime {
             ),
             '<' => $traits->Defined(
                 $natives->Operative(
-                    name => '<', signature => [{ name => 'n' },{ name => 'm' }],
+                    name => '<:ORD', signature => [{ name => 'n' },{ name => 'm' }],
                     impl => sub ($ctx, $n, $m) {
                         $konts->EvalExpr($ctx,
                             # (not (n > m))
@@ -230,7 +251,7 @@ class MXCL::Runtime {
             ),
             '<=' => $traits->Defined(
                 $natives->Operative(
-                    name => '<=', signature => [{ name => 'n' },{ name => 'm' }],
+                    name => '<=:ORD', signature => [{ name => 'n' },{ name => 'm' }],
                     impl => sub ($ctx, $n, $m) {
                         $konts->EvalExpr($ctx,
                             # ((n < m) || (n == m))
@@ -246,12 +267,16 @@ class MXCL::Runtime {
             )
         );
 
+        ## ---------------------------------------------------------------------
+        ## Core Literal Traits
+        ## ---------------------------------------------------------------------
+
         my $Bool = $traits->Compose(
             $terms->Sym('Bool:EQ'),
             $EQ,
             $traits->Trait(
                 $terms->Sym('Bool'),
-                '==' => $traits->Defined($eq),
+                '==' => $traits->Defined(binary_op('==:Bool', 'boolify', 'Bool', sub ($n, $m) { $n == $m })),
                 '&&' => $traits->Defined($and),
                 '||' => $traits->Defined($or),
             )
@@ -265,13 +290,14 @@ class MXCL::Runtime {
                 $EQ,
                 $traits->Trait(
                     $terms->Sym('Num'),
-                    '==' => $traits->Defined(binary_op('==:num', 'numify', 'Bool', sub ($n, $m) { $n == $m })),
-                    '>'  => $traits->Defined(binary_op('>:num',  'numify', 'Bool', sub ($n, $m) { $n >  $m })),
-                    '+'  => $traits->Defined($add),
-                    '-'  => $traits->Defined($sub),
-                    '*'  => $traits->Defined($mul),
-                    '/'  => $traits->Defined($div),
-                    '%'  => $traits->Defined($mod),
+                    '==' => $traits->Defined(binary_op('==:Num', 'numify', 'Bool', sub ($n, $m) { $n == $m })),
+                    '>'  => $traits->Defined(binary_op('>:Num',  'numify', 'Bool', sub ($n, $m) { $n >  $m })),
+
+                    '+'  => $traits->Defined(binary_op('+:Num',  'numify', 'Num',  sub ($n, $m) { $n + $m })),
+                    '-'  => $traits->Defined(binary_op('-:Num',  'numify', 'Num',  sub ($n, $m) { $n - $m })),
+                    '*'  => $traits->Defined(binary_op('*:Num',  'numify', 'Num',  sub ($n, $m) { $n * $m })),
+                    '/'  => $traits->Defined(binary_op('/:Num',  'numify', 'Num',  sub ($n, $m) { $n / $m })),
+                    '%'  => $traits->Defined(binary_op('%:Num',  'numify', 'Num',  sub ($n, $m) { $n % $m })),
                 )
             )
         );
@@ -284,9 +310,10 @@ class MXCL::Runtime {
                 $EQ,
                 $traits->Trait(
                     $terms->Sym('Str'),
-                    '==' => $traits->Defined(binary_op('==:str', 'stringify', 'Bool', sub ($n, $m) { $n eq $m })),
-                    '>'  => $traits->Defined(binary_op('>:str',  'stringify', 'Bool', sub ($n, $m) { $n gt $m })),
-                    '~'  => $traits->Defined($concat),
+                    '==' => $traits->Defined(binary_op('==:Str', 'stringify', 'Bool', sub ($n, $m) { $n eq $m })),
+                    '>'  => $traits->Defined(binary_op('>:Str',  'stringify', 'Bool', sub ($n, $m) { $n gt $m })),
+
+                    '~'  => $traits->Defined(binary_op('~:Str',  'stringify', 'Str',  sub ($n, $m) { $n . $m })),
                 )
             )
         );
@@ -300,6 +327,8 @@ class MXCL::Runtime {
             'define'   => $traits->Defined($define),
             'lambda'   => $traits->Defined($lambda),
             'if'       => $traits->Defined($if),
+            'do'       => $traits->Defined($do),
+            'while'    => $traits->Defined($while), # UNTESTED
 
             'eq?'      => $traits->Defined($eq),
             'not'      => $traits->Defined($not),
@@ -316,14 +345,6 @@ class MXCL::Runtime {
             'ref?'     => $traits->Defined($is_ref),
             'opaque?'  => $traits->Defined($is_opaque),
             'trait?'   => $traits->Defined($is_trait),
-
-            'add'      => $traits->Defined($add),
-            'sub'      => $traits->Defined($sub),
-            'mul'      => $traits->Defined($mul),
-            'div'      => $traits->Defined($div),
-            'mod'      => $traits->Defined($mod),
-
-            'concat'   => $traits->Defined($concat),
 
             # core types ...
             'MXCL::Term::Bool' => $traits->Defined($Bool),

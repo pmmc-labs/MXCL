@@ -92,6 +92,19 @@
     - this will allow it to do allocation, etc. 
     - the lifted native subs should never see it
 
+- What is the Eval::TOS for?
+    - I can't find why/where we added it for
+    
+- Need to think about a Drop-Stack/End-Statement kontinue
+    - see the `do` builtin for a comment explaining 
+
+<!----------------------------------------------------------------------------->
+
+## Natives
+
+- Currently we support a very sloppy varargs for the `do` builtin
+    - this needs fixing, and perhaps a bit of a "signature spec" as well
+
 
 <!----------------------------------------------------------------------------->
 

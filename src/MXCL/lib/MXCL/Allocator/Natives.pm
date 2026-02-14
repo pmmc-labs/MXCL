@@ -106,15 +106,27 @@ class MXCL::Allocator::Natives {
         my $name      = $binding{name};
         my @signature = $binding{signature}->@*;
         my $body      = $binding{impl};
-        my $arity     = scalar @signature;
-        my $bound     = Sub::Util::set_subname(
-            (sprintf 'operative:%s' => $name),
-            sub ($ctx, @args) {
-                die "ARITY MISMATCH in '${name}' expected ${arity} and got ".scalar(@args)
-                    if $arity != scalar @args;
-                return $body->( $ctx, @args );
-            }
-        );
+
+        my $bound;
+        if (scalar @signature == 1 && $signature[0]->{name} eq '@') {
+            # XXX - this could use some improvement
+            $bound = Sub::Util::set_subname(
+                (sprintf 'operative:%s' => $name),
+                sub ($ctx, @args) {
+                    return $body->( $ctx, @args );
+                }
+            )
+        } else {
+            my $arity = scalar @signature;
+            $bound = Sub::Util::set_subname(
+                (sprintf 'operative:%s' => $name),
+                sub ($ctx, @args) {
+                    die "ARITY MISMATCH in '${name}' expected ${arity} and got ".scalar(@args)
+                        if $arity != scalar @args;
+                    return $body->( $ctx, @args );
+                }
+            );
+        }
 
         my $operative = $arena->allocate(MXCL::Term::Native::Operative::,
             name    => $terms->Sym($name),

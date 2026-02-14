@@ -19,6 +19,10 @@ class MXCL::Machine {
     method run ($env, $exprs) {
         push @$queue => (
             $context->kontinues->Host($env, 'HALT', +{}, $context->terms->Nil),
+            # FIXME:
+            # We need to prevent the results of the expressions
+            # from ending up on the stack of the next expression
+            # see the Runtime `do` builtin for a comment.
             reverse map $context->kontinues->EvalExpr($env, $_, $context->terms->Nil), @$exprs
         );
         return $self->run_until_host;
@@ -91,6 +95,18 @@ class MXCL::Machine {
                         refaddr $k->condition == refaddr $k->if_false
                             ? $context->kontinues->Return( $k->env, $context->terms->List( $condition ) )
                             : $self->evaluate_term( $k->env, $k->if_false );
+                }
+            }
+            when ('MXCL::Term::Kontinue::DoWhile') {
+                my $condition = $k->stack->head;
+                if ($condition->value) {
+                    return (
+                        $k,
+                        $context->kontinues->EvalExpr( $k->env, $k->condition ),
+                        $self->evaluate_term( $k->env, $k->body ),
+                    );
+                } else {
+                    return ();
                 }
             }
             # ------------------------------------------------------------------

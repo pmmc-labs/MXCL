@@ -13,12 +13,10 @@ my $context = MXCL::Context->new;
 my $runtime = MXCL::Runtime->new( context => $context );
 
 my $exprs = $context->compile_source(q[
-    (define fact (n)
-        (if (n <= 1)
-            1
-            (n * (fact (n - 1)))))
 
-    (fact 6)
+    (do
+        (10 * 20)
+        (10 + 20))
 ]);
 
 diag "COMPILER:";
