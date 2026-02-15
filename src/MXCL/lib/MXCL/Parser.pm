@@ -24,7 +24,7 @@ class MXCL::Parser {
         my $line_no = 0;
         my $line_at = 0;
         my $char_at = 0;
-        while ($source =~ m/(\'|\%\{|\{|\}|\@\[|\[|\]|\(|\)|\;|"(?:[^"\\]|\\.)*"|\s|[^\s\(\)\'\;\{\}\[\]]+)/g) {
+        while ($source =~ m/(\+\{|\}|\+\[|\]|\(|\)|"(?:[^"\\])*"|\s|[^\s\(\)\{\}\[\]]+)/g) {
             my $match = $1;
             if ($match eq "\n") {
                 $line_no++;
@@ -77,16 +77,14 @@ class MXCL::Parser {
 
     method is_opening_bracket ($token) {
         return $token->source eq '('
-            || $token->source eq '%{'
-            || $token->source eq '{'
-            || $token->source eq '@['
-            || $token->source eq '['
+            || $token->source eq '+{'
+            || $token->source eq '+['
     }
 
     method is_closing_bracket ($token) {
         return $token->source eq ')'
-            || $token->source eq ']'
             || $token->source eq '}'
+            || $token->source eq ']'
     }
 
     method do_brackets_match ($compound, $close) {
@@ -97,12 +95,12 @@ class MXCL::Parser {
                             .$compound->open->source)
             }
             when (']') {
-                $compound->open->source eq '[' || $compound->open->source eq '@['
+                $compound->open->source eq '+['
                     || die ("Unbalanced Brackets: Expected ] and got "
                             .$compound->open->source)
             }
             when ('}') {
-                $compound->open->source eq '{' || $compound->open->source eq '%{'
+                $compound->open->source eq '+{'
                     || die ("Unbalanced Brackets: Expected } and got "
                             .$compound->open->source)
             }

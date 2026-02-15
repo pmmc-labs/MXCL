@@ -8,13 +8,15 @@ use MXCL::Term;
 
 use MXCL::Term::Nil;
 use MXCL::Term::Cons;
-use MXCL::Term::Array;
 
 use MXCL::Term::Bool;
 use MXCL::Term::Num;
 use MXCL::Term::Str;
 use MXCL::Term::Tag;
 use MXCL::Term::Sym;
+
+use MXCL::Term::Array;
+use MXCL::Term::Hash;
 
 use MXCL::Term::Lambda;
 use MXCL::Term::Opaque;
@@ -54,6 +56,10 @@ class MXCL::Allocator::Terms {
 
     method Array (@elements) {
         $arena->allocate(MXCL::Term::Array::, elements => \@elements )
+    }
+
+    method Hash (%elements) {
+        $arena->allocate(MXCL::Term::Hash::, elements => \%elements )
     }
 
     ## -------------------------------------------------------------------------

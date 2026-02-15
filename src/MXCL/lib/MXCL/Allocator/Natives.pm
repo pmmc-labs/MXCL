@@ -35,10 +35,8 @@ class MXCL::Allocator::Natives {
     method Applicative (%binding) {
         my $name        = $binding{name};
         my @signature   = $binding{signature}->@*;
-        my $returns     = $binding{returns};
         my $body        = $binding{impl};
-        my @coercions   = map { $_->{coerce} } @signature; # TODO - $returns->can($_->{coerce}) would be better
-        my $arity       = scalar @coercions;
+        my $returns     = $binding{returns};
         my $constructor = defined $returns
             ? ($terms->can( $returns ) || die "Cannot find ${returns} in Terms")
             # if $returns has not been defined, it means we
@@ -47,23 +45,40 @@ class MXCL::Allocator::Natives {
             # be re-thought, but this works for now.
             : sub ($, $result) { $result };
 
-        my $bound = Sub::Util::set_subname(
-            (sprintf 'applicative:%s' => $name),
-            sub (@args) {
-                die "ARITY MISMATCH in ${name} expected ${arity} and got ".scalar(@args)
-                    if $arity != scalar @args;
-                my @coerced;
-                foreach my $coerce (@coercions) {
-                    my $arg = shift @args;
-                    if (not(defined $coerce)) {
-                        push @coerced => $arg;
-                    } else {
-                        push @coerced => $arg->$coerce();
+        my $bound;
+        if (scalar @signature == 1 && $signature[0]->{name} eq '@') {
+            my $coerce = $signature[0]->{coerce};
+            $bound = Sub::Util::set_subname(
+                (sprintf 'applicative:%s' => $name),
+                sub (@args) {
+                    if ($coerce) {
+                        @args = map { $_->$coerce() } @args
                     }
+                    $constructor->( $terms, $body->( @args ) );
                 }
-                $constructor->( $terms, $body->( @coerced ) )
-            }
-        );
+            );
+        } else {
+            my @coercions = map { $_->{coerce} } @signature; # TODO - $returns->can($_->{coerce}) would be better
+            my $arity     = scalar @coercions;
+
+            $bound = Sub::Util::set_subname(
+                (sprintf 'applicative:%s' => $name),
+                sub (@args) {
+                    die "ARITY MISMATCH in ${name} expected ${arity} and got ".scalar(@args)
+                        if $arity != scalar @args;
+                    my @coerced;
+                    foreach my $coerce (@coercions) {
+                        my $arg = shift @args;
+                        if (not(defined $coerce)) {
+                            push @coerced => $arg;
+                        } else {
+                            push @coerced => $arg->$coerce();
+                        }
+                    }
+                    $constructor->( $terms, $body->( @coerced ) )
+                }
+            );
+        }
 
         my $applicative = $arena->allocate(MXCL::Term::Native::Applicative::,
             name    => $terms->Sym($name),

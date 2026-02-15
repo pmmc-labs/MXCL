@@ -13,7 +13,7 @@ my $context = MXCL::Context->new;
 my $runtime = MXCL::Runtime->new( context => $context );
 
 my $exprs = $context->compile_source(q[
-    (((lambda (x y) (x + y)) 10 20) != 30)
+    +{ :foo 10 :bar 20 }
 ]);
 
 diag "COMPILER:";

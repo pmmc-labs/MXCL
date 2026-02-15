@@ -27,10 +27,6 @@ class MXCL::Compiler {
 
     method expand_token ($token) {
         my $src = $token->source;
-        # XXX - in theory, these can also be in the Env
-        # so you could use #t or something if you want
-        # ... not really worth it for now, but something
-        # to think about later
         return $context->terms->True  if $src eq 'true';
         return $context->terms->False if $src eq 'false';
         if ($src =~ /^\".*\"$/) {
@@ -50,48 +46,19 @@ class MXCL::Compiler {
 
         # expand empty compounds based on delimiter type
         if (scalar @items == 0) {
-            die 'MXCL::Term::Tuple not yet supported' if $open eq "[";
-            die 'MXCL::Term::Hash not yet supported'  if $open eq "%{";
-            # FIXME - return an empty Array here
-            die 'MXCL::Term::Array not yet supported' if $open eq "@[";
-            return $context->terms->Nil; # () and {} with no content
-        }
-
-        # expand pairs at compile time,
-        # as they are constructive
-        if (scalar @items == 3 && $items[1] isa MXCL::Parser::Token && $items[1]->source eq '.') {
-            die "MXCL::Pair not yet supported";
-            #my ($fst, $dot, $snd) = @items;
-            #return MXCL::Term::Pair->new(
-            #    fst => $self->expand_expression($fst),
-            #    snd => $self->expand_expression($snd),
-            #);
+            return $context->terms->Hash  if $open eq "+{";
+            return $context->terms->Array if $open eq "+[";
+            return $context->terms->Nil; # empty list
         }
 
         # ...
         my @list = map $self->expand_expression( $_ ), @items;
 
-        # expand quoted lists ...
-        unshift @list => $context->terms->Sym('quote')
-            if $compound->open->source eq "'";
+        unshift @list => $context->terms->Sym('make-hash')
+            if $compound->open->source eq "+{";
 
-        # expand blocks ...
-        unshift @list => $context->terms->Sym('do')
-            if $compound->open->source eq "{";
-
-        # expand hashes ...
-        unshift @list => $context->terms->Sym('hash/new')
-            if $compound->open->source eq "%{";
-
-        # expand tuples ...
-        unshift @list => $context->terms->Sym('tuple/new')
-            if $compound->open->source eq "[";
-
-        # TODO:
-        # don't expand the arrays, return an Array term
-        # similar to how Lists work below.
-        unshift @list => $context->terms->Sym('array/new')
-            if $compound->open->source eq "@[";
+        unshift @list => $context->terms->Sym('make-array')
+            if $compound->open->source eq "+[";
 
         # otherwise it is a list ...
         return $context->terms->List( @list );

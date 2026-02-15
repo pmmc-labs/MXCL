@@ -166,6 +166,26 @@ class MXCL::Runtime {
         ## Constructors
         ## ---------------------------------------------------------------------
 
+        my $make_array = $natives->Applicative(
+             name      => 'make-array',
+             signature => [ { name => '@' } ],
+             impl      => sub (@elements) {
+                 $terms->Array(@elements)
+             }
+        );
+
+        my $make_hash = $natives->Applicative(
+            name      => 'make-hash',
+            signature => [ { name => '@' } ],
+            impl      => sub (@elements) {
+                my %elements;
+                foreach my ($k, $v) (@elements) {
+                    $elements{ $k->value } = $v;
+                }
+                return $terms->Hash(%elements);
+            }
+        );
+
         my $lambda = $natives->Operative(
             name => 'lambda',
             signature => [
@@ -326,6 +346,7 @@ class MXCL::Runtime {
             $terms->Sym('::'),
             'define'   => $traits->Defined($define),
             'lambda'   => $traits->Defined($lambda),
+
             'if'       => $traits->Defined($if),
             'do'       => $traits->Defined($do),
             'while'    => $traits->Defined($while), # UNTESTED
@@ -345,6 +366,10 @@ class MXCL::Runtime {
             'ref?'     => $traits->Defined($is_ref),
             'opaque?'  => $traits->Defined($is_opaque),
             'trait?'   => $traits->Defined($is_trait),
+
+            # make datatypes
+            'make-array' => $traits->Defined($make_array),
+            'make-hash'  => $traits->Defined($make_hash),
 
             # core types ...
             'MXCL::Term::Bool' => $traits->Defined($Bool),

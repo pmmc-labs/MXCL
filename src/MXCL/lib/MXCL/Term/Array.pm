@@ -10,6 +10,10 @@ class MXCL::Term::Array :isa(MXCL::Term) {
     method at ($index) { $elements->[$index] }
 
     method stringify {
-        sprintf '[%s]' => join ', ' => map $_->stringify, @$elements
+        sprintf '+[%s]' => join ', ' => map $_->stringify, @$elements
+    }
+
+    method pprint {
+        sprintf '+[%s]' => join ', ' => map $_->stringify, @$elements
     }
 }
