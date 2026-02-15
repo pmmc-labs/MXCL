@@ -7,6 +7,7 @@ use MXCL::Arena;
 use MXCL::Term::Kontinue::Host;
 
 use MXCL::Term::Kontinue::Return;
+use MXCL::Term::Kontinue::Discard;
 
 use MXCL::Term::Kontinue::IfElse;
 use MXCL::Term::Kontinue::DoWhile;
@@ -20,6 +21,9 @@ use MXCL::Term::Kontinue::Apply::Operative;
 use MXCL::Term::Kontinue::Apply::Applicative;
 
 use MXCL::Term::Kontinue::Define;
+
+use MXCL::Term::Kontinue::Scope::Enter;
+use MXCL::Term::Kontinue::Scope::Leave;
 
 class MXCL::Allocator::Kontinues {
     field $arena :param :reader;
@@ -41,7 +45,10 @@ class MXCL::Allocator::Kontinues {
                 @args{qw[ effect config ]} = ($k->effect, $k->config)
             }
             when ('MXCL::Term::Kontinue::Return') {
-                $args{env} = $k->env; # preserve the env
+                #$args{env} = $k->env; # preserve the env
+            }
+            when ('MXCL::Term::Kontinue::Discard') {
+                #$args{env} = $k->env; # preserve the env
             }
             when ('MXCL::Term::Kontinue::IfElse') {
                 @args{qw[ condition if_true if_false ]} = ($k->condition, $k->if_true, $k->if_false)
@@ -70,6 +77,13 @@ class MXCL::Allocator::Kontinues {
             when ('MXCL::Term::Kontinue::Define') {
                 @args{qw[ name ]} = ($k->name)
             }
+            when ('MXCL::Term::Kontinue::Scope::Enter') {
+                @args{qw[ leave ]} = ($k->leave)
+            }
+            when ('MXCL::Term::Kontinue::Scope::Leave') {
+                @args{qw[ __deferred ]} = ($k->deferred);
+                $args{env} = $k->env; # preserve the env
+            }
             default {
                 die 'BAD KONTINUE NO UPDATE FOR YOU!';
             }
@@ -97,6 +111,13 @@ class MXCL::Allocator::Kontinues {
         )
     }
 
+    method Discard ($env, $stack) {
+        $arena->allocate(MXCL::Term::Kontinue::Discard::,
+            env   => $env,
+            stack => $stack,
+        )
+    }
+
     ## -------------------------------------------------------------------------
 
     method Define ($env, $name, $stack) {
@@ -105,6 +126,19 @@ class MXCL::Allocator::Kontinues {
             stack => $stack,
             name  => $name,
         )
+    }
+
+    ## -------------------------------------------------------------------------
+
+    method Scope ($env, $stack) {
+        $arena->allocate(MXCL::Term::Kontinue::Scope::Enter::,
+            env   => $env,
+            stack => $stack,
+            leave => $arena->allocate(MXCL::Term::Kontinue::Scope::Leave::,
+                env   => $env,
+                stack => $stack,
+            )
+        );
     }
 
     ## -------------------------------------------------------------------------

@@ -23,7 +23,10 @@ class MXCL::Machine {
             # We need to prevent the results of the expressions
             # from ending up on the stack of the next expression
             # see the Runtime `do` builtin for a comment.
-            reverse map $context->kontinues->EvalExpr($env, $_, $context->terms->Nil), @$exprs
+            reverse map {
+                $context->kontinues->Discard($env, $context->terms->Nil),
+                $context->kontinues->EvalExpr($env, $_, $context->terms->Nil)
+            } @$exprs
         );
         return $self->run_until_host;
     }
@@ -49,15 +52,21 @@ class MXCL::Machine {
             # ------------------------------------------------------------------
             when ('MXCL::Term::Kontinue::Return') {
                 # NOTE:
-                # can mutate Env and Stack of previous K
-                # unless previous K is a Return, in which
-                # case it will preserve the Env of the
-                # previous K rather than overrite it
+                # this passes on the Env and merges the stacks
+                # for this K the previous K in the queue.
                 my $prev = pop @$queue;
                 return $context->kontinues->Update(
                     $prev,
                     $k->env,
                     $context->terms->Append( $prev->stack, $k->stack )
+                );
+            }
+            when ('MXCL::Term::Kontinue::Discard') {
+                my $prev = pop @$queue;
+                return $context->kontinues->Update(
+                    $prev,
+                    $k->env,
+                    $context->terms->Nil
                 );
             }
             when ('MXCL::Term::Kontinue::Define') {
@@ -78,6 +87,30 @@ class MXCL::Machine {
                 return $context->kontinues->Return(
                     $local,
                     $context->terms->Nil,
+                );
+            }
+            # ------------------------------------------------------------------
+            # Enter/Leave Scopes
+            # ------------------------------------------------------------------
+            when ('MXCL::Term::Kontinue::Scope::Enter') {
+                # TODO
+                # - set up the `defer` function in the Env
+                # - set up a local `return` function in the Env
+                return ();
+            }
+            when ('MXCL::Term::Kontinue::Scope::Leave') {
+                # NOTE:
+                # this will restore the env, but in a kinda
+                # janky way inside the Update function
+
+                # FIXME:
+                # The Leave K should have a restore_env
+                # as an explicit thing to restore, and
+                # be part of the hash. Then we do not
+                # need to special case things anymore.
+                return $context->kontinues->Return(
+                    $k->env,
+                    $k->stack,
                 );
             }
             # ------------------------------------------------------------------
@@ -201,8 +234,7 @@ class MXCL::Machine {
                         )
                     );
 
-                    return (
-                        $context->kontinues->Return( $k->env, $context->terms->Nil ),
+                    return $context->kontinues->Scope( $k->env, $context->terms->Nil )->wrap(
                         $context->kontinues->EvalExpr(
                             $local,
                             $call->body,

@@ -65,7 +65,7 @@ class MXCL::Debugger {
         if ($machine->queue->@*) {
             say "  - ", join "\n  - " => map blessed $_ ? $_->pprint : $_, reverse $machine->queue->@*;
         }
-        #say for $lines->@*;
+        say for $lines->@*;
     }
 
 }

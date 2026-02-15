@@ -118,16 +118,12 @@ class MXCL::Runtime {
             name => 'do',
             signature => [{ name => '@' }],
             impl => sub ($env, @exprs) {
-                return reverse map {
-                    # FIXME:
-                    # We need to add a Drop-Stack/End-Statement kontinue
-                    # here to prevent the last value of the expression
-                    # from going on the stack of the next one.
-                    #
-                    # But make sure the last value is preserved
-                    # so that we can return it.
-                    $context->kontinues->EvalExpr($env, $_, $context->terms->Nil)
-                } @exprs
+                return $konts->Scope( $env, $terms->Nil )->wrap(
+                    (reverse map {
+                        $konts->Discard($env, $terms->Nil),
+                        $konts->EvalExpr($env, $_, $terms->Nil)
+                    } @exprs),
+                )
             }
         );
 
@@ -139,7 +135,7 @@ class MXCL::Runtime {
                 { name => 'if-false' },
             ],
             impl => sub ($env, $cond, $if_true, $if_false) {
-                return (
+                return $konts->Scope( $env, $terms->Nil )->wrap(
                     $konts->IfElse( $env, $cond, $if_true, $if_false, $terms->Nil ),
                     $konts->EvalExpr( $env, $cond, $terms->Nil ),
                 )
@@ -155,7 +151,7 @@ class MXCL::Runtime {
                 { name => 'body' },
             ],
             impl => sub ($env, $cond, $body) {
-                return (
+                return $konts->Scope( $env, $terms->Nil )->wrap(
                     $konts->DoWhile( $env, $cond, $body, $terms->Nil ),
                     $konts->EvalExpr( $env, $cond, $terms->Nil ),
                 )
@@ -163,28 +159,8 @@ class MXCL::Runtime {
         );
 
         ## ---------------------------------------------------------------------
-        ## Constructors
+        ## Functions
         ## ---------------------------------------------------------------------
-
-        my $make_array = $natives->Applicative(
-             name      => 'make-array',
-             signature => [ { name => '@' } ],
-             impl      => sub (@elements) {
-                 $terms->Array(@elements)
-             }
-        );
-
-        my $make_hash = $natives->Applicative(
-            name      => 'make-hash',
-            signature => [ { name => '@' } ],
-            impl      => sub (@elements) {
-                my %elements;
-                foreach my ($k, $v) (@elements) {
-                    $elements{ $k->value } = $v;
-                }
-                return $terms->Hash(%elements);
-            }
-        );
 
         my $lambda = $natives->Operative(
             name => 'lambda',
@@ -336,6 +312,30 @@ class MXCL::Runtime {
                     '~'  => $traits->Defined(binary_op('~:Str',  'stringify', 'Str',  sub ($n, $m) { $n . $m })),
                 )
             )
+        );
+
+        ## ---------------------------------------------------------------------
+        ## Core Datatypes
+        ## ---------------------------------------------------------------------
+
+        my $make_array = $natives->Applicative(
+             name      => 'make-array',
+             signature => [ { name => '@' } ],
+             impl      => sub (@elements) {
+                 $terms->Array(@elements)
+             }
+        );
+
+        my $make_hash = $natives->Applicative(
+            name      => 'make-hash',
+            signature => [ { name => '@' } ],
+            impl      => sub (@elements) {
+                my %elements;
+                foreach my ($k, $v) (@elements) {
+                    $elements{ $k->value } = $v;
+                }
+                return $terms->Hash(%elements);
+            }
         );
 
         ## ---------------------------------------------------------------------
