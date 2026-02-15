@@ -14,9 +14,12 @@ my $runtime = MXCL::Runtime->new( context => $context );
 
 my $exprs = $context->compile_source(q[
 
-    (do
-        (10 * 20)
-        (10 + 20))
+    (define fact (n)
+        (if (n == 0)
+            1
+            (n * (fact (n - 1)))))
+
+    (fact 10)
 ]);
 
 diag "COMPILER:";
