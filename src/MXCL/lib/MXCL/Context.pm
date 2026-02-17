@@ -9,6 +9,7 @@ use MXCL::Machine;
 
 use MXCL::Allocator::Terms;
 use MXCL::Allocator::Traits;
+use MXCL::Allocator::Roles;
 use MXCL::Allocator::References;
 use MXCL::Allocator::Kontinues;
 use MXCL::Allocator::Natives;
@@ -18,6 +19,7 @@ class MXCL::Context {
 
     field $terms     :reader;
     field $traits    :reader;
+    field $roles     :reader;
     field $refs      :reader;
     field $kontinues :reader;
     field $natives   :reader;
@@ -35,6 +37,7 @@ class MXCL::Context {
 
         $terms     = MXCL::Allocator::Terms->new( arena => $arena );
         $traits    = MXCL::Allocator::Traits->new( arena => $arena );
+        $roles     = MXCL::Allocator::Roles->new( arena => $arena );
         $refs      = MXCL::Allocator::References->new( arena => $arena );
         $kontinues = MXCL::Allocator::Kontinues->new( arena => $arena );
         $natives   = MXCL::Allocator::Natives->new(
