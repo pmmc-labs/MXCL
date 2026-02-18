@@ -33,20 +33,18 @@ purely about data, albiet code represented as data.
     [ ] related Token/Compound(s)
 
 <!----------------------------------------------------------------------------->
-## Layer 1: Trait Substrate
+## Layer 1: Role Substrate
 <!----------------------------------------------------------------------------->
 
-Layer 1 provides a substrate for Trait composition using terms defined in 
+Layer 1 provides a substrate for Role composition using terms defined in 
 Layer 0. 
 
-[-] Communitivity & Associativity
-    [-] trait composition is order independent
-[-] Trait Operations
-    [-] Union: composing two traits together
+[x] Communitivity & Associativity
+    [x] role composition is order independent
+[-] Role Operations
+    [x] Union: composing two roles together
     [-] Conflicts: detecting conflicts during composition
-    [ ] Exclusion: removing methods from a trait
-    [ ] Aliasing: renaming methods from a trait
-    [ ] Resolution: explicit override (forces an ordering)
+    [-] Resolution: explicit override (forces an ordering)
 
 <!----------------------------------------------------------------------------->
 ## Layer 2: Callables, Environments & Scopes
@@ -54,16 +52,16 @@ Layer 0.
 
 Layer 2 provides a set of callable terms, each of which is either an 
 Operative (args are not evaluted) or Applicative (args are evaluated). 
-These can be used as functions in the environment, or methods of a Trait. 
+These can be used as functions in the environment, or methods of a Role. 
 
-This layer also provides the Environment and Scope abstractions using traits
+This layer also provides the Environment and Scope abstractions using roles
 as the name lookup mechanism, and the environment operations are implemented
-as trait operations.
+as role operations.
 
-[-] Environments & Scopes
-    [-] deriving scopes
-    [-] name resolution
-    [-] fixed-point for recursion
+[x] Environments & Scopes
+    [x] deriving scopes
+    [x] name resolution
+    [x] fixed-point for recursion
 [x] Operatives
     [x] arguments are unevaluated
     [x] returns a list of continuation objects
@@ -73,7 +71,7 @@ as trait operations.
     [x] returns a term  
     [x] can be user defined
 [x] Opaque
-    [x] an Operative wrapped around a Trait
+    [x] an Operative wrapped around a Role
     [x] dispatches based on first argument
     
 [-] Callable Terms
@@ -90,14 +88,22 @@ as trait operations.
 <!----------------------------------------------------------------------------->
     
 Layer 3 builds upon the previous layers to provide a meta-circular object 
-system with a complete MOP. It also uses the Trait substrate to provide a
-trait for each of the core literal terms, and MXCL autoboxes it accordingly.
+system with a complete MOP. It also uses the Role substrate to provide a
+role for each of the core literal terms, and MXCL autoboxes it accordingly.
 
-[-] Foundational Traits
-    [-] EQ, ORD, etc. 
+[x] Foundational Roles
+    [x] EQ, ORD
+    [ ] SHOW/PPRINTABLE
+    [ ] INDEXED (for Array and Hash)
 [-] Autoboxed core Terms
-    [-] Bool, Num, Str, etc. have trait wrappers
-    [-] core terms can be called as an object
+    [x] core terms can be called as an object
+    [x] Bool
+    [-] Num
+    [-] Str 
+    [ ] Ref 
+    [ ] Array
+    [ ] Hash
+
 [ ] The classic MOP bootstrap
     [ ] Class isa Object
     [ ] Object isa Class
@@ -107,8 +113,10 @@ trait for each of the core literal terms, and MXCL autoboxes it accordingly.
     [ ] creating instances
     [ ] introspection via metaclasses
     [ ] class/role construction via metaclasses
+
 [ ] Mutable objects
     [ ] using the Ref terms to create mutable objects
+
 [ ] Operatives for Generics
 
 <!----------------------------------------------------------------------------->
@@ -118,8 +126,8 @@ trait for each of the core literal terms, and MXCL autoboxes it accordingly.
 Layer 4 is the machine which runs this code, and the Context interface which 
 provides access to the runtime. 
 
-[-] Continuation Queue Machine
-    [-] incrementally compiles expressions to continations
+[x] Continuation Queue Machine
+    [x] incrementally compiles expressions to continations
     [x] passes temporary values through local stack in continuation
 [-] Kontinue Terms
     [ ] first-class, exposed in the language
@@ -130,6 +138,7 @@ provides access to the runtime.
     [-] `defer` to handle resource cleanup on scope exit
     [ ] `return` for non-local returns
     [-] `try/catch` and `throw` for exceptions
+
 [ ] Objects as Schedulers
     [ ] object stores continutations for later execution
     [ ] Generators, etc. 
