@@ -17,7 +17,9 @@ class MXCL::Allocator::Roles {
     method Role (@slots) {
         my %index = map { $_->ident, undef } @slots;
         die "Duplicated slots in the role, WTF DUDE" if scalar(keys %index) != scalar @slots;
-        $arena->allocate(MXCL::Term::Role::, slots => \@slots );
+        $arena->allocate(MXCL::Term::Role::, slots => [
+            sort { $a->ident->value cmp $b->ident->value  } @slots
+        ] );
     }
 
     ## -------------------------------------------------------------------------
@@ -43,9 +45,11 @@ class MXCL::Allocator::Roles {
     method MergeSlot ($s1, $s2) {
         return $s1 if not defined $s2;
         return $s2 if not defined $s1;
+
         return $s1 if $s1 isa MXCL::Term::Role::Slot::Required && $s2 isa MXCL::Term::Role::Slot::Required;
-        return $s1 if $s1 isa MXCL::Term::Role::Slot::Defined  && $s2 isa MXCL::Term::Role::Slot::Required;
         return $s2 if $s1 isa MXCL::Term::Role::Slot::Required && $s2 isa MXCL::Term::Role::Slot::Defined;
+        return $s1 if $s1 isa MXCL::Term::Role::Slot::Defined  && $s2 isa MXCL::Term::Role::Slot::Required;
+
         if ($s1 isa MXCL::Term::Role::Slot::Defined && $s2 isa MXCL::Term::Role::Slot::Defined) {
             if ($s1->eq( $s2 )) {
                 return $s1;
@@ -53,6 +57,10 @@ class MXCL::Allocator::Roles {
                 return $self->Conflict( $s1, $s2 );
             }
         }
+
+        return $self->Conflict( $s1, $s2 )
+            if $s1 isa MXCL::Term::Role::Slot::Conflict || $s2 isa MXCL::Term::Role::Slot::Conflict;
+
         die "Cannot Merge Slots (".(blessed($s1) // '???').") and (".(blessed($s2) // '???').")";
     }
 

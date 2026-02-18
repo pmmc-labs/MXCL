@@ -44,39 +44,73 @@ my $STR = $roles->Role(
     $roles->Defined( $terms->Sym('~'),  $terms->Str('(concat x y)') ),
 );
 
-#diag 'EQ : ', $EQ->pprint;
-#diag 'ORD : ', $ORD->pprint;
+# ...
 
-#diag 'EQ + ORD : ', $roles->Union( $ORD, $EQ )->pprint;
-#diag 'ORD + EQ : ', $roles->Union( $EQ, $ORD )->pprint;
+is $roles->Union( $ORD, $EQ )->hash,
+   $roles->Union( $EQ, $ORD )->hash, '... hashing is order independent';
 
 ok $roles->Union( $ORD, $EQ )
         ->is_equal( $roles->Union( $EQ, $ORD ) ),
             '... EQ <+> ORD';
 
-#diag 'ORD - EQ : ', $roles->SymmetricDifference( $ORD, $EQ )->pprint;
-#diag 'EQ - ORD : ', $roles->SymmetricDifference( $EQ, $ORD )->pprint;
+# ...
+
+is $roles->SymmetricDifference( $ORD, $EQ )->hash,
+   $roles->SymmetricDifference( $EQ, $ORD )->hash, '... hashing is order independent';
 
 ok $roles->SymmetricDifference( $ORD, $EQ )
         ->is_equal( $roles->SymmetricDifference( $EQ, $ORD ) ),
             '... EQ <-> ORD';
 
-#diag 'ORD > EQ : ', $roles->AsymmetricDifference( $ORD, $EQ )->pprint;
-#diag 'EQ > ORD : ', $roles->AsymmetricDifference( $EQ, $ORD )->pprint;
+# ...
+
+is $roles->AsymmetricDifference( $ORD, $EQ )->hash,
+   $roles->AsymmetricDifference( $EQ, $ORD )->hash, '... hashing is order independent';
 
 ok $roles->AsymmetricDifference( $ORD, $EQ )
         ->is_equal( $roles->AsymmetricDifference( $EQ, $ORD ) ),
             '... EQ >< ORD';
 
-#diag 'ORD * EQ : ', $roles->Intersection( $ORD, $EQ )->pprint;
-#diag 'EQ * ORD : ', $roles->Intersection( $EQ, $ORD )->pprint;
+# ...
+
+is $roles->Intersection( $ORD, $EQ )->hash,
+   $roles->Intersection( $EQ, $ORD )->hash, '... hashing is order independent';
 
 ok $roles->Intersection( $ORD, $EQ )
         ->is_equal( $roles->Intersection( $EQ, $ORD ) ),
             '... EQ <*> ORD';
 
-#diag 'NUM + (ORD + EQ) : ', $roles->Union( $NUM, $roles->Union( $ORD, $EQ ) )->pprint;
-#diag 'STR + (ORD + EQ) : ', $roles->Union( $STR, $roles->Union( $ORD, $EQ ) )->pprint;
-#diag 'NUM - (ORD + EQ) : ', $roles->Intersection( $NUM, $roles->Union( $ORD, $EQ ) )->pprint;
+# ...
+
+is $roles->Union( $NUM, $roles->Union( $ORD, $EQ ) )->hash,
+   $roles->Union( $NUM, $roles->Union( $EQ, $ORD ) )->hash, '... hashing is order independent';
+
+ok $roles->Union( $NUM, $roles->Union( $ORD, $EQ ) )
+        ->is_equal( $roles->Union( $NUM, $roles->Union( $EQ, $ORD ) ) ),
+            '... NUM + EQ + ORD';
+
+is $roles->Union( $NUM, $roles->Union( $ORD, $EQ ) )->hash,
+   $roles->Union( $ORD, $roles->Union( $EQ, $NUM ) )->hash, '... hashing is order independent';
+
+ok $roles->Union( $NUM, $roles->Union( $ORD, $EQ ) )
+        ->is_equal( $roles->Union( $ORD, $roles->Union( $EQ, $NUM ) ) ),
+            '... NUM + EQ + ORD';
+
+# ...
+
+is $roles->Union( $STR, $roles->Union( $ORD, $EQ ) )->hash,
+   $roles->Union( $STR, $roles->Union( $EQ, $ORD ) )->hash, '... hashing is order independent';
+
+ok $roles->Union( $STR, $roles->Union( $ORD, $EQ ) )
+        ->is_equal( $roles->Union( $STR, $roles->Union( $EQ, $ORD ) ) ),
+            '... STR + EQ + ORD';
+
+is $roles->Union( $STR, $roles->Union( $ORD, $EQ ) )->hash,
+   $roles->Union( $ORD, $roles->Union( $EQ, $STR ) )->hash, '... hashing is order independent';
+
+ok $roles->Union( $STR, $roles->Union( $ORD, $EQ ) )
+        ->is_equal( $roles->Union( $ORD, $roles->Union( $EQ, $STR ) ) ),
+            '... STR + EQ + ORD';
+# ...
 
 done_testing;
