@@ -8,9 +8,11 @@ class MXCL::Term::Role :isa(MXCL::Term) {
     field $slots :param :reader = +[];
 
     field %index;
+    field %hashes;
 
     ADJUST {
-        %index = map { $_->ident->value, $_ } $slots->@*;
+        %index  = map { $_->ident->value, $_ } $slots->@*;
+        %hashes = map { $_->hash, $_ } $slots->@*;
     }
 
     # --------------------------------------------------------------------------
@@ -20,7 +22,7 @@ class MXCL::Term::Role :isa(MXCL::Term) {
 
     method contains (@slots) {
         foreach my $slot (@slots) {
-            return false unless $index{ $slot->ident->value };
+            return false unless $hashes{ $slot->hash };
         }
         return true;
     }
