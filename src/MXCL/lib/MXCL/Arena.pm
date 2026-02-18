@@ -3,6 +3,8 @@ use v5.42;
 use experimental qw[ class ];
 
 use Digest::MD5 ();
+#use Digest::xxHash ();
+use Time::HiRes ();
 
 class MXCL::Arena {
     field $terms :reader = +{};
@@ -18,6 +20,7 @@ class MXCL::Arena {
     field $statz :reader = +{};
     field $typez :reader = +{};
     field $hashz :reader = +{};
+    field $timez :reader = +{};
 
     # ... commits
 
@@ -31,6 +34,7 @@ class MXCL::Arena {
             statz  => +{ %$statz },
             typez  => +{ %$typez },
             hashz  => +{ %$hashz },
+            timez  => +{ %$timez },
         };
 
         # clear them each generation
@@ -39,6 +43,7 @@ class MXCL::Arena {
         $statz->%* = ();
         $typez->%* = ();
         $hashz->%* = ();
+        #$timez->%* = ();
 
         # get the next gen marker
         $current_gen = scalar @$generations;
@@ -46,10 +51,12 @@ class MXCL::Arena {
     }
 
     method allocate ($type, %fields) {
-        my @names  = sort { $a cmp $b } grep !/^__/, keys %fields;
-        my @values = @fields{ @names };
-        my $hash   = $self->construct_hash($type, @values);
+        # check timing for hashing
+        my $hash_start = [Time::HiRes::gettimeofday];
+        my $hash = $self->construct_hash($type, %fields);
+        $timez->{hashing} += Time::HiRes::tv_interval( $hash_start );
 
+        # dont let stats interfere
         $statz->{alive}++;
         $statz->{types}{$type}++;
         $statz->{hashes}{$hash}++;
@@ -62,25 +69,33 @@ class MXCL::Arena {
         $hashz->{$hash}{hits}   //= 0;
         $hashz->{$hash}{misses} //= 0;
 
+        # check timing for cache hits/misses
+        my $start = [Time::HiRes::gettimeofday];
         if (exists $terms->{ $hash }) {
+            $timez->{hits} += Time::HiRes::tv_interval( $start );
+            # do not let stats interfere
             $statz->{hits}++;
             $typez->{$type}{hits}++;
             $hashz->{$hash}{hits}++;
-            return $terms->{ $hash };
         } else {
-            $statz->{misses}++;
-            $typez->{$type}{misses}++;
-            $hashz->{$hash}{misses}++;
-            return $terms->{ $hash } = $type->new(
+            $terms->{ $hash } = $type->new(
                 hash => $hash,
                 gen  => $current_gen,
                 %fields
             );
+            $timez->{misses} += Time::HiRes::tv_interval( $start );
+            # do not let stats interfere
+            $statz->{misses}++;
+            $typez->{$type}{misses}++;
+            $hashz->{$hash}{misses}++;
         }
+
+        return $terms->{ $hash }
     }
 
-    method construct_hash ($inv, @values) {
-        my $type = blessed $inv // $inv;
+    method construct_hash ($inv, %fields) {
+        my $type   = blessed $inv // $inv;
+        my @values = @fields{ sort { $a cmp $b } grep !/^__/, keys %fields };
 
         if (scalar @values == 1 && ref $values[0] && !(blessed $values[0])) {
             if (reftype $values[0] eq 'HASH') {
@@ -96,17 +111,22 @@ class MXCL::Arena {
             }
         }
 
-        return Digest::MD5::md5_hex( $type, map {
-            # FIXME: This is maybe a bit fragile
-            # and very opaque, we should make it
-            # easier to catch issues here.
-            blessed $_
-                ? $_->isa('MXCL::Term')
-                    ? $_->hash
-                    : refaddr $_
-                : ref $_
-                    ? refaddr $_
-                    : $_
-        } @values );
+        my $start = [Time::HiRes::gettimeofday];
+        my $hash = Digest::MD5::md5(
+            (join '' => $type, map {
+                 # FIXME: This is maybe a bit fragile
+                 # and very opaque, we should make it
+                 # easier to catch issues here.
+                 blessed $_
+                     ? $_->isa('MXCL::Term')
+                         ? $_->hash
+                         : refaddr $_
+                     : ref $_
+                         ? refaddr $_
+                         : $_
+             } @values),
+        );
+        $timez->{MD5} += Time::HiRes::tv_interval( $start );
+        return $hash;
     }
 }
