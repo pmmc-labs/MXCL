@@ -15,10 +15,10 @@ class MXCL::Allocator::Roles {
     ## -------------------------------------------------------------------------
 
     method Role (@slots) {
-        my %index = map { $_->ident, undef } @slots;
+        my %index = map { $_->ident->value, $_ } @slots;
         die "Duplicated slots in the role, WTF DUDE" if scalar(keys %index) != scalar @slots;
         $arena->allocate(MXCL::Term::Role::, slots => [
-            sort { $a->ident->value cmp $b->ident->value  } @slots
+            @index{ sort { $a cmp $b } keys %index }
         ] );
     }
 
@@ -67,11 +67,10 @@ class MXCL::Allocator::Roles {
     method MergeSlots (@slots) {
         my %seen;
         foreach my $slot (@slots) {
-            if (exists $seen{ $slot->ident->value }) {
-                $seen{ $slot->ident->value } = $self->MergeSlot( $seen{ $slot->ident->value }, $slot );
-            } else {
-                $seen{ $slot->ident->value } = $slot;
-            }
+            my $ident = $slot->ident->value;
+            $seen{ $ident } = exists $seen{ $ident }
+                ? $self->MergeSlot( $seen{ $ident }, $slot )
+                : $slot;
         }
         return values %seen;
     }
