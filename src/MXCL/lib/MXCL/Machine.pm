@@ -189,7 +189,7 @@ class MXCL::Machine {
                     my $name = $args->head; # should be Sym
                     my $slot = $role->lookup( $name->value );
 
-                    die "Bad Slot! ".$slot->stringify
+                    die "Bad Slot! ".(join '/' => blessed $call, $name->value)
                         unless $slot isa MXCL::Term::Role::Slot::Defined;
 
                     my $method = $slot->value;
