@@ -25,7 +25,7 @@ class MXCL::Term::Role :isa(MXCL::Term) {
         return true;
     }
 
-    method lookup ($ident) { $index{ $ident->value } }
+    method lookup ($ident) { $index{ $ident } }
 
     # --------------------------------------------------------------------------
 
@@ -37,7 +37,7 @@ class MXCL::Term::Role :isa(MXCL::Term) {
     # --------------------------------------------------------------------------
 
     method pprint {
-        sprintf "(role\n  %s)" => join "\n  " => map $_->pprint, @$slots
+        sprintf "(role %s)" => join ' ' => map $_->pprint, @$slots
     }
 }
 

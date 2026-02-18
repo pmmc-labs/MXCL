@@ -9,7 +9,7 @@ our @EXPORT_OK = qw[
     ctx
     arena
     terms
-    traits
+    roles
     compiler
     parser
 ];
@@ -21,7 +21,7 @@ my $CTX;
 sub ctx      { $CTX //= MXCL::Context->new }
 sub arena    { ctx->arena }
 sub terms    { ctx->terms }
-sub traits   { ctx->traits }
+sub roles    { ctx->roles }
 sub compiler { ctx->compiler }
 sub parser   { ctx->parser }
 

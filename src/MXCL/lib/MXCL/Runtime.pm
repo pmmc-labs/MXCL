@@ -10,7 +10,7 @@ class MXCL::Runtime {
     ADJUST {
         my $terms    = $context->terms;
         my $refs     = $context->refs;
-        my $traits   = $context->traits;
+        my $roles    = $context->roles;
         my $natives  = $context->natives;
         my $konts    = $context->kontinues;
 
@@ -68,7 +68,7 @@ class MXCL::Runtime {
         my $is_array  = type_predicate('array?',  'MXCL::Term::Array');
         my $is_ref    = type_predicate('ref?',    'MXCL::Term::Ref');
         my $is_opaque = type_predicate('opaque?', 'MXCL::Term::Opaque');
-        my $is_trait  = type_predicate('trait?',  'MXCL::Term::Trait');
+        my $is_role   = type_predicate('role?',   'MXCL::Term::Role');
 
         ## ---------------------------------------------------------------------
         ## basic equality checker
@@ -193,13 +193,13 @@ class MXCL::Runtime {
         );
 
         ## ---------------------------------------------------------------------
-        ## Core Traits
+        ## Core Roles
         ## ---------------------------------------------------------------------
 
-        my $EQ = $traits->Trait(
-            $terms->Sym('EQ'),
-            '==' => $traits->Required,
-            '!=' => $traits->Defined(
+        my $EQ = $roles->Role(
+            $roles->Required($terms->Sym('==')),
+            $roles->Defined(
+                $terms->Sym('!='),
                 $natives->Operative(
                     name => '!=:EQ', signature => [{ name => 'n' },{ name => 'm' }],
                     impl => sub ($ctx, $n, $m) {
@@ -213,105 +213,94 @@ class MXCL::Runtime {
             )
         );
 
-        my $ORD = $traits->Trait(
-            $terms->Sym('ORD'),
-            '==' => $traits->Required,
-            '>'  => $traits->Required,
-            '>=' => $traits->Defined(
-                $natives->Operative(
-                    name => '>=:ORD', signature => [{ name => 'n' },{ name => 'm' }],
-                    impl => sub ($ctx, $n, $m) {
-                        $konts->EvalExpr($ctx,
-                            # ((n > m) || (n == m))
-                            $terms->List(
-                                $terms->List( $n, $terms->Sym('>'), $m ),
-                                $terms->Sym('||'),
-                                $terms->List( $n, $terms->Sym('=='), $m )
-                            ),
-                            $terms->Nil
-                        )
-                    }
+        my $ORD = $roles->Union(
+            $roles->Role(
+                $roles->Required($terms->Sym('==')),
+                $roles->Required($terms->Sym('>')),
+                $roles->Defined(
+                    $terms->Sym('>='),
+                    $natives->Operative(
+                        name => '>=:ORD', signature => [{ name => 'n' },{ name => 'm' }],
+                        impl => sub ($ctx, $n, $m) {
+                            $konts->EvalExpr($ctx,
+                                # ((n > m) || (n == m))
+                                $terms->List(
+                                    $terms->List( $n, $terms->Sym('>'), $m ),
+                                    $terms->Sym('||'),
+                                    $terms->List( $n, $terms->Sym('=='), $m )
+                                ),
+                                $terms->Nil
+                            )
+                        }
+                    )
+                ),
+                $roles->Defined(
+                    $terms->Sym('<'),
+                    $natives->Operative(
+                        name => '<:ORD', signature => [{ name => 'n' },{ name => 'm' }],
+                        impl => sub ($ctx, $n, $m) {
+                            $konts->EvalExpr($ctx,
+                                # (not (n > m))
+                                $terms->List($terms->Sym('not'), $terms->List( $n, $terms->Sym('>'), $m )),
+                                $terms->Nil
+                            )
+                        }
+                    )
+                ),
+                $roles->Defined(
+                    $terms->Sym('<='),
+                    $natives->Operative(
+                        name => '<=:ORD', signature => [{ name => 'n' },{ name => 'm' }],
+                        impl => sub ($ctx, $n, $m) {
+                            $konts->EvalExpr($ctx,
+                                # ((n < m) || (n == m))
+                                $terms->List(
+                                    $terms->List( $n, $terms->Sym('<'), $m ),
+                                    $terms->Sym('||'),
+                                    $terms->List( $n, $terms->Sym('=='), $m )
+                                ),
+                                $terms->Nil
+                            )
+                        }
+                    )
                 )
             ),
-            '<' => $traits->Defined(
-                $natives->Operative(
-                    name => '<:ORD', signature => [{ name => 'n' },{ name => 'm' }],
-                    impl => sub ($ctx, $n, $m) {
-                        $konts->EvalExpr($ctx,
-                            # (not (n > m))
-                            $terms->List($terms->Sym('not'), $terms->List( $n, $terms->Sym('>'), $m )),
-                            $terms->Nil
-                        )
-                    }
-                )
-            ),
-            '<=' => $traits->Defined(
-                $natives->Operative(
-                    name => '<=:ORD', signature => [{ name => 'n' },{ name => 'm' }],
-                    impl => sub ($ctx, $n, $m) {
-                        $konts->EvalExpr($ctx,
-                            # ((n < m) || (n == m))
-                            $terms->List(
-                                $terms->List( $n, $terms->Sym('<'), $m ),
-                                $terms->Sym('||'),
-                                $terms->List( $n, $terms->Sym('=='), $m )
-                            ),
-                            $terms->Nil
-                        )
-                    }
-                )
-            )
+            $EQ
         );
 
         ## ---------------------------------------------------------------------
-        ## Core Literal Traits
+        ## Core Literal Roles
         ## ---------------------------------------------------------------------
 
-        my $Bool = $traits->Compose(
-            $terms->Sym('Bool:EQ'),
-            $EQ,
-            $traits->Trait(
-                $terms->Sym('Bool'),
-                '==' => $traits->Defined(binary_op('==:Bool', 'boolify', 'Bool', sub ($n, $m) { $n == $m })),
-                '&&' => $traits->Defined($and),
-                '||' => $traits->Defined($or),
-            )
+        my $Bool = $roles->Union(
+            $roles->Role(
+                $roles->Defined($terms->Sym('=='), binary_op('==:Bool', 'boolify', 'Bool', sub ($n, $m) { $n == $m })),
+                $roles->Defined($terms->Sym('&&'), $and),
+                $roles->Defined($terms->Sym('||'), $or),
+            ),
+            $EQ
         );
 
-        my $Num = $traits->Compose(
-            $terms->Sym('Num:EQ::ORD'),
-            $ORD,
-            $traits->Compose(
-                $terms->Sym('Num:EQ'),
-                $EQ,
-                $traits->Trait(
-                    $terms->Sym('Num'),
-                    '==' => $traits->Defined(binary_op('==:Num', 'numify', 'Bool', sub ($n, $m) { $n == $m })),
-                    '>'  => $traits->Defined(binary_op('>:Num',  'numify', 'Bool', sub ($n, $m) { $n >  $m })),
-
-                    '+'  => $traits->Defined(binary_op('+:Num',  'numify', 'Num',  sub ($n, $m) { $n + $m })),
-                    '-'  => $traits->Defined(binary_op('-:Num',  'numify', 'Num',  sub ($n, $m) { $n - $m })),
-                    '*'  => $traits->Defined(binary_op('*:Num',  'numify', 'Num',  sub ($n, $m) { $n * $m })),
-                    '/'  => $traits->Defined(binary_op('/:Num',  'numify', 'Num',  sub ($n, $m) { $n / $m })),
-                    '%'  => $traits->Defined(binary_op('%:Num',  'numify', 'Num',  sub ($n, $m) { $n % $m })),
-                )
-            )
+        my $Num = $roles->Union(
+            $roles->Role(
+                $roles->Defined($terms->Sym('=='), binary_op('==:Num', 'numify', 'Bool', sub ($n, $m) { $n == $m })),
+                $roles->Defined($terms->Sym('>'),  binary_op('>:Num',  'numify', 'Bool', sub ($n, $m) { $n >  $m })),
+                $roles->Defined($terms->Sym('+'),  binary_op('+:Num',  'numify', 'Num',  sub ($n, $m) { $n + $m })),
+                $roles->Defined($terms->Sym('-'),  binary_op('-:Num',  'numify', 'Num',  sub ($n, $m) { $n - $m })),
+                $roles->Defined($terms->Sym('*'),  binary_op('*:Num',  'numify', 'Num',  sub ($n, $m) { $n * $m })),
+                $roles->Defined($terms->Sym('/'),  binary_op('/:Num',  'numify', 'Num',  sub ($n, $m) { $n / $m })),
+                $roles->Defined($terms->Sym('%'),  binary_op('%:Num',  'numify', 'Num',  sub ($n, $m) { $n % $m })),
+            ),
+            $ORD
         );
 
-        my $Str = $traits->Compose(
-            $terms->Sym('Str:EQ::ORD'),
-            $ORD,
-            $traits->Compose(
-                $terms->Sym('Str:EQ'),
-                $EQ,
-                $traits->Trait(
-                    $terms->Sym('Str'),
-                    '==' => $traits->Defined(binary_op('==:Str', 'stringify', 'Bool', sub ($n, $m) { $n eq $m })),
-                    '>'  => $traits->Defined(binary_op('>:Str',  'stringify', 'Bool', sub ($n, $m) { $n gt $m })),
-
-                    '~'  => $traits->Defined(binary_op('~:Str',  'stringify', 'Str',  sub ($n, $m) { $n . $m })),
-                )
-            )
+        my $Str = $roles->Union(
+            $roles->Role(
+                $roles->Defined($terms->Sym('=='), binary_op('==:Str', 'stringify', 'Bool', sub ($n, $m) { $n eq $m })),
+                $roles->Defined($terms->Sym('>'),  binary_op('>:Str',  'stringify', 'Bool', sub ($n, $m) { $n gt $m })),
+                $roles->Defined($terms->Sym('~'),  binary_op('~:Str',  'stringify', 'Str',  sub ($n, $m) { $n . $m })),
+            ),
+            $ORD
         );
 
         ## ---------------------------------------------------------------------
@@ -342,39 +331,31 @@ class MXCL::Runtime {
         ## Base Scope ...
         ## ---------------------------------------------------------------------
 
-        $base_scope = $traits->Trait(
-            $terms->Sym('::'),
-            'define'   => $traits->Defined($define),
-            'lambda'   => $traits->Defined($lambda),
-
-            'if'       => $traits->Defined($if),
-            'do'       => $traits->Defined($do),
-            'while'    => $traits->Defined($while), # UNTESTED
-
-            'eq?'      => $traits->Defined($eq),
-            'not'      => $traits->Defined($not),
-            'and'      => $traits->Defined($and),
-            'or'       => $traits->Defined($or),
-
-            'nil?'     => $traits->Defined($is_nil),
-            'bool?'    => $traits->Defined($is_bool),
-            'num?'     => $traits->Defined($is_num),
-            'str?'     => $traits->Defined($is_str),
-            'sym?'     => $traits->Defined($is_sym),
-            'lambda?'  => $traits->Defined($is_lambda),
-            'array?'   => $traits->Defined($is_array),
-            'ref?'     => $traits->Defined($is_ref),
-            'opaque?'  => $traits->Defined($is_opaque),
-            'trait?'   => $traits->Defined($is_trait),
-
-            # make datatypes
-            'make-array' => $traits->Defined($make_array),
-            'make-hash'  => $traits->Defined($make_hash),
-
-            # core types ...
-            'MXCL::Term::Bool' => $traits->Defined($Bool),
-            'MXCL::Term::Num'  => $traits->Defined($Num),
-            'MXCL::Term::Str'  => $traits->Defined($Str),
+        $base_scope = $roles->Role(
+             $roles->Defined($terms->Sym('define'),           $define),
+             $roles->Defined($terms->Sym('lambda'),           $lambda),
+             $roles->Defined($terms->Sym('if'),               $if),
+             $roles->Defined($terms->Sym('do'),               $do),
+             $roles->Defined($terms->Sym('while'),            $while),
+             $roles->Defined($terms->Sym('eq?'),              $eq),
+             $roles->Defined($terms->Sym('not'),              $not),
+             $roles->Defined($terms->Sym('and'),              $and),
+             $roles->Defined($terms->Sym('or'),               $or),
+             $roles->Defined($terms->Sym('nil?'),             $is_nil),
+             $roles->Defined($terms->Sym('bool?'),            $is_bool),
+             $roles->Defined($terms->Sym('num?'),             $is_num),
+             $roles->Defined($terms->Sym('str?'),             $is_str),
+             $roles->Defined($terms->Sym('sym?'),             $is_sym),
+             $roles->Defined($terms->Sym('lambda?'),          $is_lambda),
+             $roles->Defined($terms->Sym('array?'),           $is_array),
+             $roles->Defined($terms->Sym('ref?'),             $is_ref),
+             $roles->Defined($terms->Sym('opaque?'),          $is_opaque),
+             $roles->Defined($terms->Sym('role?'),            $is_role),
+             $roles->Defined($terms->Sym('make-array'),       $make_array),
+             $roles->Defined($terms->Sym('make-hash'),        $make_hash),
+             $roles->Defined($terms->Sym('MXCL::Term::Bool'), $Bool),
+             $roles->Defined($terms->Sym('MXCL::Term::Num'),  $Num),
+             $roles->Defined($terms->Sym('MXCL::Term::Str'),  $Str),
         );
     }
 

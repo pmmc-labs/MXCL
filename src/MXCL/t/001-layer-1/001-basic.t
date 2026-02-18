@@ -44,40 +44,39 @@ my $STR = $roles->Role(
     $roles->Defined( $terms->Sym('~'),  $terms->Str('(concat x y)') ),
 );
 
-diag 'EQ : ', $EQ->pprint;
-diag 'ORD : ', $ORD->pprint;
+#diag 'EQ : ', $EQ->pprint;
+#diag 'ORD : ', $ORD->pprint;
 
-diag 'EQ + ORD : ', $roles->Union( $ORD, $EQ )->pprint;
-diag 'ORD + EQ : ', $roles->Union( $EQ, $ORD )->pprint;
+#diag 'EQ + ORD : ', $roles->Union( $ORD, $EQ )->pprint;
+#diag 'ORD + EQ : ', $roles->Union( $EQ, $ORD )->pprint;
 
 ok $roles->Union( $ORD, $EQ )
         ->is_equal( $roles->Union( $EQ, $ORD ) ),
             '... EQ <+> ORD';
 
-diag 'ORD - EQ : ', $roles->SymmetricDifference( $ORD, $EQ )->pprint;
-diag 'EQ - ORD : ', $roles->SymmetricDifference( $EQ, $ORD )->pprint;
+#diag 'ORD - EQ : ', $roles->SymmetricDifference( $ORD, $EQ )->pprint;
+#diag 'EQ - ORD : ', $roles->SymmetricDifference( $EQ, $ORD )->pprint;
 
 ok $roles->SymmetricDifference( $ORD, $EQ )
         ->is_equal( $roles->SymmetricDifference( $EQ, $ORD ) ),
             '... EQ <-> ORD';
 
-diag 'ORD > EQ : ', $roles->AsymmetricDifference( $ORD, $EQ )->pprint;
-diag 'EQ > ORD : ', $roles->AsymmetricDifference( $EQ, $ORD )->pprint;
+#diag 'ORD > EQ : ', $roles->AsymmetricDifference( $ORD, $EQ )->pprint;
+#diag 'EQ > ORD : ', $roles->AsymmetricDifference( $EQ, $ORD )->pprint;
 
 ok $roles->AsymmetricDifference( $ORD, $EQ )
         ->is_equal( $roles->AsymmetricDifference( $EQ, $ORD ) ),
             '... EQ >< ORD';
 
-diag 'ORD * EQ : ', $roles->Intersection( $ORD, $EQ )->pprint;
-diag 'EQ * ORD : ', $roles->Intersection( $EQ, $ORD )->pprint;
+#diag 'ORD * EQ : ', $roles->Intersection( $ORD, $EQ )->pprint;
+#diag 'EQ * ORD : ', $roles->Intersection( $EQ, $ORD )->pprint;
 
 ok $roles->Intersection( $ORD, $EQ )
         ->is_equal( $roles->Intersection( $EQ, $ORD ) ),
             '... EQ <*> ORD';
 
-diag 'NUM + (ORD + EQ) : ', $roles->Union( $NUM, $roles->Union( $ORD, $EQ ) )->pprint;
-diag 'STR + (ORD + EQ) : ', $roles->Union( $STR, $roles->Union( $ORD, $EQ ) )->pprint;
-
-diag 'NUM - (ORD + EQ) : ', $roles->Intersection( $NUM, $roles->Union( $ORD, $EQ ) )->pprint;
+#diag 'NUM + (ORD + EQ) : ', $roles->Union( $NUM, $roles->Union( $ORD, $EQ ) )->pprint;
+#diag 'STR + (ORD + EQ) : ', $roles->Union( $STR, $roles->Union( $ORD, $EQ ) )->pprint;
+#diag 'NUM - (ORD + EQ) : ', $roles->Intersection( $NUM, $roles->Union( $ORD, $EQ ) )->pprint;
 
 done_testing;

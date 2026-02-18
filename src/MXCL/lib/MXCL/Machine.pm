@@ -39,13 +39,13 @@ class MXCL::Machine {
             push @$queue => $self->step($k);
             push @$trace => $k;
         }
-        $debug->DEBUG_STEP($k, true);
+        #$debug->DEBUG_STEP($k, true);
         return $k;
     }
 
     method step ($k) {
         $steps++;
-        $debug->DEBUG_STEP( $k );
+        #$debug->DEBUG_STEP( $k );
         given (blessed $k) {
             # ------------------------------------------------------------------
             # Threading of Env & Stack
@@ -70,17 +70,13 @@ class MXCL::Machine {
                 );
             }
             when ('MXCL::Term::Kontinue::Define') {
-                my $name   = $k->name->value;
+                my $name   = $k->name;
                 my $lambda = $k->stack->head;
 
-                my $local = $context->traits->Compose(
-                    # FIXME - this naming is horrible
-                    $context->terms->Sym("Scope[".$k->env->name->stringify." + declare:${name}]"),
+                my $local = $context->roles->Union(
                     $k->env,
-                    $context->traits->Trait(
-                        # FIXME - this naming is either worse, or better, hmmm
-                        $context->terms->Sym($name),
-                        $name, $context->traits->Defined( $lambda )
+                    $context->roles->Role(
+                        $context->roles->Defined( $name, $lambda )
                     )
                 );
 
@@ -189,17 +185,17 @@ class MXCL::Machine {
                 else {
                     my $autobox = $env->lookup(blessed $call);
 
-                    die "Could not find trait to autobox ".blessed $call
-                        unless $autobox isa MXCL::Term::Trait::Slot::Defined;
+                    die "Could not find role to autobox ".blessed $call
+                        unless $autobox isa MXCL::Term::Role::Slot::Defined;
 
-                    my $trait = $autobox->term;
-                    my $name  = $args->head; # should be Sym
-                    my $slot  = $trait->lookup( $name->value );
+                    my $role = $autobox->value;
+                    my $name = $args->head; # should be Sym
+                    my $slot = $role->lookup( $name->value );
 
                     die "Bad Slot! ".$slot->stringify
-                        unless $slot isa MXCL::Term::Trait::Slot::Defined;
+                        unless $slot isa MXCL::Term::Role::Slot::Defined;
 
-                    my $method = $slot->term;
+                    my $method = $slot->value;
                     return $context->kontinues->ApplyExpr(
                         $k->env, $context->terms->Cons( $call, $args->tail ), $context->terms->List( $method )
                     );
@@ -217,19 +213,14 @@ class MXCL::Machine {
                     my @args   = $context->terms->Uncons($args);
                     die "Arity mismatch" if scalar @params != scalar @args;
 
-                    my $args_string = sprintf '(%s)' => join ', ' => map $_->value, @params;
-
-                    my $local = $context->traits->Compose(
-                        $context->terms->Sym("Scope[Lambda + args:${args_string}]"),
+                    my $local = $context->roles->Union(
                         $call->env,
-                        $context->traits->Trait(
-                            $context->terms->Sym($args_string),
+                        $context->roles->Role(
                             # Define a recursive self call ...
-                            $call->name, $context->traits->Defined($call),
+                            $context->roles->Defined($call->name, $call),
                             # include the params ...
                             map {
-                                $_->value,
-                                $context->traits->Defined(shift @args)
+                                $context->roles->Defined($_, shift @args)
                             } @params,
                         )
                     );
@@ -257,9 +248,9 @@ class MXCL::Machine {
                     my $slot = $call->env->lookup( $name->value );
 
                     die "Bad Slot! ".$slot->stringify
-                        unless $slot isa MXCL::Term::Trait::Slot::Defined;
+                        unless $slot isa MXCL::Term::Role::Slot::Defined;
 
-                    my $method = $slot->term;
+                    my $method = $slot->value;
                     return $context->kontinues->ApplyExpr(
                         $k->env, $context->terms->Cons( $call, $args->tail ), $context->terms->List( $method )
                     );
@@ -279,8 +270,8 @@ class MXCL::Machine {
             when ('MXCL::Term::Sym') {
                 my $value = $env->lookup( $expr->value );
                 die "Could not find ".$expr->value." in Env"
-                    unless $value isa MXCL::Term::Trait::Slot::Defined;
-                return $context->kontinues->Return( $env, $context->terms->List( $value->term ) );
+                    unless $value isa MXCL::Term::Role::Slot::Defined;
+                return $context->kontinues->Return( $env, $context->terms->List( $value->value ) );
             }
             when ('MXCL::Term::Cons') {
                 return $context->kontinues->EvalHead( $env, $expr, $context->terms->Nil );
