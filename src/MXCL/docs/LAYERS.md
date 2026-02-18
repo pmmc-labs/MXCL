@@ -43,7 +43,7 @@ Layer 0.
     [x] role composition is order independent
 [-] Role Operations
     [x] Union: composing two roles together
-    [-] Conflicts: detecting conflicts during composition
+    [x] Conflicts: detecting conflicts during composition
     [-] Resolution: explicit override (forces an ordering)
 
 <!----------------------------------------------------------------------------->
