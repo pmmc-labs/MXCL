@@ -112,7 +112,7 @@ class MXCL::Arena {
         }
 
         my $start = [Time::HiRes::gettimeofday];
-        my $hash = Digest::MD5::md5(
+        my $hash = Digest::MD5::md5_hex(
             (join '' => $type, map {
                  # FIXME: This is maybe a bit fragile
                  # and very opaque, we should make it

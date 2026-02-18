@@ -35,6 +35,6 @@ class MXCL::Term::Kontinue :isa(MXCL::Term) {
                 '#')))))
             ),
             $stack->pprint,
-            $self->env->hash;
+            substr($self->env->hash, 0, 8);
     }
 }

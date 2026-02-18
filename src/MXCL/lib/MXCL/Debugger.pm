@@ -2,70 +2,80 @@
 use v5.42;
 use utf8;
 use open ':std', ':encoding(UTF-8)';
-use experimental qw[ class switch ];
+use experimental qw[ class ];
 
-use P5::TUI::Table;
-
-# FIXME:
-# remove the P5::TUI::Table dependency
 
 class MXCL::Debugger {
+    use Time::HiRes qw[ sleep ];
+
     field $machine :param :reader;
 
-    method DEBUG_STEP ($k, $final=false) {
-        my @rows = map {
-            [
-                (sprintf '%03d' => $k->env->bindings->{$_}->gen),
-                $_,
-                $k->env->bindings->{$_}->pprint,
-                $k->env->bindings->{$_}->hash
-            ]
-        } sort { $k->env->bindings->{$b}->gen <=> $k->env->bindings->{$a}->gen }
-          keys $k->env->bindings->%*;
+    method DEBUG_STEP ($k, $last=false) {
+        return;
 
-        my $env_table = P5::TUI::Table->new(
-            column_spec => [
-                {
-                    name  => (sprintf '%03d' => $k->env->gen),
-                    width => 3,
-                    align => 1,
-                    color => { fg => 'green', bg => undef }
-                },
-                {
-                    name  => '',
-                    width => '20%',
-                    align => 1,
-                    color => { fg => 'cyan', bg => undef }
-                },
-                {
-                    name  => $k->env->name->pprint,
-                    width => '80%',
-                    align => 1,
-                    color => { fg => 'white', bg => undef }
-                },
-                {
-                    name  => $k->env->hash,
-                    width => '32',
-                    align => 1,
-                    color => { fg => 'white', bg => undef }
-                },
-            ],
-            rows => \@rows
+        my sub clear_screen { "\e[2J" }
+        my sub home_cursor  { "\e[H" }
+
+        my sub format_reset               { "\e[0m" }
+        my sub format_bg_color ($color)   { sprintf "\e[48;2;%d;%d;%d;m" => @$color }
+        my sub format_fg_color ($color)   { sprintf "\e[38;2;%d;%d;%d;m" => @$color }
+        my sub format_color    ($fg, $bg) { sprintf "\e[38;2;%d;%d;%d;48;2;%d;%d;%d;m"  => @$fg, @$bg }
+
+        my sub take_n ($n, @args) {
+            return @args unless scalar @args > $n;
+            return @args[ 0 .. $n ];
+        }
+
+        say(clear_screen, home_cursor);
+        say(
+            format_fg_color([255, 0, 0]),
+            (join "\n" => map { '^^ '.$_->pprint } $machine->queue->@*),
+            format_fg_color([0, 255, 0]),
+            (sprintf "\n@@ %s\n" => $k->pprint),
+            format_fg_color([0, 0, 255]),
+            (join "\n" => map { '__ '.$_->pprint } take_n( 20, reverse $machine->trace->@*)),
+            "\n...",
+            format_reset()
         );
 
-        my $lines = $env_table->draw( width => '100%', height => (2 * scalar @rows) );
-
-        say '-' x 120;
-        if ($final) {
-            say sprintf "DONE[%03d]" => $machine->steps;
-        } else {
-            say sprintf "STEP[%03d]" => $machine->steps;
-        }
-        say " -> ", $k->pprint;
-        if ($machine->queue->@*) {
-            say "  - ", join "\n  - " => map blessed $_ ? $_->pprint : $_, reverse $machine->queue->@*;
-        }
-        say for $lines->@*;
+        #my $x = <>;
+        sleep(0.3);
     }
 
+    method DUMP_TERM ($term, %opts) {}
+
 }
+
+__END__
+
+# Debugging Step
+
+Prints the following information:
+
+- current Kontinue ($k)
+- uses $machine reference to show:
+    - remaining queue
+    - trace
+
+# Dumping Terms
+
+Prints a table with the following columns:
+
+- cons tree or leaf term
+- term type
+- term hash
+- term generation
+
+```
+┌───────────────┬──────────┬──────────┬─────┐
+│ > lambda      │ Lambda   │ 0b1e0e1e │ 001 │
+│    > name     │ Sym      │ 7564b7e3 │ 001 │
+│    > params   │ Cons     │ 1edc5815 │ 001 │
+│        > x    │ Sym      │ 0818ff85 │ 001 │
+│        > y    │ Sym      │ bcac42de │ 001 │
+│    > body     │ Cons     │ 12acd310 │ 001 │
+│        > x    │ Sym      │ 991d224d │ 001 │
+│        > +    │ Sym      │ 01ae4300 │ 001 │
+│        > y    │ Sym      │ 236d0f7c │ 001 │
+└───────────────┴──────────┴──────────┴─────┘
+```

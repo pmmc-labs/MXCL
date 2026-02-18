@@ -71,13 +71,18 @@ class MXCL::Machine {
                 return $Konts->Update( $prev, $k->env, $Nil );
             }
             when ('MXCL::Term::Kontinue::Define') {
-                my $name   = $k->name;
-                my $lambda = $k->stack->head;
+                my $name  = $k->name;
+                my $value = $k->stack->head;
 
                 my $local = $Roles->Union(
                     $k->env,
-                    $Roles->Role($Roles->Defined( $name, $lambda ))
+                    $Roles->Role($Roles->Defined( $name, $value ))
                 );
+
+                # TODO
+                # - need to check if we have any conflicts
+                #   here, and decide what to do with them
+                #   this is going to need some thinking
 
                 return $Konts->Return( $local, $Nil );
             }

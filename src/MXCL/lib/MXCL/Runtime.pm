@@ -192,6 +192,17 @@ class MXCL::Runtime {
             }
         );
 
+        my $let = $natives->Operative(
+            name => 'let',
+            signature => [
+                { name => 'name' },
+                { name => 'value' },
+            ],
+            impl => sub ($env, $name, $value) {
+                return $konts->Define( $env, $name, $terms->List( $value ) );
+            }
+        );
+
         ## ---------------------------------------------------------------------
         ## Core Roles
         ## ---------------------------------------------------------------------
@@ -366,6 +377,7 @@ class MXCL::Runtime {
 
         $base_scope = $roles->Role(
             $roles->Defined($terms->Sym('define'),            $define),
+            $roles->Defined($terms->Sym('let'),             $let),
             $roles->Defined($terms->Sym('lambda'),            $lambda),
             $roles->Defined($terms->Sym('if'),                $if),
             $roles->Defined($terms->Sym('do'),                $do),
