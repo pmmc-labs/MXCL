@@ -46,10 +46,10 @@ class MXCL::Allocator::Roles {
         return $s1 if not defined $s2;
         return $s2 if not defined $s1;
 
-        return $s1 if $s1 isa MXCL::Term::Role::Slot::Required && $s2 isa MXCL::Term::Role::Slot::Required;
-        return $s2 if $s1 isa MXCL::Term::Role::Slot::Required && $s2 isa MXCL::Term::Role::Slot::Defined;
-        return $s1 if $s1 isa MXCL::Term::Role::Slot::Defined  && $s2 isa MXCL::Term::Role::Slot::Required;
+        return $s2 if $s1 isa MXCL::Term::Role::Slot::Required;
+        return $s1 if $s2 isa MXCL::Term::Role::Slot::Required;
 
+        return $s1 if $s1 isa MXCL::Term::Role::Slot::Defined && $s2 isa MXCL::Term::Role::Slot::Required;
         if ($s1 isa MXCL::Term::Role::Slot::Defined && $s2 isa MXCL::Term::Role::Slot::Defined) {
             if ($s1->eq( $s2 )) {
                 return $s1;
