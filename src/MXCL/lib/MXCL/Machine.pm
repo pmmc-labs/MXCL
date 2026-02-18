@@ -68,11 +68,7 @@ class MXCL::Machine {
             }
             when ('MXCL::Term::Kontinue::Discard') {
                 my $prev = pop @$queue;
-                return $Konts->Update(
-                    $prev,
-                    $k->env,
-                    $Nil
-                );
+                return $Konts->Update( $prev, $k->env, $Nil );
             }
             when ('MXCL::Term::Kontinue::Define') {
                 my $name   = $k->name;

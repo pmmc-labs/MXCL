@@ -28,5 +28,6 @@ class MXCL::Allocator::References {
 
     method SetRef ($ref, $value) {
         $refs->{ $ref->uid } = $value;
+        $ref;
     }
 }

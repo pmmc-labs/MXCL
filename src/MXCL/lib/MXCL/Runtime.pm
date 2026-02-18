@@ -315,6 +315,10 @@ class MXCL::Runtime {
              }
         );
 
+        my $Array = $roles->Role();
+
+        # ...
+
         my $make_hash = $natives->Applicative(
             name      => 'make-hash',
             signature => [ { name => '@' } ],
@@ -327,35 +331,68 @@ class MXCL::Runtime {
             }
         );
 
+        my $Hash = $roles->Role();
+
+        # ...
+
+        my $make_ref = $natives->Applicative(
+             name      => 'make-ref',
+             signature => [ { name => 'value' } ],
+             impl      => sub ($value) {
+                $refs->Ref($value)
+             }
+        );
+
+        my $deref = $natives->Applicative(
+             name      => 'deref',
+             signature => [ { name => 'ref' } ],
+             impl      => sub ($ref) { $refs->Deref($ref) }
+        );
+
+        my $setref = $natives->Applicative(
+             name      => 'setref',
+             signature => [ { name => 'ref' }, { name => 'value' } ],
+             impl      => sub ($ref, $value) { $refs->SetRef($ref, $value) }
+        );
+
+        my $Ref = $roles->Role(
+            $roles->Defined($terms->Sym('get'), $deref),
+            $roles->Defined($terms->Sym('set!'), $setref),
+        );
+
         ## ---------------------------------------------------------------------
         ## Base Scope ...
         ## ---------------------------------------------------------------------
 
         $base_scope = $roles->Role(
-            $roles->Defined($terms->Sym('define'),           $define),
-            $roles->Defined($terms->Sym('lambda'),           $lambda),
-            $roles->Defined($terms->Sym('if'),               $if),
-            $roles->Defined($terms->Sym('do'),               $do),
-            $roles->Defined($terms->Sym('while'),            $while),
-            $roles->Defined($terms->Sym('eq?'),              $eq),
-            $roles->Defined($terms->Sym('not'),              $not),
-            $roles->Defined($terms->Sym('and'),              $and),
-            $roles->Defined($terms->Sym('or'),               $or),
-            $roles->Defined($terms->Sym('nil?'),             $is_nil),
-            $roles->Defined($terms->Sym('bool?'),            $is_bool),
-            $roles->Defined($terms->Sym('num?'),             $is_num),
-            $roles->Defined($terms->Sym('str?'),             $is_str),
-            $roles->Defined($terms->Sym('sym?'),             $is_sym),
-            $roles->Defined($terms->Sym('lambda?'),          $is_lambda),
-            $roles->Defined($terms->Sym('array?'),           $is_array),
-            $roles->Defined($terms->Sym('ref?'),             $is_ref),
-            $roles->Defined($terms->Sym('opaque?'),          $is_opaque),
-            $roles->Defined($terms->Sym('role?'),            $is_role),
-            $roles->Defined($terms->Sym('make-array'),       $make_array),
-            $roles->Defined($terms->Sym('make-hash'),        $make_hash),
-            $roles->Defined($terms->Sym('MXCL::Term::Bool'), $Bool),
-            $roles->Defined($terms->Sym('MXCL::Term::Num'),  $Num),
-            $roles->Defined($terms->Sym('MXCL::Term::Str'),  $Str),
+            $roles->Defined($terms->Sym('define'),            $define),
+            $roles->Defined($terms->Sym('lambda'),            $lambda),
+            $roles->Defined($terms->Sym('if'),                $if),
+            $roles->Defined($terms->Sym('do'),                $do),
+            $roles->Defined($terms->Sym('while'),             $while),
+            $roles->Defined($terms->Sym('eq?'),               $eq),
+            $roles->Defined($terms->Sym('not'),               $not),
+            $roles->Defined($terms->Sym('and'),               $and),
+            $roles->Defined($terms->Sym('or'),                $or),
+            $roles->Defined($terms->Sym('nil?'),              $is_nil),
+            $roles->Defined($terms->Sym('bool?'),             $is_bool),
+            $roles->Defined($terms->Sym('num?'),              $is_num),
+            $roles->Defined($terms->Sym('str?'),              $is_str),
+            $roles->Defined($terms->Sym('sym?'),              $is_sym),
+            $roles->Defined($terms->Sym('lambda?'),           $is_lambda),
+            $roles->Defined($terms->Sym('array?'),            $is_array),
+            $roles->Defined($terms->Sym('ref?'),              $is_ref),
+            $roles->Defined($terms->Sym('opaque?'),           $is_opaque),
+            $roles->Defined($terms->Sym('role?'),             $is_role),
+            $roles->Defined($terms->Sym('make-array'),        $make_array),
+            $roles->Defined($terms->Sym('make-hash'),         $make_hash),
+            $roles->Defined($terms->Sym('make-ref'),          $make_ref),
+            $roles->Defined($terms->Sym('MXCL::Term::Bool'),  $Bool),
+            $roles->Defined($terms->Sym('MXCL::Term::Num'),   $Num),
+            $roles->Defined($terms->Sym('MXCL::Term::Str'),   $Str),
+            $roles->Defined($terms->Sym('MXCL::Term::Ref'),   $Ref),
+            $roles->Defined($terms->Sym('MXCL::Term::Array'), $Array),
+            $roles->Defined($terms->Sym('MXCL::Term::Hash'),  $Hash),
         );
     }
 

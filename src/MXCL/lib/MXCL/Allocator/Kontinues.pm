@@ -45,10 +45,10 @@ class MXCL::Allocator::Kontinues {
                 @args{qw[ effect config ]} = ($k->effect, $k->config)
             }
             when ('MXCL::Term::Kontinue::Return') {
-                #$args{env} = $k->env; # preserve the env
+                ; # do nothing
             }
             when ('MXCL::Term::Kontinue::Discard') {
-                #$args{env} = $k->env; # preserve the env
+                ; # do nothing
             }
             when ('MXCL::Term::Kontinue::IfElse') {
                 @args{qw[ condition if_true if_false ]} = ($k->condition, $k->if_true, $k->if_false)
@@ -218,38 +218,7 @@ class MXCL::Allocator::Kontinues {
 
 =pod
 
-LEGEND:
-$__INTERNAL  # often an internal detail
-$__mutable   # these things are mutated after creation
-@$on_stack   # a value which is expected to be on the stack
-
-Kontinue
-    $__env
-    $__stack
-
-## -----------------------------------------------------------------------------
-## these might be internal and non user accesible ...
-## I need to think more about Context stuff.
-## -----------------------------------------------------------------------------
-
-Host
-    $__EFFECT  # this it the Effect object
-    $__CONFIG  # and native HASHref configuration
-    # - must be native, comes from Effects only
-
-Context::Enter
-    $__LEAVE
-    # - returns all values of the stack
-    # - defines the local `defer` which pushes
-    #   onto the $__LEAVE it is paired with
-Context::Leave
-    $__deferred
-    # - runs all deferred calls
-    # - returns all values of the stack
-
-## -----------------------------------------------------------------------------
-## Control structures
-## -----------------------------------------------------------------------------
+TODO:
 
 Throw
     $exception
@@ -264,75 +233,8 @@ Catch
     # if top of stack is an exception
     # - apply the handler with the @$exception on its stack
     # otherwise, just return the top of the stack
-IfElse
-    $condition
-    $if_true
-    $if_false
-    # check the contiditon and evalute the correct branch
-DoWhile
-    $conditon
-    $body
-    # checks the condition and re-calls itself until it fails
-
-## -----------------------------------------------------------------------------
-## TODO: Replace these ...
-## -----------------------------------------------------------------------------
-
-Define
-    $name
-    @$value
-Mutate
-    $name
-    @$value
-
-## -----------------------------------------------------------------------------
-## TODO: Turn these into explicit stack operations
-## -----------------------------------------------------------------------------
-
-Return
-    $value
-
-## -----------------------------------------------------------------------------
-## Evaling
-## -----------------------------------------------------------------------------
-
-Eval::Expr
-    $expr
 Eval::TOS
     @$expr
-Eval::Head
-    $cons
-Eval::Rest
-    $rest
-    # - returns all values of the stack
-
-## -----------------------------------------------------------------------------
-## Applying
-## -----------------------------------------------------------------------------
-
-Apply::Expr
-    $args
-    @$call
-    # dispatch based on type:
-    # - operative
-    #   - pass $args directly via the stack
-    # - applicative
-    #   - enqueue $args for eval (and they will end up on the stack)
-Apply::Operative
-    $call
-    @$args
-    # dispatch based on type:
-    # - fexpr
-    # - native
-    # - opaque
-Apply::Applicative
-    $call
-    @$args
-    # dispatch based on type:
-    # - lambda
-    # - native
-
-## -----------------------------------------------------------------------------
 
 =cut
 
