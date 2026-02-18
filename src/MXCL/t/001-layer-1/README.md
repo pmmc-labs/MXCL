@@ -74,18 +74,6 @@ These tests verify every cell of that table at the slot level.
 | `000-compose-table.t` | 5 | S1-S5: Required+Required, Required+Defined, Defined+Required, Defined+Defined (same hash), Defined+Defined (different hash) |
 | `001-conflict-rows.t` | 5 | S6-S10: Required+Conflict (identity), Conflict+Required (identity), Defined+Conflict (wraps), Conflict+Defined (wraps), Conflict+Conflict (wraps) |
 
-### 001-basic.t -- Order-Independent Hashing (Real Roles)
-
-An integration test using the real `EQ`, `ORD`, `NUM`, and `STR` roles from
-the Runtime. Verifies that `Union`, `Intersection`, `SymmetricDifference`, and
-`AsymmetricDifference` all produce hash-identical results regardless of
-argument order, and that nested compositions (`NUM + (ORD + EQ)` vs
-`ORD + (EQ + NUM)`) hash identically.
-
-| File | Tests | What It Covers |
-|------|-------|----------------|
-| `001-basic.t` | 16 | Order-independent hash for all four set operations; associativity of union over Runtime roles |
-
 ### 002-role-composition/ -- Role Composition Scenarios
 
 Role-level tests using abstract fixture roles (RA, RB, RC, RD, etc.) drawn
@@ -105,10 +93,18 @@ of Conflict nodes.
 Integration tests that prove the algebraic laws hold across the full
 composition pipeline.
 
+> Includes an integration test using the real world `EQ`, `ORD`, `NUM`, 
+> and `STR` roles (similar to those in the Runtime). Verifies that `Union`, 
+> `Intersection`, `SymmetricDifference`, and `AsymmetricDifference` all 
+> produce hash-identical results regardless of argument order, and that 
+> nested compositions (`NUM + (ORD + EQ)` vs `ORD + (EQ + NUM)`) hash 
+> identically.
+
 | File | Tests | What It Covers |
 |------|-------|----------------|
 | `000-algebraic.t` | 5 | R14-R18: Commutativity (different hash, same leaves); associativity (same structure); associativity (divergent tree shapes); idempotency; idempotency with Requirements |
 | `001-absorption.t` | 7 | R23-R29: Conflict survives empty; third provider deepens conflict; Con+Con; Req met by idempotent providers; Req meets conflict (not satisfied); Req satisfied alongside conflict; clean requirement satisfaction |
+| `002-role-hashing.t` | 16 | Order-independent hash for all four set operations; associativity of union over Runtime roles |
 
 ## Running the Tests
 
@@ -150,5 +146,6 @@ interned -- no test pollution between files.
 - **Scope usage** -- Roles-as-Scope (the Machine's `Define` and `Union`
   for name binding) is exercised by the execution layer, not here.
 - **Set algebra operations** -- `Difference`, `Intersection`,
-  `SymmetricDifference`, `AsymmetricDifference` are tested in `001-basic.t`
-  for the order-independence property but not exhaustively for all combinations.
+  `SymmetricDifference`, `AsymmetricDifference` are tested in 
+  `t.003-layer-1-thesis/002-role-hashing.t` for the order-independence property 
+  but not exhaustively for all combinations.
