@@ -382,7 +382,22 @@ class MXCL::Runtime {
              }
         );
 
-        my $Array = $roles->Role();
+        my $Array = $roles->Role(
+            $roles->Defined($terms->Sym('length'),
+                $natives->Applicative(
+                     name      => 'length:Array',
+                     signature => [ { name => 'array' } ],
+                     impl      => sub ($array) { $terms->Num( $array->length ) }
+                )
+            ),
+            $roles->Defined($terms->Sym('at'),
+                $natives->Applicative(
+                     name      => 'at:Array',
+                     signature => [ { name => 'array' }, { name => 'index', coerce => 'numify' } ],
+                     impl      => sub ($array, $index) { $array->at( $index ) }
+                )
+            )
+        );
 
         # ...
 
@@ -398,7 +413,22 @@ class MXCL::Runtime {
             }
         );
 
-        my $Hash = $roles->Role();
+        my $Hash = $roles->Role(
+            $roles->Defined($terms->Sym('length'),
+                $natives->Applicative(
+                     name      => 'length:Hash',
+                     signature => [ { name => 'hash' } ],
+                     impl      => sub ($hash) { $terms->Num( $hash->length ) }
+                )
+            ),
+            $roles->Defined($terms->Sym('at'),
+                $natives->Applicative(
+                     name      => 'at:Hash',
+                     signature => [ { name => 'hash' }, { name => 'index', coerce => 'stringify' } ],
+                     impl      => sub ($hash, $index) { $hash->at( $index ) }
+                )
+            )
+        );
 
         # ...
 

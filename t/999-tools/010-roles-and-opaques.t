@@ -8,7 +8,7 @@ use Test::MXCL qw[ test_mxcl ];
 
 my $result = test_mxcl(q[
 
-    ;; NOTE: the <Str> is part of
+;; NOTE: the <Str> is part of
     ;; the name, nothing actually
     ;; get checked (for now)
 
@@ -19,12 +19,15 @@ my $result = test_mxcl(q[
 
     (let greeter (make-opaque "World" Greeter<Str>))
 
-    ((greeter hello) ~ ("/" ~ (greeter bye)))
+    (is (greeter hello) "Hello World" "... got the expected hello")
+    (is (greeter bye) "Goodbye World" "... got the expected bye")
 
 
 ]);
 
-say($result ? $result->stack->pprint : 'UNDEFINED');
+diag($result ? $result->stack->pprint : 'UNDEFINED');
 
 done_testing;
+
+__END__
 
