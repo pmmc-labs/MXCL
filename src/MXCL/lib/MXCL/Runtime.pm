@@ -113,6 +113,10 @@ class MXCL::Runtime {
         ## ---------------------------------------------------------------------
         ## Control structures
         ## ---------------------------------------------------------------------
+        ## Note:
+        ## These all wrap themselves inside a Scope::Enter/Leave which will
+        ## mean that all changes to the env will get reverted after Leave.
+        ## ---------------------------------------------------------------------
 
         my $do = $natives->Operative(
             name => 'do',
@@ -159,22 +163,8 @@ class MXCL::Runtime {
         );
 
         ## ---------------------------------------------------------------------
-        ## Functions
+        ## Definitions
         ## ---------------------------------------------------------------------
-
-        my $lambda = $natives->Operative(
-            name => 'lambda',
-            signature => [
-                { name => 'params' },
-                { name => 'body'   },
-            ],
-            impl => sub ($env, $params, $body) {
-                return $konts->Return(
-                    $env,
-                    $terms->List( $terms->Lambda( $params, $body, $env ) )
-                );
-            }
-        );
 
         my $define = $natives->Operative(
             name => 'define',
@@ -317,6 +307,22 @@ class MXCL::Runtime {
         ## ---------------------------------------------------------------------
         ## Core Datatypes
         ## ---------------------------------------------------------------------
+
+        my $lambda = $natives->Operative(
+            name => 'lambda',
+            signature => [
+                { name => 'params' },
+                { name => 'body'   },
+            ],
+            impl => sub ($env, $params, $body) {
+                return $konts->Return(
+                    $env,
+                    $terms->List( $terms->Lambda( $params, $body, $env ) )
+                );
+            }
+        );
+
+        # ...
 
         my $make_array = $natives->Applicative(
              name      => 'make-array',

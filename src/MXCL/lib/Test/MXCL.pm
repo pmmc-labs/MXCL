@@ -1,28 +1,95 @@
 
 use v5.42;
-use experimental qw[ class ];
 
-package Test::MXCL;
+package Test::MXCL {
+    use v5.42;
+    use experimental qw[ class ];
 
-use Exporter 'import';
-our @EXPORT_OK = qw[
-    ctx
-    arena
-    terms
-    roles
-    compiler
-    parser
-];
+    use Test::Builder ();
 
-use MXCL::Context;
+    use MXCL::Context;
+    use MXCL::Runtime;
 
-my $CTX;
+    # --------------------------------------------------------------------------
 
-sub ctx      { $CTX //= MXCL::Context->new }
-sub arena    { ctx->arena }
-sub terms    { ctx->terms }
-sub roles    { ctx->roles }
-sub compiler { ctx->compiler }
-sub parser   { ctx->parser }
+    sub import ($, @) {
+        my $from = caller;
 
-1;
+        no strict 'refs';
+        *{"${from}::${_}"} = \&{"Test::MXCL::${_}"} foreach qw[
+            ctx
+            arena
+            terms
+            roles
+            compiler
+            parser
+
+            runtime
+
+            test_mxcl
+        ];
+    }
+
+    # --------------------------------------------------------------------------
+
+    sub ctx      { state $CTX //= MXCL::Context->new }
+    sub arena    { ctx->arena }
+    sub terms    { ctx->terms }
+    sub roles    { ctx->roles }
+    sub compiler { ctx->compiler }
+    sub parser   { ctx->parser }
+
+    sub runtime  { state $RUNTIME //= MXCL::Runtime->new( context => ctx ) }
+
+    # --------------------------------------------------------------------------
+
+    sub test_mxcl ($source) {
+        state $Tester = Test::Builder->new;
+
+        local $Test::Builder::Level = $Test::Builder::Level + 6;
+
+        my $runtime = runtime;
+        my $context = $runtime->context;
+        my $terms   = $context->terms;
+        my $roles   = $context->roles;
+        my $natives = $context->natives;
+
+        my sub wrap_slot ($name, $args, $body) {
+            $roles->Defined(
+                $terms->Sym( $name ),
+                $natives->Applicative(
+                    name      => $name,
+                    signature => $args,
+                    returns   => 'Nil',
+                    impl      => $body,
+                )
+            )
+        }
+
+        my $testing_scope = $roles->Union(
+            $roles->Role(
+                wrap_slot('ok', [{ name => 'got', coerce => 'boolify' }, { name => 'msg', coerce => 'stringify' }],
+                    sub ($got, $msg) { $Tester->ok( $got, $msg ) }
+                ),
+                wrap_slot('is', [{ name => 'got' }, { name => 'expected' }, { name => 'msg', coerce => 'stringify' }],
+                    sub ($got, $expected, $msg) {
+                        if ($got->eq($expected)) {
+                            $Tester->ok(true, $msg);
+                        } else {
+                            $Tester->ok(false, $msg);
+                            $Tester->diag("       got: ".$got->pprint);
+                            $Tester->diag("  expected: ".$expected->pprint);
+                        }
+                    }
+                ),
+                wrap_slot('done-testing', [], sub () { $Tester->done_testing }),
+            ),
+            $runtime->base_scope
+        );
+
+        my $test = $context->compile_source($source);
+
+        return $context->evaluate( $testing_scope,  $test );
+    }
+
+}

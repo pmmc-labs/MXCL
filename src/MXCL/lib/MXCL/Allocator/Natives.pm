@@ -38,7 +38,9 @@ class MXCL::Allocator::Natives {
         my $body        = $binding{impl};
         my $returns     = $binding{returns};
         my $constructor = defined $returns
-            ? ($terms->can( $returns ) || die "Cannot find ${returns} in Terms")
+            ? ($returns eq 'Nil'
+                ? sub (@) { $terms->Nil }
+                : ($terms->can( $returns ) || die "Cannot find ${returns} in Terms"))
             # if $returns has not been defined, it means we
             # do not need to inflate, so we use this little
             # hack to make things work, probably should all

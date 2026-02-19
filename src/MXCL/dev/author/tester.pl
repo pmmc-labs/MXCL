@@ -18,10 +18,15 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
-    (define countdown (n)
-        (if (n == 0) n (countdown (n - 1))))
+    (let foo 10)
+    (let bar 100)
 
-    (countdown 10)
+    (do
+        (let foo 20)
+        (let bar 30)
+    )
+
+    (foo + bar)
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );
