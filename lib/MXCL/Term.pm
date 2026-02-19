@@ -3,7 +3,7 @@ use v5.42;
 use experimental qw[ class ];
 
 class MXCL::Term {
-    use overload '""' => 'pprint';
+    #use overload '""' => 'pprint';
 
     field $hash :param :reader;
     field $gen  :param :reader;

@@ -22,7 +22,7 @@ class MXCL::Term::Kontinue :isa(MXCL::Term) {
                 ($self->isa('MXCL::Term::Kontinue::Eval::Expr') ?
                     ($self->expr->pprint) :
                 ($self->isa('MXCL::Term::Kontinue::Eval::Head') ?
-                    ($self->cons->pprint) :
+                    ($self->cons->head->pprint) :
                 ($self->isa('MXCL::Term::Kontinue::Eval::Rest') ?
                     ($self->rest->pprint) :
                 ($self->isa('MXCL::Term::Kontinue::Apply::Expr') ?

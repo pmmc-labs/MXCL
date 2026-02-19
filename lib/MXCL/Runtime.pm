@@ -362,6 +362,13 @@ class MXCL::Runtime {
             }
         );
 
+        my $Role = $roles->Union(
+            $roles->Role(
+                $roles->Defined($terms->Sym('=='), $eq),
+            ),
+            $EQ
+        );
+
         # ...
 
         my $make_opaque = $natives->Applicative(
@@ -440,21 +447,21 @@ class MXCL::Runtime {
              }
         );
 
-        my $deref = $natives->Applicative(
-             name      => 'deref',
-             signature => [ { name => 'ref' } ],
-             impl      => sub ($ref) { $refs->Deref($ref) }
-        );
-
-        my $setref = $natives->Applicative(
-             name      => 'setref',
-             signature => [ { name => 'ref' }, { name => 'value' } ],
-             impl      => sub ($ref, $value) { $refs->SetRef($ref, $value) }
-        );
-
         my $Ref = $roles->Role(
-            $roles->Defined($terms->Sym('get'), $deref),
-            $roles->Defined($terms->Sym('set!'), $setref),
+            $roles->Defined($terms->Sym('get'),
+                $natives->Applicative(
+                     name      => 'deref',
+                     signature => [ { name => 'ref' } ],
+                     impl      => sub ($ref) { $refs->Deref($ref) }
+                )
+            ),
+            $roles->Defined($terms->Sym('set!'),
+                $natives->Applicative(
+                     name      => 'setref',
+                     signature => [ { name => 'ref' }, { name => 'value' } ],
+                     impl      => sub ($ref, $value) { $refs->SetRef($ref, $value) }
+                )
+            )
         );
 
         ## ---------------------------------------------------------------------
@@ -494,6 +501,7 @@ class MXCL::Runtime {
             $roles->Defined($terms->Sym('MXCL::Term::Ref'),   $Ref),
             $roles->Defined($terms->Sym('MXCL::Term::Array'), $Array),
             $roles->Defined($terms->Sym('MXCL::Term::Hash'),  $Hash),
+            $roles->Defined($terms->Sym('MXCL::Term::Role'),  $Role),
         );
     }
 

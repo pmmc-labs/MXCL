@@ -18,18 +18,10 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
-    (let foo 10)
-    (let bar 100)
+    (let r1 (make-role (let x 10)))
+    (let r2 (make-role (let x 10)))
 
-    (do
-        ; testing the comments
-        (let foo 20)
-        (let bar 30) ; do they work correctly
-    )
-
-    (foo + bar)
-
-    ; even as the last thing?
+    (r1 == r2)
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );

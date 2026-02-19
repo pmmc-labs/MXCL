@@ -11,7 +11,6 @@ class MXCL::Debugger {
     field $machine :param :reader;
 
     method DEBUG_STEP ($k, $last=false) {
-        return;
 
         my sub clear_screen { "\e[2J" }
         my sub home_cursor  { "\e[H" }
