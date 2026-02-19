@@ -258,7 +258,7 @@ class MXCL::Machine {
 
                     my $method = $slot->value;
                     return $Konts->ApplyExpr(
-                        $k->env, $Terms->Cons( $call->repr, $args->tail ), $context->terms->List( $method )
+                        $k->env, $Terms->Cons( $call, $args->tail ), $context->terms->List( $method )
                     );
                 }
                 else {
@@ -279,8 +279,17 @@ class MXCL::Machine {
         given (blessed $expr) {
             when ('MXCL::Term::Sym') {
                 my $value = $env->lookup( $expr->value );
+
+                # NOTE:
+                # this works for here, but we really should
+                # check things more carefully in Define.
+                while ($value isa MXCL::Term::Role::Slot::Conflict) {
+                    $value = $value->rhs;
+                }
+
                 die "Could not find ".$expr->value." in Env"
                     unless $value isa MXCL::Term::Role::Slot::Defined;
+
                 return $Konts->Return( $env, $Terms->List( $value->value ) );
             }
             when ('MXCL::Term::Cons') {

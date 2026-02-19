@@ -66,12 +66,12 @@ class MXCL::Allocator::Terms {
     ## Opaques (hashed by identity)
     ## -------------------------------------------------------------------------
 
-    method Opaque ($repr, $role) {
+    method Opaque ($role) {
         state $nonce = 0;
         my $uid = ++$nonce; # unique object identity
         $arena->allocate(MXCL::Term::Opaque::,
             uid  => $uid,
-            repr => $repr,
+            repr => $nil, # TODO: remove me (probably)
             role => $role,
         );
     }

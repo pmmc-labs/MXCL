@@ -365,6 +365,13 @@ class MXCL::Runtime {
         my $Role = $roles->Union(
             $roles->Role(
                 $roles->Defined($terms->Sym('=='), $eq),
+                $roles->Defined($terms->Sym('+'),
+                    $natives->Applicative(
+                        name      => '+:Role',
+                        signature => [ { name => 'r1' }, { name => 'r2' } ],
+                        impl      => sub ($r1, $r2) { $roles->Union( $r1, $r2 ) }
+                    )
+                ),
             ),
             $EQ
         );
@@ -372,21 +379,21 @@ class MXCL::Runtime {
         # ...
 
         my $make_opaque = $natives->Applicative(
-             name      => 'make-opaque',
-             signature => [ { name => 'repr' }, { name => 'role' } ],
-             impl      => sub ($repr, $role) {
-                 $terms->Opaque($repr, $role)
-             }
+            name      => 'make-opaque',
+            signature => [ { name => 'role' } ],
+            impl      => sub ($role) {
+                $terms->Opaque($role)
+            }
         );
 
         # ...
 
         my $make_array = $natives->Applicative(
-             name      => 'make-array',
-             signature => [ { name => '@' } ],
-             impl      => sub (@elements) {
-                 $terms->Array(@elements)
-             }
+            name      => 'make-array',
+            signature => [ { name => '@' } ],
+            impl      => sub (@elements) {
+                $terms->Array(@elements)
+            }
         );
 
         my $Array = $roles->Role(
@@ -502,6 +509,8 @@ class MXCL::Runtime {
             $roles->Defined($terms->Sym('MXCL::Term::Array'), $Array),
             $roles->Defined($terms->Sym('MXCL::Term::Hash'),  $Hash),
             $roles->Defined($terms->Sym('MXCL::Term::Role'),  $Role),
+            $roles->Defined($terms->Sym('<EQ>'),              $EQ),
+            $roles->Defined($terms->Sym('<ORD>'),             $ORD),
         );
     }
 
