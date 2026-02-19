@@ -1,10 +1,14 @@
+<!----------------------------------------------------------------------------->
 # TODO
-
 <!----------------------------------------------------------------------------->
 
-## Scopes
+Lot's of TODOs, XXXs and FIXMEs in the source as well.
 
-- Scope composition needs refinement too
+<!----------------------------------------------------------------------------->
+## Scopes
+<!----------------------------------------------------------------------------->
+
+- Scope composition needs refinement
     - add Required methods for params
     - add Required methods for recursive calls
     - if we traverse the tree we can find free variables
@@ -14,8 +18,6 @@
         - or we could Exclude the params/recursive names from 
           the parent before we compose them, to ensure no conflicts
             - that said, I kinda like the Conflict as Override thing
-    - there can be no Absent methods at this point
-    - and Alias does not really make a lot of sense
     
 - Machine needs to handle things other than Defined in composed Scopes
     - Conflicts 
@@ -26,21 +28,10 @@
         - should probably throw an error
     - Required
         - unsatisfied requirements are bad
-    - Excluded
-    - Alias 
-        - not sure these makes a lot of sense here
-            - and would be unlikely to be returned from Lookup
-            - as they would have already been resolved
 
 <!----------------------------------------------------------------------------->
-
-## Traits
-
-- Trait composition is hackish at best for now
-    - only does union
-    - need difference, etc. 
-
-- lookup() should return Absent if it finds nothing
+## Roles
+<!----------------------------------------------------------------------------->
 
 - add methods to check for state of the trait (resolved, still requires, etc)
 
@@ -58,12 +49,11 @@
     - we can replace a node with an equivalent compiled node
         - this is where zk proofs could come in handy
 
-- handle Alias, Exclude and the other thing 
-    - see TODOs
+- maybe do Alias, Exclude??
 
 <!----------------------------------------------------------------------------->
-
 ## Context
+<!----------------------------------------------------------------------------->
 
 - add Builder to construct Kontinue queues with
 
@@ -75,8 +65,8 @@
 - think about commits, etc. 
 
 <!----------------------------------------------------------------------------->
-
 ## Arena
+<!----------------------------------------------------------------------------->
     
 - add a way to walk the hashes
 
@@ -85,8 +75,8 @@
     - works for now, but needs improvement
 
 <!----------------------------------------------------------------------------->
-
 ## Machine
+<!----------------------------------------------------------------------------->
 
 - Applicatives should get the ctx variable as the first arg
     - this will allow it to do allocation, etc. 
@@ -95,44 +85,34 @@
 - What is the Eval::TOS for?
     - I can't find why/where we added it for
     
-- Need to think about a Drop-Stack/End-Statement kontinue
-    - see the `do` builtin for a comment explaining 
+- Add Throw/Catch back in
 
 <!----------------------------------------------------------------------------->
-
 ## Natives
+<!----------------------------------------------------------------------------->
 
-- Currently we support a very sloppy varargs for the `do` builtin
+- Currently we support a very sloppy varargs 
     - this needs fixing, and perhaps a bit of a "signature spec" as well
 
-
+<!----------------------------------------------------------------------------->
+## Parser
 <!----------------------------------------------------------------------------->
 
-## Parser
-
-- strip comments
 - switch the sugar around a bit
     - @[] becomes +[]
     - %{} becomes +{}
     - {} stays as is
     - remove the tuple parsing
     
-- add generation metadata 
-    - see Arena TODO below
-    
 <!----------------------------------------------------------------------------->    
-    
 ## Compiler
+<!----------------------------------------------------------------------------->
 
 - handle the parser changes
 
 <!----------------------------------------------------------------------------->
-
 ## Terms
-
-- Remove all the Tuple references, we have immutable Arrays
-- Remove all the Pair references, we don't need them
-- Create a Hash term
+<!----------------------------------------------------------------------------->
 
 - standardize on `->unbox` name for all unboxing methods
 
