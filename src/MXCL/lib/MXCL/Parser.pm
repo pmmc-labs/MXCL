@@ -24,13 +24,13 @@ class MXCL::Parser {
         my $line_no = 0;
         my $line_at = 0;
         my $char_at = 0;
-        while ($source =~ m/(\+\{|\}|\+\[|\]|\(|\)|"(?:[^"\\])*"|\s|[^\s\(\)\{\}\[\]]+)/g) {
+        while ($source =~ m/(\+\{|\}|\+\[|\]|\(|\)|"(?:[^"\\])*"|;[^\n]*|\s|[^\s\(\)\{\}\[\]]+)/g) {
             my $match = $1;
             if ($match eq "\n") {
                 $line_no++;
                 $char_at = $line_at = pos($source);
             }
-            elsif ($match eq " ") {
+            elsif ($match eq " " || $match =~ /^;/) {
                 $char_at = pos($source);
             }
             else {
@@ -39,10 +39,10 @@ class MXCL::Parser {
 
                 push @tokens => MXCL::Parser::Token->new(
                     source => $match,
-                    start => $start,
-                    end   => $char_at - $line_at,
-                    line  => $line_no,
-                    pos   => pos($source)
+                    start  => $start,
+                    end    => $char_at - $line_at,
+                    line   => $line_no,
+                    pos    => pos($source)
                 );
             }
         }

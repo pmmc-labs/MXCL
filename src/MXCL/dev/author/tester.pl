@@ -22,11 +22,14 @@ my $exprs = $context->compile_source(q[
     (let bar 100)
 
     (do
+        ; testing the comments
         (let foo 20)
-        (let bar 30)
+        (let bar 30) ; do they work correctly
     )
 
     (foo + bar)
+
+    ; even as the last thing?
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );
