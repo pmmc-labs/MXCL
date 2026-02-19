@@ -18,10 +18,11 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
-    (let r1 (make-role (let x 10)))
-    (let r2 (make-role (let x 10)))
+    (let x 10)
 
-    (r1 == r2)
+    (define foo (n) (x + n))
+
+    foo
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );
@@ -32,6 +33,9 @@ say $_->pprint foreach @$exprs;
 my $start_run = [Time::HiRes::gettimeofday];
 my $result = $context->evaluate( $runtime->base_scope, $exprs );
 $timings{execute} += Time::HiRes::tv_interval( $start_run );
+
+#my ($lambda) = $result->stack->uncons;
+#say "FREE! ", join ', ' => map $_->stringify, $lambda->free_variables;
 
 my $arena = $context->arena;
 my $gen = $arena->generations->[-1];

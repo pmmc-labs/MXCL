@@ -93,16 +93,14 @@ role for each of the core literal terms, and MXCL autoboxes it accordingly.
 
 [x] Foundational Roles
     [x] EQ, ORD
-    [ ] SHOW/PPRINTABLE
-    [ ] INDEXED (for Array and Hash)
 [-] Autoboxed core Terms
     [x] core terms can be called as an object
     [x] Bool
     [-] Num
     [-] Str 
-    [ ] Ref 
-    [ ] Array
-    [ ] Hash
+    [x] Ref 
+    [-] Array
+    [-] Hash
 
 [ ] The classic MOP bootstrap
     [ ] Class isa Object
@@ -114,10 +112,10 @@ role for each of the core literal terms, and MXCL autoboxes it accordingly.
     [ ] introspection via metaclasses
     [ ] class/role construction via metaclasses
 
-[ ] Mutable objects
-    [ ] using the Ref terms to create mutable objects
+[-] Mutable objects
+    [-] using the Ref terms to create mutable objects
 
-[ ] Operatives for Generics
+[ ] Operatives for Generics?
 
 <!----------------------------------------------------------------------------->
 ## Layer 4: Machine & Contexts
