@@ -5,7 +5,15 @@ MXCL is a LISP with the guts of Scheme and the heart of Perl.
 
 ... more to come
 
-# License & Acknowledgments
+# 
+
+# AUTHOR
+
+Matt Trout, `mstrout@cpan.org`
+
+# LICENSE
+
+Copyright (C) 2026, Stevan Little
 
 MXCL is licensed under the Apache License, Version 2.0.
 
