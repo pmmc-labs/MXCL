@@ -48,11 +48,11 @@ package Test::MXCL {
 
         local $Test::Builder::Level = $Test::Builder::Level + 6;
 
-        my $runtime = runtime;
-        my $context = $runtime->context;
-        my $terms   = $context->terms;
-        my $roles   = $context->roles;
-        my $natives = $context->natives;
+        state $runtime = runtime;
+        state $context = $runtime->context;
+        state $terms   = $context->terms;
+        state $roles   = $context->roles;
+        state $natives = $context->natives;
 
         my sub wrap_slot ($name, $args, $body) {
             $roles->Defined(
@@ -66,7 +66,7 @@ package Test::MXCL {
             )
         }
 
-        my $testing_scope = $roles->Union(
+        state $testing_scope = $roles->Union(
             $roles->Role(
                 wrap_slot('ok', [{ name => 'got', coerce => 'boolify' }, { name => 'msg', coerce => 'stringify' }],
                     sub ($got, $msg) { $Tester->ok( $got, $msg ) }
