@@ -9,7 +9,7 @@ MXCL is a LISP with the guts of Scheme and the heart of Perl.
 
 # AUTHOR
 
-Matt Trout, `mstrout@cpan.org`
+Stevan Little
 
 # LICENSE
 
