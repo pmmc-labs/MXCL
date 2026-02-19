@@ -70,6 +70,14 @@ class MXCL::Machine {
                 my $prev = pop @$queue;
                 return $Konts->Update( $prev, $k->env, $Nil );
             }
+            when ('MXCL::Term::Kontinue::Capture') {
+                my $prev = pop @$queue;
+                return $Konts->Update(
+                    $prev,
+                    $k->env,
+                    $Terms->List($Roles->Difference( $k->env, $k->origin ))
+                );
+            }
             when ('MXCL::Term::Kontinue::Define') {
                 my $name  = $k->name;
                 my $value = $k->stack->head;

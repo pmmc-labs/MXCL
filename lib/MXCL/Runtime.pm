@@ -197,6 +197,24 @@ class MXCL::Runtime {
         );
 
         ## ---------------------------------------------------------------------
+        ## Roles
+        ## ---------------------------------------------------------------------
+
+        my $role = $natives->Operative(
+            name => 'role',
+            signature => [{ name => '@' }],
+            impl => sub ($env, @exprs) {
+                return $konts->Scope( $env, $terms->Nil )->wrap(
+                    $konts->Capture( $env, $terms->Nil ),
+                    (reverse map {
+                        $konts->Discard($env, $terms->Nil),
+                        $konts->EvalExpr($env, $_, $terms->Nil)
+                    } @exprs),
+                )
+            }
+        );
+
+        ## ---------------------------------------------------------------------
         ## Core Roles
         ## ---------------------------------------------------------------------
 
@@ -330,6 +348,16 @@ class MXCL::Runtime {
 
         # ...
 
+        my $make_opaque = $natives->Applicative(
+             name      => 'make-opaque',
+             signature => [ { name => 'role' } ],
+             impl      => sub ($role) {
+                 $terms->Opaque($role)
+             }
+        );
+
+        # ...
+
         my $make_array = $natives->Applicative(
              name      => 'make-array',
              signature => [ { name => '@' } ],
@@ -389,8 +417,9 @@ class MXCL::Runtime {
 
         $base_scope = $roles->Role(
             $roles->Defined($terms->Sym('define'),            $define),
-            $roles->Defined($terms->Sym('let'),             $let),
+            $roles->Defined($terms->Sym('let'),               $let),
             $roles->Defined($terms->Sym('lambda'),            $lambda),
+            $roles->Defined($terms->Sym('role'),              $role),
             $roles->Defined($terms->Sym('if'),                $if),
             $roles->Defined($terms->Sym('do'),                $do),
             $roles->Defined($terms->Sym('while'),             $while),
@@ -408,6 +437,7 @@ class MXCL::Runtime {
             $roles->Defined($terms->Sym('ref?'),              $is_ref),
             $roles->Defined($terms->Sym('opaque?'),           $is_opaque),
             $roles->Defined($terms->Sym('role?'),             $is_role),
+            $roles->Defined($terms->Sym('make-opaque'),       $make_opaque),
             $roles->Defined($terms->Sym('make-array'),        $make_array),
             $roles->Defined($terms->Sym('make-hash'),         $make_hash),
             $roles->Defined($terms->Sym('make-ref'),          $make_ref),

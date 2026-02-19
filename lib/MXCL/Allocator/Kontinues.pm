@@ -8,6 +8,7 @@ use MXCL::Term::Kontinue::Host;
 
 use MXCL::Term::Kontinue::Return;
 use MXCL::Term::Kontinue::Discard;
+use MXCL::Term::Kontinue::Capture;
 
 use MXCL::Term::Kontinue::IfElse;
 use MXCL::Term::Kontinue::DoWhile;
@@ -49,6 +50,9 @@ class MXCL::Allocator::Kontinues {
             }
             when ('MXCL::Term::Kontinue::Discard') {
                 ; # do nothing
+            }
+            when ('MXCL::Term::Kontinue::Capture') {
+                @args{qw[ origin ]} = ($k->origin)
             }
             when ('MXCL::Term::Kontinue::IfElse') {
                 @args{qw[ condition if_true if_false ]} = ($k->condition, $k->if_true, $k->if_false)
@@ -125,6 +129,14 @@ class MXCL::Allocator::Kontinues {
             env   => $env,
             stack => $stack,
             name  => $name,
+        )
+    }
+
+    method Capture ($env, $stack) {
+        $arena->allocate(MXCL::Term::Kontinue::Capture::,
+            env    => $env,
+            stack  => $stack,
+            origin => $env,
         )
     }
 

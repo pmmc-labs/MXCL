@@ -10,5 +10,7 @@ class MXCL::Term::Opaque :isa(MXCL::Term) {
         sprintf 'opaque<%s>(%s)' => $uid, $env->hash;
     }
 
-    method pprint { die 'Cannot pprint a Ref' }
+    method pprint {
+        sprintf 'opaque[%s]:%s' => $uid, $env;
+    }
 }
