@@ -251,14 +251,14 @@ class MXCL::Machine {
                 }
                 elsif ($call isa MXCL::Term::Opaque) {
                     my $name = $args->head; # should be Sym
-                    my $slot = $call->env->lookup( $name->value );
+                    my $slot = $call->role->lookup( $name->value );
 
                     die "Bad Slot! ".$slot->stringify
                         unless $slot isa MXCL::Term::Role::Slot::Defined;
 
                     my $method = $slot->value;
                     return $Konts->ApplyExpr(
-                        $k->env, $Terms->Cons( $call, $args->tail ), $context->terms->List( $method )
+                        $k->env, $Terms->Cons( $call->repr, $args->tail ), $context->terms->List( $method )
                     );
                 }
                 else {

@@ -182,6 +182,24 @@ class MXCL::Runtime {
             }
         );
 
+        my $role = $natives->Operative(
+            name => 'role',
+            signature => [{ name => '@' }],
+            impl => sub ($env, @args) {
+                my ($name, @exprs) = @args;
+                return (
+                    $konts->Define( $env, $name, $terms->Nil ),
+                    $konts->Scope( $env, $terms->Nil )->wrap(
+                        $konts->Capture( $env, $terms->Nil ),
+                        (reverse map {
+                            $konts->Discard($env, $terms->Nil),
+                            $konts->EvalExpr($env, $_, $terms->Nil)
+                        } @exprs),
+                    )
+                )
+            }
+        );
+
         my $let = $natives->Operative(
             name => 'let',
             signature => [
@@ -193,24 +211,6 @@ class MXCL::Runtime {
                     $konts->Define( $env, $name, $terms->Nil ),
                     $konts->EvalExpr( $env, $value, $terms->Nil )
                 );
-            }
-        );
-
-        ## ---------------------------------------------------------------------
-        ## Roles
-        ## ---------------------------------------------------------------------
-
-        my $role = $natives->Operative(
-            name => 'role',
-            signature => [{ name => '@' }],
-            impl => sub ($env, @exprs) {
-                return $konts->Scope( $env, $terms->Nil )->wrap(
-                    $konts->Capture( $env, $terms->Nil ),
-                    (reverse map {
-                        $konts->Discard($env, $terms->Nil),
-                        $konts->EvalExpr($env, $_, $terms->Nil)
-                    } @exprs),
-                )
             }
         );
 
@@ -348,11 +348,27 @@ class MXCL::Runtime {
 
         # ...
 
+        my $make_role = $natives->Operative(
+            name => 'make-role',
+            signature => [{ name => '@' }],
+            impl => sub ($env, @exprs) {
+                return $konts->Scope( $env, $terms->Nil )->wrap(
+                    $konts->Capture( $env, $terms->Nil ),
+                    (reverse map {
+                        $konts->Discard($env, $terms->Nil),
+                        $konts->EvalExpr($env, $_, $terms->Nil)
+                    } @exprs),
+                )
+            }
+        );
+
+        # ...
+
         my $make_opaque = $natives->Applicative(
              name      => 'make-opaque',
-             signature => [ { name => 'role' } ],
-             impl      => sub ($role) {
-                 $terms->Opaque($role)
+             signature => [ { name => 'repr' }, { name => 'role' } ],
+             impl      => sub ($repr, $role) {
+                 $terms->Opaque($repr, $role)
              }
         );
 
@@ -438,6 +454,7 @@ class MXCL::Runtime {
             $roles->Defined($terms->Sym('opaque?'),           $is_opaque),
             $roles->Defined($terms->Sym('role?'),             $is_role),
             $roles->Defined($terms->Sym('make-opaque'),       $make_opaque),
+            $roles->Defined($terms->Sym('make-role'),         $make_role),
             $roles->Defined($terms->Sym('make-array'),        $make_array),
             $roles->Defined($terms->Sym('make-hash'),         $make_hash),
             $roles->Defined($terms->Sym('make-ref'),          $make_ref),
