@@ -244,8 +244,15 @@ class MXCL::Runtime {
                         name => '<:ORD', signature => [{ name => 'n' },{ name => 'm' }],
                         impl => sub ($ctx, $n, $m) {
                             $konts->EvalExpr($ctx,
-                                # (not (n > m))
-                                $terms->List($terms->Sym('not'), $terms->List( $n, $terms->Sym('>'), $m )),
+                                # (not ((n > m) || (n == m)))
+                                $terms->List(
+                                    $terms->Sym('not'),
+                                    $terms->List(
+                                        $terms->List( $n, $terms->Sym('>'), $m ),
+                                        $terms->Sym('||'),
+                                        $terms->List( $n, $terms->Sym('=='), $m )
+                                    )
+                                ),
                                 $terms->Nil
                             )
                         }
@@ -257,12 +264,8 @@ class MXCL::Runtime {
                         name => '<=:ORD', signature => [{ name => 'n' },{ name => 'm' }],
                         impl => sub ($ctx, $n, $m) {
                             $konts->EvalExpr($ctx,
-                                # ((n < m) || (n == m))
-                                $terms->List(
-                                    $terms->List( $n, $terms->Sym('<'), $m ),
-                                    $terms->Sym('||'),
-                                    $terms->List( $n, $terms->Sym('=='), $m )
-                                ),
+                                # (not (n > m))
+                                $terms->List($terms->Sym('not'), $terms->List( $n, $terms->Sym('>'), $m )),
                                 $terms->Nil
                             )
                         }

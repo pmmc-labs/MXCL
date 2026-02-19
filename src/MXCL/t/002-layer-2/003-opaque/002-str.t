@@ -48,13 +48,12 @@ test_mxcl(q[
     (ok (not ("a" > "a")) "... not a > a")
 ]);
 
-# --- lexicographic ordering: < (derived from ORD as "not >") ---
-# Note: < is derived as (not (n > m)), so the self-equal case ("a" < "a")
-# returns true instead of false.  Only strict-ordering cases are tested.
+# --- lexicographic ordering: < (derived from ORD as "not (n > m || n == m)") ---
 
 test_mxcl(q[
     (ok      ("a" < "b") "... a < b")
     (ok (not ("b" < "a")) "... not b < a")
+    (ok (not ("a" < "a")) "... not a < a")
 ]);
 
 done_testing;

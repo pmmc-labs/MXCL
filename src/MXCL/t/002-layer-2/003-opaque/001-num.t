@@ -44,14 +44,12 @@ test_mxcl(q[
     (ok (not (5 > 5)) "... not 5 > 5")
 ]);
 
-# --- ordering: < (derived from ORD as "not >") ---
-# Note: < is derived as (not (n > m)), so it behaves as <= for the equal case:
-# (5 < 5) = (not (5 > 5)) = (not false) = true.
-# The self-equality edge case is omitted; the strict ordering cases are tested.
+# --- ordering: < (derived from ORD as "not (n > m || n == m)") ---
 
 test_mxcl(q[
     (ok      (4 < 5)  "... 4 < 5")
     (ok (not (5 < 4)) "... not 5 < 4")
+    (ok (not (5 < 5)) "... not 5 < 5")
 ]);
 
 # --- ordering: >= and <= (derived from ORD) ---
