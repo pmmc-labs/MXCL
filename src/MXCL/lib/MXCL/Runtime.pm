@@ -189,7 +189,10 @@ class MXCL::Runtime {
                 { name => 'value' },
             ],
             impl => sub ($env, $name, $value) {
-                return $konts->Define( $env, $name, $terms->List( $value ) );
+                return (
+                    $konts->Define( $env, $name, $terms->Nil ),
+                    $konts->EvalExpr( $env, $value, $terms->Nil )
+                );
             }
         );
 

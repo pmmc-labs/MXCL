@@ -47,13 +47,27 @@ for my $name (qw[ eq? not nil? bool? num? str? lambda? sym? ]) {
         'define inserts a Lambda into the env';
 }
 
-# --- lambda (operative) also produces a Lambda ---
-# lambda? is an applicative so its argument (lambda ...) is fully evaluated
-# before the predicate receives it - yielding the Lambda term directly.
+# --- let + lambda also produces a Lambda in the env ---
+# let now evaluates its value, so the Lambda term is what gets bound.
+
+{
+    my $ctx = $r->context;
+    my $result = $ctx->evaluate(
+        $scope,
+        $ctx->compile_source(q[ (let g (lambda (x) x)) ])
+    );
+
+    isa_ok $result->env->lookup('g')->value, 'MXCL::Term::Lambda',
+        'let + lambda: g is bound to a Lambda term';
+}
+
+# --- lambda? confirms both paths at the MXCL level ---
 
 test_mxcl(q[
     (ok (lambda? (lambda (x) x))         "... lambda expression produces a Lambda term")
     (ok (lambda? (lambda (x y) (x + y))) "... multi-arg lambda is also a Lambda term")
+    (let h (lambda (x) x))
+    (ok (lambda? h) "... let-bound lambda is a Lambda term")
 ]);
 
 # =============================================================================
