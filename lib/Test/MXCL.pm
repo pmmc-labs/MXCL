@@ -23,7 +23,6 @@ package Test::MXCL {
             roles
             compiler
             parser
-
             runtime
 
             test_mxcl
@@ -38,8 +37,7 @@ package Test::MXCL {
     sub roles    { ctx->roles }
     sub compiler { ctx->compiler }
     sub parser   { ctx->parser }
-
-    sub runtime  { state $RUNTIME //= MXCL::Runtime->new( context => ctx ) }
+    sub runtime  { ctx->runtime }
 
     # --------------------------------------------------------------------------
 
@@ -48,8 +46,8 @@ package Test::MXCL {
 
         local $Test::Builder::Level = $Test::Builder::Level + 6;
 
-        state $runtime = runtime;
-        state $context = $runtime->context;
+        state $context = ctx;
+        state $runtime = $context->runtime;
         state $terms   = $context->terms;
         state $roles   = $context->roles;
         state $natives = $context->natives;

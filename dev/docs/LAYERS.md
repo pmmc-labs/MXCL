@@ -82,7 +82,7 @@ as role operations.
         [-] FExpr: user defined operative function
         [x] Native: native operative function
         [x] Opaque: instance as operative
-        
+ 
 <!----------------------------------------------------------------------------->
 ## Layer 3: MOP
 <!----------------------------------------------------------------------------->
@@ -127,6 +127,10 @@ provides access to the runtime.
 [x] Continuation Queue Machine
     [x] incrementally compiles expressions to continations
     [x] passes temporary values through local stack in continuation
+    [-] Queue as Turing-Tape analogy
+        [-] linearity
+        [-] atomicity of steps
+        [-] correct continuation chaining 
 [-] Kontinue Terms
     [ ] first-class, exposed in the language
     [x] content addressed 

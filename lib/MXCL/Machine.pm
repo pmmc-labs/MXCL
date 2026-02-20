@@ -2,27 +2,12 @@
 use v5.42;
 use experimental qw[ class switch ];
 
-use MXCL::Debugger;
-
 class MXCL::Machine {
     field $context :param :reader;
 
-    field $steps :reader = 0;
-    field $queue :reader = +[];
-    field $trace :reader = +[];
-    field $debug :reader = undef;
-
-    ADJUST {
-        $debug = MXCL::Debugger->new( machine => $self );
-    }
-
     method run ($env, $exprs) {
-        push @$queue => (
+        $context->tape->enqueue(
             $context->kontinues->Host($env, 'HALT', +{}, $context->terms->Nil),
-            # FIXME:
-            # We need to prevent the results of the expressions
-            # from ending up on the stack of the next expression
-            # see the Runtime `do` builtin for a comment.
             reverse map {
                 $context->kontinues->Discard($env, $context->terms->Nil),
                 $context->kontinues->EvalExpr($env, $_, $context->terms->Nil)
@@ -33,13 +18,11 @@ class MXCL::Machine {
 
     method run_until_host {
         my $k;
-        while (@$queue) {
-            $k = pop @$queue;
+        while ($context->tape->has_next) {
+            $k = $context->tape->next;
             last if $k isa MXCL::Term::Kontinue::Host;
-            push @$queue => $self->step($k);
-            push @$trace => $k;
+            $context->tape->advance( $k, $self->step( $k ) );
         }
-        #$debug->DEBUG_STEP($k, true);
         return $k;
     }
 
@@ -49,17 +32,15 @@ class MXCL::Machine {
         state $Roles = $context->roles;
         state $Nil   = $Terms->Nil;
 
-        $steps++;
-        #$debug->DEBUG_STEP( $k );
         given (blessed $k) {
             # ------------------------------------------------------------------
             # Threading of Env & Stack
             # ------------------------------------------------------------------
             when ('MXCL::Term::Kontinue::Return') {
-                # NOTE:
-                # this passes on the Env and merges the stacks
-                # for this K the previous K in the queue.
-                my $prev = pop @$queue;
+                die "EXPECTED KONTINUE IN QUEUE for Return!"
+                    unless $context->tape->has_next;
+
+                my $prev = $context->tape->next;
                 return $Konts->Update(
                     $prev,
                     $k->env,
@@ -67,11 +48,17 @@ class MXCL::Machine {
                 );
             }
             when ('MXCL::Term::Kontinue::Discard') {
-                my $prev = pop @$queue;
+                die "EXPECTED KONTINUE IN QUEUE for Discard!"
+                    unless $context->tape->has_next;
+
+                my $prev = $context->tape->next;
                 return $Konts->Update( $prev, $k->env, $Nil );
             }
             when ('MXCL::Term::Kontinue::Capture') {
-                my $prev = pop @$queue;
+                die "EXPECTED KONTINUE IN QUEUE for Capture!"
+                    unless $context->tape->has_next;
+
+                my $prev = $context->tape->next;
                 return $Konts->Update(
                     $prev,
                     $k->env,
@@ -106,13 +93,8 @@ class MXCL::Machine {
             when ('MXCL::Term::Kontinue::Scope::Leave') {
                 # NOTE:
                 # this will restore the env, but in a kinda
-                # janky way inside the Update function
-
-                # FIXME:
-                # The Leave K should have a restore_env
-                # as an explicit thing to restore, and
-                # be part of the hash. Then we do not
-                # need to special case things anymore.
+                # janky way inside the Update function of the
+                # Kontinues allocator.
                 return $Konts->Return( $k->env, $k->stack );
             }
             # ------------------------------------------------------------------
