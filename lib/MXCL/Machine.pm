@@ -3,9 +3,8 @@ use v5.42;
 use experimental qw[ class switch ];
 
 class MXCL::Machine {
-    field $context :param :reader;
 
-    method run ($env, $exprs) {
+    method run ($context, $env, $exprs) {
         $context->tape->enqueue(
             $context->kontinues->Host($env, 'HALT', +{}, $context->terms->Nil),
             reverse map {
@@ -13,20 +12,20 @@ class MXCL::Machine {
                 $context->kontinues->EvalExpr($env, $_, $context->terms->Nil)
             } @$exprs
         );
-        return $self->run_until_host;
+        return $self->run_until_host($context);
     }
 
-    method run_until_host {
+    method run_until_host ($context) {
         my $k;
         while ($context->tape->has_next) {
             $k = $context->tape->next;
             last if $k isa MXCL::Term::Kontinue::Host;
-            $context->tape->advance( $k, $self->step( $k ) );
+            $context->tape->advance( $k, $self->step( $context, $k ) );
         }
         return $k;
     }
 
-    method step ($k) {
+    method step ($context, $k) {
         state $Terms = $context->terms;
         state $Konts = $context->kontinues;
         state $Roles = $context->roles;
@@ -106,12 +105,12 @@ class MXCL::Machine {
                     return # AND short/circuit
                         refaddr $k->condition == refaddr $k->if_true
                             ? $Konts->Return( $k->env, $Terms->List( $condition ) )
-                            : $self->evaluate_term( $k->env, $k->if_true  );
+                            : $self->evaluate_term( $context, $k->env, $k->if_true  );
                 } else {
                     return # OR short/circuit
                         refaddr $k->condition == refaddr $k->if_false
                             ? $Konts->Return( $k->env, $Terms->List( $condition ) )
-                            : $self->evaluate_term( $k->env, $k->if_false );
+                            : $self->evaluate_term( $context, $k->env, $k->if_false );
                 }
             }
             when ('MXCL::Term::Kontinue::DoWhile') {
@@ -120,7 +119,7 @@ class MXCL::Machine {
                     return (
                         $k,
                         $Konts->EvalExpr( $k->env, $k->condition ),
-                        $self->evaluate_term( $k->env, $k->body ),
+                        $self->evaluate_term( $context, $k->env, $k->body ),
                     );
                 } else {
                     return ();
@@ -130,7 +129,7 @@ class MXCL::Machine {
             # Eval
             # ------------------------------------------------------------------
             when ('MXCL::Term::Kontinue::Eval::Expr') {
-                return $self->evaluate_term( $k->env, $k->expr );
+                return $self->evaluate_term( $context, $k->env, $k->expr );
             }
             when ('MXCL::Term::Kontinue::Eval::Head') {
                 my $cons = $k->cons;
@@ -138,7 +137,7 @@ class MXCL::Machine {
 
                 return (
                     $Konts->ApplyExpr( $env, $cons->tail, $Nil ),
-                    $self->evaluate_term( $env, $cons->head ),
+                    $self->evaluate_term( $context, $env, $cons->head ),
                 );
             }
             when ('MXCL::Term::Kontinue::Eval::Rest') {
@@ -148,7 +147,7 @@ class MXCL::Machine {
                     ($rest->tail->isa('MXCL::Term::Nil')
                         ? $Konts->Return( $env, $k->stack )
                         : $Konts->EvalRest( $env, $rest->tail, $k->stack )),
-                    $self->evaluate_term( $env, $rest->head ),
+                    $self->evaluate_term( $context, $env, $rest->head ),
                 );
             }
             # ------------------------------------------------------------------
@@ -253,7 +252,7 @@ class MXCL::Machine {
         }
     }
 
-    method evaluate_term ($env, $expr) {
+    method evaluate_term ($context, $env, $expr) {
         state $Terms = $context->terms;
         state $Konts = $context->kontinues;
         state $Nil   = $Terms->Nil;

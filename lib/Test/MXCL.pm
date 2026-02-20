@@ -50,12 +50,11 @@ package Test::MXCL {
         state $runtime = $context->runtime;
         state $terms   = $context->terms;
         state $roles   = $context->roles;
-        state $natives = $context->natives;
 
         my sub wrap_slot ($name, $args, $body) {
             $roles->Defined(
                 $terms->Sym( $name ),
-                $natives->Applicative(
+                $terms->Applicative(
                     name      => $name,
                     signature => $args,
                     returns   => 'Nil',
@@ -87,7 +86,7 @@ package Test::MXCL {
 
         my $test = $context->compile_source($source);
 
-        return $context->evaluate( $testing_scope,  $test );
+        return $context->evaluate( $testing_scope, $test );
     }
 
 }

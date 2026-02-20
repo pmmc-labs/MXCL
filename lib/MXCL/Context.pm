@@ -11,9 +11,7 @@ use MXCL::Tape;
 
 use MXCL::Allocator::Terms;
 use MXCL::Allocator::Roles;
-use MXCL::Allocator::References;
 use MXCL::Allocator::Kontinues;
-use MXCL::Allocator::Natives;
 
 use MXCL::Debugger;
 
@@ -23,9 +21,7 @@ class MXCL::Context {
 
     field $terms     :reader;
     field $roles     :reader;
-    field $refs      :reader;
     field $kontinues :reader;
-    field $natives   :reader;
 
     field $parser    :reader;
     field $compiler  :reader;
@@ -35,16 +31,13 @@ class MXCL::Context {
     ADJUST {
         $arena     = MXCL::Arena->new;
         $terms     = MXCL::Allocator::Terms->new( arena => $arena );
-        $refs      = MXCL::Allocator::References->new( arena => $arena );
-        $natives   = MXCL::Allocator::Natives->new( arena => $arena, terms => $terms );
         $roles     = MXCL::Allocator::Roles->new( arena => $arena );
         $kontinues = MXCL::Allocator::Kontinues->new( arena => $arena );
 
-        $runtime   = MXCL::Runtime->new( context => $self );
-
         $parser    = MXCL::Parser->new;
-        $compiler  = MXCL::Compiler->new( context => $self );
-        $machine   = MXCL::Machine->new( context => $self );
+        $compiler  = MXCL::Compiler->new( parser => $parser, alloc => $terms );
+        $runtime   = MXCL::Runtime->new( context => $self );
+        $machine   = MXCL::Machine->new;
         $tape      = MXCL::Tape->new;
 
         $arena->commit_generation('context initialized');
@@ -56,8 +49,8 @@ class MXCL::Context {
         return $exprs;
     }
 
-    method evaluate ( $env, $exprs ) {
-        my $result = $machine->run( $env, $exprs );
+    method evaluate ($env, $exprs) {
+        my $result = $machine->run( $self, $env, $exprs );
         $arena->commit_generation('program executed');
         return $result;
     }

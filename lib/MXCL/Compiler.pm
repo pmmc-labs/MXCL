@@ -5,10 +5,11 @@ use experimental qw[ class ];
 use Scalar::Util ();
 
 class MXCL::Compiler {
-    field $context :param :reader;
+    field $parser :param :reader;
+    field $alloc  :param :reader;
 
     method compile ($source) {
-        my $compounds = $context->parser->parse($source);
+        my $compounds = $parser->parse($source);
         my $expanded  = $self->expand($compounds);
         return $expanded;
     }
@@ -27,17 +28,17 @@ class MXCL::Compiler {
 
     method expand_token ($token) {
         my $src = $token->source;
-        return $context->terms->True  if $src eq 'true';
-        return $context->terms->False if $src eq 'false';
+        return $alloc->True  if $src eq 'true';
+        return $alloc->False if $src eq 'false';
         if ($src =~ /^\".*\"$/) {
             my $str = substr($src, 1, length($src) - 2);
             $str = "\n" if $str eq "\\n";
             $str = "\t" if $str eq "\\t";
-            return $context->terms->Str( $str );
+            return $alloc->Str( $str );
         }
-        return $context->terms->Num( 0+$src ) if Scalar::Util::looks_like_number($src);
-        return $context->terms->Tag( substr($src, 1) ) if $src =~ /^\:/;
-        return $context->terms->Sym( $src );
+        return $alloc->Num( 0+$src ) if Scalar::Util::looks_like_number($src);
+        return $alloc->Tag( substr($src, 1) ) if $src =~ /^\:/;
+        return $alloc->Sym( $src );
     }
 
     method expand_compound ($compound) {
@@ -46,21 +47,21 @@ class MXCL::Compiler {
 
         # expand empty compounds based on delimiter type
         if (scalar @items == 0) {
-            return $context->terms->Hash  if $open eq "+{";
-            return $context->terms->Array if $open eq "+[";
-            return $context->terms->Nil; # empty list
+            return $alloc->Hash  if $open eq "+{";
+            return $alloc->Array if $open eq "+[";
+            return $alloc->Nil; # empty list
         }
 
         # ...
         my @list = map $self->expand_expression( $_ ), @items;
 
-        unshift @list => $context->terms->Sym('make-hash')
+        unshift @list => $alloc->Sym('make-hash')
             if $compound->open->source eq "+{";
 
-        unshift @list => $context->terms->Sym('make-array')
+        unshift @list => $alloc->Sym('make-array')
             if $compound->open->source eq "+[";
 
         # otherwise it is a list ...
-        return $context->terms->List( @list );
+        return $alloc->List( @list );
     }
 }
