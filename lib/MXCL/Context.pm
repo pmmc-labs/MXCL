@@ -7,11 +7,13 @@ use MXCL::Parser;
 use MXCL::Compiler;
 use MXCL::Machine;
 use MXCL::Runtime;
-use MXCL::Tape;
 
 use MXCL::Allocator::Terms;
 use MXCL::Allocator::Roles;
 use MXCL::Allocator::Kontinues;
+
+use MXCL::Tape;
+use MXCL::Tape::Spliced;
 
 use MXCL::Debugger;
 
@@ -38,7 +40,7 @@ class MXCL::Context {
         $compiler  = MXCL::Compiler->new( parser => $parser, alloc => $terms );
         $runtime   = MXCL::Runtime->new;
         $machine   = MXCL::Machine->new;
-        $tape      = MXCL::Tape->new;
+        $tape      = MXCL::Tape::Spliced->new;
 
         $arena->commit_generation('context initialized');
     }
@@ -54,7 +56,34 @@ class MXCL::Context {
     }
 
     method evaluate ($env, $exprs) {
-        my $result = $machine->run( $self, $env, $exprs );
+
+        # Load in the prelude ...
+        $tape->splice(
+            MXCL::Tape->new->enqueue(
+                # discard the last value, but pass on the Env
+                $kontinues->Discard($env, $terms->Nil),
+                reverse map {
+                    $kontinues->Discard($env, $terms->Nil),
+                    $kontinues->EvalExpr($env, $_, $terms->Nil)
+                } $self->compile_source(q[
+                    (let $NAME      "MXCL")
+                    (let $VERSION   :v0.0.1)
+                    (let $AUTHORITY :cpan:STEVAN)
+                ])->@*
+            )
+        );
+
+        $tape->splice(
+            MXCL::Tape->new->enqueue(
+                $kontinues->Host($env, 'HALT', +{}, $terms->Nil),
+                reverse map {
+                    $kontinues->Discard($env, $terms->Nil),
+                    $kontinues->EvalExpr($env, $_, $terms->Nil)
+                } @$exprs
+            )
+        );
+
+        my $result = $machine->run( $self );
         $arena->commit_generation('program executed');
         return $result;
     }

@@ -11,7 +11,8 @@ class MXCL::Tape {
     method next     { pop @$queue }
 
     method enqueue (@kontinues) {
-        push @$queue => @kontinues
+        push @$queue => @kontinues;
+        $self;
     }
 
     method advance ($k, @next) {
@@ -20,3 +21,5 @@ class MXCL::Tape {
         $steps++;
     }
 }
+
+

@@ -4,14 +4,7 @@ use experimental qw[ class switch ];
 
 class MXCL::Machine {
 
-    method run ($context, $env, $exprs) {
-        $context->tape->enqueue(
-            $context->kontinues->Host($env, 'HALT', +{}, $context->terms->Nil),
-            reverse map {
-                $context->kontinues->Discard($env, $context->terms->Nil),
-                $context->kontinues->EvalExpr($env, $_, $context->terms->Nil)
-            } @$exprs
-        );
+    method run ($context) {
         return $self->run_until_host($context);
     }
 

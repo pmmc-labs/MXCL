@@ -16,11 +16,7 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
-    (let x 10)
-
-    (define foo (n) (x + n))
-
-    foo
+    (($NAME ~ $VERSION) ~ $AUTHORITY)
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );
@@ -64,6 +60,14 @@ ARENA:
     (map { $_ * 1000 } $gen->{timez}->@{qw[ hits misses hashing MD5 ]}),
 ;
 
+foreach my $tape ($context->tape->tapes->@*) {
+    say "QUEUE:";
+    say join "\n" => map $_->pprint, $tape->queue->@*;
+    say '-' x 120;
+    say "TRACE:";
+    say join "\n" => map $_->pprint, reverse $tape->trace->@*;
+    say '-' x 120;
+}
 
 __END__
 
