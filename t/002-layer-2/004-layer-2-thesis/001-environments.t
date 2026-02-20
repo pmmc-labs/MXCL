@@ -4,20 +4,19 @@ use v5.42;
 
 use Test::More;
 use Scalar::Util qw[ refaddr ];
-use Test::MXCL qw[ runtime test_mxcl ];
+use Test::MXCL qw[ ctx test_mxcl ];
 
 # Layer 2 thesis: environments are immutable, content-addressed Roles.
 # Scope derivation is Role union; name lookup is slot lookup.
 # Scoped forms (do, lambda body) restore the pre-entry env on exit.
 
-my $r   = runtime;
-my $ctx = $r->context;
+my $ctx = ctx;
 
 # =============================================================================
 # Structural: the base scope is a Role
 # =============================================================================
 
-isa_ok $r->base_scope, 'MXCL::Term::Role',
+isa_ok $ctx->base_scope, 'MXCL::Term::Role',
     'base_scope is a Role';
 
 # =============================================================================
@@ -25,10 +24,10 @@ isa_ok $r->base_scope, 'MXCL::Term::Role',
 # =============================================================================
 
 {
-    my $before = $r->base_scope->size;
+    my $before = $ctx->base_scope->size;
 
     my $result = $ctx->evaluate(
-        $r->base_scope,
+        $ctx->base_scope,
         $ctx->compile_source(q[ (define f (x) x) ])
     );
 
@@ -48,12 +47,12 @@ isa_ok $r->base_scope, 'MXCL::Term::Role',
 
 {
     my $env_f = $ctx->evaluate(
-        $r->base_scope,
+        $ctx->base_scope,
         $ctx->compile_source(q[ (define f (x) x) ])
     )->env;
 
     my $env_g = $ctx->evaluate(
-        $r->base_scope,
+        $ctx->base_scope,
         $ctx->compile_source(q[ (define g (x) x) ])
     )->env;
 
@@ -67,17 +66,17 @@ isa_ok $r->base_scope, 'MXCL::Term::Role',
 # =============================================================================
 
 {
-    my $before_hash = $r->base_scope->hash;
+    my $before_hash = $ctx->base_scope->hash;
 
     my $result = $ctx->evaluate(
-        $r->base_scope,
+        $ctx->base_scope,
         $ctx->compile_source(q[ (do (let __scoped 1)) ])
     );
 
     is $result->env->hash, $before_hash,
         'do block: returned env matches base_scope (scope reverted on Leave)';
 
-    isnt refaddr($r->base_scope), refaddr(undef),
+    isnt refaddr($ctx->base_scope), refaddr(undef),
         'base_scope itself is unchanged (it is immutable)';
 }
 

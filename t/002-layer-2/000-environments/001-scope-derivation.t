@@ -3,7 +3,7 @@
 use v5.42;
 
 use Test::More;
-use Test::MXCL qw[ test_mxcl runtime ];
+use Test::MXCL qw[ test_mxcl ctx ];
 
 # --- inner scope can see bindings from the outer scope ---
 
@@ -36,15 +36,14 @@ test_mxcl(q[
 # A let at the top level (not inside a do) propagates up to the returned env.
 
 {
-    my $r   = runtime;
-    my $ctx = $r->context;
+    my $ctx = ctx;
 
     my $result = $ctx->evaluate(
-        $r->base_scope,
+        $ctx->base_scope,
         $ctx->compile_source('(let __top 1)')
     );
 
-    isnt $result->env->hash, $r->base_scope->hash,
+    isnt $result->env->hash, $ctx->base_scope->hash,
         'top-level let: returned env is extended beyond base_scope';
 }
 
@@ -54,15 +53,14 @@ test_mxcl(q[
 # inside do never propagate to the returned Host continuation.
 
 {
-    my $r   = runtime;
-    my $ctx = $r->context;
+    my $ctx = ctx;
 
     my $result = $ctx->evaluate(
-        $r->base_scope,
+        $ctx->base_scope,
         $ctx->compile_source('(do (let __inner 1))')
     );
 
-    is $result->env->hash, $r->base_scope->hash,
+    is $result->env->hash, $ctx->base_scope->hash,
         'do-scoped let: returned env equals base_scope (scope boundary reverted)';
 }
 

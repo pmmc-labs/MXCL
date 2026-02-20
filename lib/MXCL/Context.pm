@@ -36,11 +36,15 @@ class MXCL::Context {
 
         $parser    = MXCL::Parser->new;
         $compiler  = MXCL::Compiler->new( parser => $parser, alloc => $terms );
-        $runtime   = MXCL::Runtime->new( context => $self );
+        $runtime   = MXCL::Runtime->new;
         $machine   = MXCL::Machine->new;
         $tape      = MXCL::Tape->new;
 
         $arena->commit_generation('context initialized');
+    }
+
+    method base_scope {
+        $runtime->base_scope( $self )
     }
 
     method compile_source ($source) {

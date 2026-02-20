@@ -8,10 +8,8 @@ use List::Util qw[ max min ];
 use Time::HiRes ();
 
 use MXCL::Context;
-use MXCL::Runtime;
 
 my $context = MXCL::Context->new;
-my $runtime = MXCL::Runtime->new( context => $context );
 
 my %timings;
 
@@ -31,7 +29,7 @@ say "PROGRAM:";
 say $_->pprint foreach @$exprs;
 
 my $start_run = [Time::HiRes::gettimeofday];
-my $result = $context->evaluate( $runtime->base_scope, $exprs );
+my $result = $context->evaluate( $context->base_scope, $exprs );
 $timings{execute} += Time::HiRes::tv_interval( $start_run );
 
 #my ($lambda) = $result->stack->uncons;

@@ -3,7 +3,7 @@
 use v5.42;
 
 use Test::More;
-use Test::MXCL qw[ runtime test_mxcl ];
+use Test::MXCL qw[ ctx test_mxcl ];
 
 # Layer 2 thesis: every callable is either an Applicative (args evaluated before
 # the call) or an Operative (args are raw unevaluated AST).  There is no third
@@ -14,8 +14,8 @@ use Test::MXCL qw[ runtime test_mxcl ];
 # Structural: inspect the base scope
 # =============================================================================
 
-my $r     = runtime;
-my $scope = $r->base_scope;
+my $ctx   = ctx;
+my $scope = $ctx->base_scope;
 
 # --- known operatives in the base scope ---
 
@@ -37,7 +37,6 @@ for my $name (qw[ eq? not nil? bool? num? str? lambda? sym? ]) {
 # define is an operative that constructs a Lambda and installs it in the env.
 
 {
-    my $ctx = $r->context;
     my $result = $ctx->evaluate(
         $scope,
         $ctx->compile_source(q[ (define f (x) x) ])
@@ -51,7 +50,6 @@ for my $name (qw[ eq? not nil? bool? num? str? lambda? sym? ]) {
 # let now evaluates its value, so the Lambda term is what gets bound.
 
 {
-    my $ctx = $r->context;
     my $result = $ctx->evaluate(
         $scope,
         $ctx->compile_source(q[ (let g (lambda (x) x)) ])

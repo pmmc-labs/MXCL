@@ -3,12 +3,10 @@ use v5.42;
 use experimental qw[ class switch ];
 
 class MXCL::Runtime {
-    field $context :param :reader;
-
     field $base_scope = undef;
 
     # be lazy here
-    method base_scope {
+    method base_scope ($context) {
         return $base_scope if defined $base_scope;
 
         my $terms = $context->terms;

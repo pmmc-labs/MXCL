@@ -81,7 +81,7 @@ package Test::MXCL {
                 ),
                 wrap_slot('done-testing', [], sub () { $Tester->done_testing }),
             ),
-            $runtime->base_scope
+            $context->base_scope
         );
 
         my $test = $context->compile_source($source);
