@@ -6,6 +6,7 @@ use MXCL::Term::Parser::Token;
 use MXCL::Term::Parser::Compound;
 
 class MXCL::Parser {
+    field $alloc :param :reader;
 
     method parse ($source) {
         my $tokens = $self->tokenize($source);
@@ -37,7 +38,7 @@ class MXCL::Parser {
                 my $start = $char_at - $line_at;
                 $char_at = pos($source);
 
-                push @tokens => MXCL::Term::Parser::Token->new(
+                push @tokens => $alloc->Token(
                     source => $match,
                     start  => $start,
                     end    => $char_at - $line_at,
@@ -52,24 +53,32 @@ class MXCL::Parser {
     method parse_expression ($tokens) {
         my $token = shift @$tokens;
 
-        return $self->parse_compound(MXCL::Term::Parser::Compound->new( open => $token ), $tokens)
+        return $self->parse_compound(MXCL::Parser::CompoundBuilder->new( open => $token ), $tokens)
             if $self->is_opening_bracket($token);
 
         if ($token->source eq "'") {
-            return MXCL::Term::Parser::Compound->new(
+            return $self->build_compound(MXCL::Parser::CompoundBuilder->new(
                 open  => $token,
                 items => [ $self->parse_expression($tokens) ]
-            );
+            ));
         }
 
         return $token;
+    }
+
+    method build_compound ($builder) {
+        return $alloc->Compound(
+            ($builder->open  // $alloc->Token(source => '(')),
+            ($builder->items->@*),
+            ($builder->close // $alloc->Token(source => ')')),
+        )
     }
 
     method parse_compound ( $compound, $tokens ) {
         if ($self->is_closing_bracket($tokens->[0])) {
             my $close = shift @$tokens;
             $compound->close = $self->do_brackets_match($compound, $close);
-            return $compound;
+            return $self->build_compound( $compound );
         }
         my $expr = $self->parse_expression($tokens);
         return $self->parse_compound( $compound->push( $expr ), $tokens );
@@ -110,7 +119,25 @@ class MXCL::Parser {
     }
 }
 
+class MXCL::Parser::CompoundBuilder {
+    field $items :param :reader = +[];
 
+    field $open  :param = undef;
+    field $close :param = undef;
 
+    method open  :lvalue { $open  }
+    method close :lvalue { $close }
+
+    method push (@items) { push @$items => @items; $self }
+
+    method stringify {
+        sprintf 'CompoundBuilder:%s %s %s' =>
+                ($open->source // '~'),
+                (join ', ' => map $_->stringify, @$items),
+                ($close->source // '~')
+    }
+
+    method pprint { $self->stringify }
+}
 
 

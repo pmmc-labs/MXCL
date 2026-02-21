@@ -31,8 +31,6 @@ $timings{execute} += Time::HiRes::tv_interval( $start_run );
 #my ($lambda) = $result->stack->uncons;
 #say "FREE! ", join ', ' => map $_->stringify, $lambda->free_variables;
 
-my $arena = $context->arena;
-my $gen = $arena->generations->[-1];
 say sprintf q[
 RESULT: %s
 
@@ -40,9 +38,15 @@ TIMING:
 -------------------------------------------------
  compile (ms) : %.03f
  execute (ms) : %.03f
--------------------------------------------------
+-------------------------------------------------]
+=>  ($result ? $result->stack->pprint : 'UNDEFINED'),
+    (map { $_ * 1000 } @timings{qw[ compile execute ]}),
+;
 
-ARENA:
+my $arena = $context->arena;
+foreach my ($i, $gen) (indexed $arena->generations->@*) {
+    say sprintf q[
+ARENA GEN[%d] - %s
 -- cache ----------------------------------------
    alive : %d
     hits : %d
@@ -54,11 +58,11 @@ ARENA:
 .................................................
      MD5 (ms) : %.03f
 -------------------------------------------------]
-=>  ($result ? $result->stack->pprint : 'UNDEFINED'),
-    (map { $_ * 1000 } @timings{qw[ compile execute ]}),
-    (map { defined $_ ? $_ : 0 } $gen->{statz}->@{qw[ alive hits misses ]}),
-    (map { $_ * 1000 } $gen->{timez}->@{qw[ hits misses hashing MD5 ]}),
-;
+    =>  $i, $gen->{label},
+        (map { defined $_ ? $_ : 0 } $gen->{statz}->@{qw[ alive hits misses ]}),
+        (map { $_ ? $_ * 1000 : 0 } $gen->{timez}->@{qw[ hits misses hashing MD5 ]}),
+    ;
+}
 
 foreach my ($i, $tape) (indexed $context->tape->tapes->@*) {
     say '-' x 120;

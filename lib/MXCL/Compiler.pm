@@ -10,6 +10,7 @@ class MXCL::Compiler {
 
     method compile ($source) {
         my $compounds = $parser->parse($source);
+        $alloc->arena->commit_generation('parser finished');
         my $expanded  = $self->expand($compounds);
         return $expanded;
     }
@@ -55,11 +56,8 @@ class MXCL::Compiler {
         # ...
         my @list = map $self->expand_expression( $_ ), @items;
 
-        unshift @list => $alloc->Sym('make-hash')
-            if $compound->open->source eq "+{";
-
-        unshift @list => $alloc->Sym('make-array')
-            if $compound->open->source eq "+[";
+        unshift @list => $alloc->Sym('make-hash')   if $open eq "+{";
+        unshift @list => $alloc->Sym('make-array')  if $open eq "+[";
 
         # otherwise it is a list ...
         return $alloc->List( @list );

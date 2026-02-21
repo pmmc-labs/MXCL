@@ -4,18 +4,22 @@ use experimental qw[ class ];
 
 use MXCL::Term::Parser::Token;
 
-class MXCL::Term::Parser::Compound {
-    field $items :param :reader = +[];
+class MXCL::Term::Parser::Compound :isa(MXCL::Term) {
+    field $items :param;
 
-    field $open  :param = MXCL::Term::Parser::Token->new(source => '(');
-    field $close :param = MXCL::Term::Parser::Token->new(source => ')');
+    method open  { $items->[0] }
+    method close { $items->[-1] }
 
-    method open  :lvalue { $open  }
-    method close :lvalue { $close }
-
-    method push (@items) { push @$items => @items; $self }
+    method items {
+        my @items = @$items;
+        shift @items;
+        pop @items;
+        return \@items;
+    }
 
     method stringify {
-        sprintf 'Compound:%s %s %s' => $open->source, (join ', ' => map $_->stringify, @$items), $close->source
+        sprintf 'Compound:%s' => (join ', ' => map $_->stringify, @$items)
     }
+
+    method pprint { $self->stringify }
 }
