@@ -19,7 +19,7 @@ class MXCL::Compiler {
     }
 
     method expand_expression ($expr) {
-        if ($expr isa MXCL::Parser::Compound) {
+        if ($expr isa MXCL::Term::Parser::Compound) {
             return $self->expand_compound( $expr );
         } else {
             return $self->expand_token( $expr );

@@ -2,7 +2,7 @@
 use v5.42;
 use experimental qw[ class ];
 
-class MXCL::Parser::Token {
+class MXCL::Term::Parser::Token {
     field $source :param :reader;
     field $start  :param :reader = -1;
     field $end    :param :reader = -1;

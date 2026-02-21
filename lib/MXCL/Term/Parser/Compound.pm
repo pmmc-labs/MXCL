@@ -2,13 +2,13 @@
 use v5.42;
 use experimental qw[ class ];
 
-use MXCL::Parser::Token;
+use MXCL::Term::Parser::Token;
 
-class MXCL::Parser::Compound {
+class MXCL::Term::Parser::Compound {
     field $items :param :reader = +[];
 
-    field $open  :param = MXCL::Parser::Token->new(source => '(');
-    field $close :param = MXCL::Parser::Token->new(source => ')');
+    field $open  :param = MXCL::Term::Parser::Token->new(source => '(');
+    field $close :param = MXCL::Term::Parser::Token->new(source => ')');
 
     method open  :lvalue { $open  }
     method close :lvalue { $close }

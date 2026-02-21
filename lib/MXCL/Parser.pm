@@ -2,8 +2,8 @@
 use v5.42;
 use experimental qw[ class switch ];
 
-use MXCL::Parser::Token;
-use MXCL::Parser::Compound;
+use MXCL::Term::Parser::Token;
+use MXCL::Term::Parser::Compound;
 
 class MXCL::Parser {
 
@@ -37,7 +37,7 @@ class MXCL::Parser {
                 my $start = $char_at - $line_at;
                 $char_at = pos($source);
 
-                push @tokens => MXCL::Parser::Token->new(
+                push @tokens => MXCL::Term::Parser::Token->new(
                     source => $match,
                     start  => $start,
                     end    => $char_at - $line_at,
@@ -52,11 +52,11 @@ class MXCL::Parser {
     method parse_expression ($tokens) {
         my $token = shift @$tokens;
 
-        return $self->parse_compound(MXCL::Parser::Compound->new( open => $token ), $tokens)
+        return $self->parse_compound(MXCL::Term::Parser::Compound->new( open => $token ), $tokens)
             if $self->is_opening_bracket($token);
 
         if ($token->source eq "'") {
-            return MXCL::Parser::Compound->new(
+            return MXCL::Term::Parser::Compound->new(
                 open  => $token,
                 items => [ $self->parse_expression($tokens) ]
             );

@@ -14,18 +14,18 @@ subtest '... parse (a b c)' => sub {
     is scalar @$exprs, 1, 'one top-level expression';
 
     my $compound = $exprs->[0];
-    isa_ok $compound, 'MXCL::Parser::Compound';
+    isa_ok $compound, 'MXCL::Term::Parser::Compound';
     is $compound->open->source, '(', 'open bracket is (';
     is $compound->close->source, ')', 'close bracket is )';
 
     my $items = $compound->items;
     is scalar @$items, 3, 'compound has 3 items';
 
-    isa_ok $items->[0], 'MXCL::Parser::Token';
+    isa_ok $items->[0], 'MXCL::Term::Parser::Token';
     is $items->[0]->source, 'a', 'first item is a';
-    isa_ok $items->[1], 'MXCL::Parser::Token';
+    isa_ok $items->[1], 'MXCL::Term::Parser::Token';
     is $items->[1]->source, 'b', 'second item is b';
-    isa_ok $items->[2], 'MXCL::Parser::Token';
+    isa_ok $items->[2], 'MXCL::Term::Parser::Token';
     is $items->[2]->source, 'c', 'third item is c';
 };
 
@@ -36,16 +36,16 @@ subtest '... parse (a (b c))' => sub {
     is scalar @$exprs, 1, 'one top-level expression';
 
     my $compound = $exprs->[0];
-    isa_ok $compound, 'MXCL::Parser::Compound';
+    isa_ok $compound, 'MXCL::Term::Parser::Compound';
 
     my $items = $compound->items;
     is scalar @$items, 2, 'outer compound has 2 items';
 
-    isa_ok $items->[0], 'MXCL::Parser::Token';
+    isa_ok $items->[0], 'MXCL::Term::Parser::Token';
     is $items->[0]->source, 'a', 'first item is Token a';
 
     my $inner = $items->[1];
-    isa_ok $inner, 'MXCL::Parser::Compound';
+    isa_ok $inner, 'MXCL::Term::Parser::Compound';
     is $inner->open->source, '(', 'inner open is (';
 
     my $inner_items = $inner->items;
@@ -61,7 +61,7 @@ subtest '... parse +{ :foo 10 }' => sub {
     is scalar @$exprs, 1, 'one top-level expression';
 
     my $compound = $exprs->[0];
-    isa_ok $compound, 'MXCL::Parser::Compound';
+    isa_ok $compound, 'MXCL::Term::Parser::Compound';
     is $compound->open->source, '+{', 'open bracket is +{';
     is $compound->close->source, '}', 'close bracket is }';
 
@@ -78,7 +78,7 @@ subtest '... parse +[ 1 2 ]' => sub {
     is scalar @$exprs, 1, 'one top-level expression';
 
     my $compound = $exprs->[0];
-    isa_ok $compound, 'MXCL::Parser::Compound';
+    isa_ok $compound, 'MXCL::Term::Parser::Compound';
     is $compound->open->source, '+[', 'open bracket is +[';
     is $compound->close->source, ']', 'close bracket is ]';
 
@@ -95,12 +95,12 @@ subtest '... parse quote expression' => sub {
     is scalar @$exprs, 1, 'one top-level expression';
 
     my $compound = $exprs->[0];
-    isa_ok $compound, 'MXCL::Parser::Compound';
+    isa_ok $compound, 'MXCL::Term::Parser::Compound';
     is $compound->open->source, "'", 'open is quote character';
 
     my $items = $compound->items;
     is scalar @$items, 1, 'quote compound has 1 item';
-    isa_ok $items->[0], 'MXCL::Parser::Compound', 'quoted item is a Compound';
+    isa_ok $items->[0], 'MXCL::Term::Parser::Compound', 'quoted item is a Compound';
     is $items->[0]->open->source, '(', 'quoted item open is (';
 
     my $inner_items = $items->[0]->items;
@@ -114,10 +114,10 @@ subtest '... parse multiple top-level expressions' => sub {
     my $exprs = parser->parse("a (b c)");
     is scalar @$exprs, 2, 'two top-level expressions';
 
-    isa_ok $exprs->[0], 'MXCL::Parser::Token';
+    isa_ok $exprs->[0], 'MXCL::Term::Parser::Token';
     is $exprs->[0]->source, 'a', 'first is Token a';
 
-    isa_ok $exprs->[1], 'MXCL::Parser::Compound';
+    isa_ok $exprs->[1], 'MXCL::Term::Parser::Compound';
     my $items = $exprs->[1]->items;
     is scalar @$items, 2, 'compound has 2 items';
     is $items->[0]->source, 'b', 'first item is b';
@@ -131,7 +131,7 @@ subtest '... parse empty parens' => sub {
     is scalar @$exprs, 1, 'one top-level expression';
 
     my $compound = $exprs->[0];
-    isa_ok $compound, 'MXCL::Parser::Compound';
+    isa_ok $compound, 'MXCL::Term::Parser::Compound';
     is $compound->open->source, '(', 'open is (';
     is $compound->close->source, ')', 'close is )';
 
