@@ -25,7 +25,7 @@ say "PROGRAM:";
 say $_->pprint foreach @$exprs;
 
 my $start_run = [Time::HiRes::gettimeofday];
-my $result = $context->evaluate( $context->base_scope, $exprs );
+my $result = $context->evaluate( $context->base_scope, $exprs, load_prelude => true );
 $timings{execute} += Time::HiRes::tv_interval( $start_run );
 
 #my ($lambda) = $result->stack->uncons;
@@ -60,13 +60,15 @@ ARENA:
     (map { $_ * 1000 } $gen->{timez}->@{qw[ hits misses hashing MD5 ]}),
 ;
 
-foreach my $tape ($context->tape->tapes->@*) {
+foreach my ($i, $tape) (indexed $context->tape->tapes->@*) {
+    say '-' x 120;
+    say "TAPE[ $i ]";
+    say '-' x 120;
     say "QUEUE:";
     say join "\n" => map $_->pprint, $tape->queue->@*;
     say '-' x 120;
     say "TRACE:";
     say join "\n" => map $_->pprint, reverse $tape->trace->@*;
-    say '-' x 120;
 }
 
 __END__

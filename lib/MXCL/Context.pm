@@ -55,23 +55,25 @@ class MXCL::Context {
         return $exprs;
     }
 
-    method evaluate ($env, $exprs) {
+    method evaluate ($env, $exprs, %opts) {
 
-        # Load in the prelude ...
-        $tape->splice(
-            MXCL::Tape->new->enqueue(
-                # discard the last value, but pass on the Env
-                $kontinues->Discard($env, $terms->Nil),
-                reverse map {
+        if (exists $opts{load_prelude}) {
+            # Load in the prelude ...
+            $tape->splice(
+                MXCL::Tape->new->enqueue(
+                    # discard the last value, but pass on the Env
                     $kontinues->Discard($env, $terms->Nil),
-                    $kontinues->EvalExpr($env, $_, $terms->Nil)
-                } $self->compile_source(q[
-                    (let $NAME      "MXCL")
-                    (let $VERSION   :v0.0.1)
-                    (let $AUTHORITY :cpan:STEVAN)
-                ])->@*
-            )
-        );
+                    reverse map {
+                        $kontinues->Discard($env, $terms->Nil),
+                        $kontinues->EvalExpr($env, $_, $terms->Nil)
+                    } $self->compile_source(q[
+                        (let $NAME      "MXCL")
+                        (let $VERSION   :v0.0.1)
+                        (let $AUTHORITY :cpan:STEVAN)
+                    ])->@*
+                )
+            );
+        }
 
         $tape->splice(
             MXCL::Tape->new->enqueue(
