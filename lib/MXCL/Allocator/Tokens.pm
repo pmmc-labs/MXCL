@@ -7,7 +7,7 @@ use MXCL::Arena;
 use MXCL::Term::Parser::Token;
 use MXCL::Term::Parser::Compound;
 
-class MXCL::Allocator::Sources {
+class MXCL::Allocator::Tokens {
     field $arena :param :reader;
 
     method Token (%args) {

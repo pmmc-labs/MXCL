@@ -13,19 +13,20 @@ class MXCL::Tape::Spliced {
     method steps { $tapes->[$idx]->steps }
 
     method has_next {
-        #warn "ENTER\n";
         while (@$tapes) {
-            #warn "has-next? ", join ', ' => @$tapes;
             return true if $tapes->[$idx]->has_next;
+            # FIXME: the `next` should actually do the
+            # incrementing, because this will increment
+            # when tested, and affect any other methods
+            # like enqueue. Look at the usage though
+            # it might a differnt issue.
             $idx++;
-            #warn "??has-next-tape! ", join ', ' => @$tapes;
+
         }
-        #warn "LEAVE\n";
         return false;
     }
 
     method next {
-        #warn ">>> next? ", join ', ' => @$tapes;
         $tapes->[$idx]->next;
     }
 

@@ -95,54 +95,37 @@ as role operations.
 ## Layer 3: Machines, Tapes & Contexts
 <!----------------------------------------------------------------------------->
 
-Layer 4 is the machine which runs this code, and the Context interface which 
+Layer 3 is the machine which runs this code, and the Context interface which 
 provides access to the runtime. 
 
 - Continuation Queue Machine
     - [x] incrementally compiles expressions to continations
-    - [x] passes temporary values through local stack in continuation
-    * [ ] Queue as Turing-Tape analogy enforces ...
-        * [ ] linearity
-        * [ ] atomicity of steps
-        * [ ] correct continuation chaining 
+    - [x] passes temporary values through local stack in continuation 
 - Kontinue Terms
     - [ ] first-class, exposed in the language
     - [x] content addressed 
 - Step until Host
     - [x] runs until a `Host` continuation is reaches, then returns
 - Builtin mechanisms
+    - [x] `if`, `while` to control execution
+    - [x] `define`, `let` to handle naming things
     * [ ] `defer` to handle resource cleanup on scope exit
     - [ ] `return` for non-local returns
     * [ ] `try/catch` and `throw` for exceptions
- 
-Machines run "Tapes", which are an abstraction around the continuation queue, 
-and can be used in a number of ways. 
-    
-- Tapes as ...
-    - Code Loader/Sequencer
-        * [ ] Spliced Tape - Concatenates one or more tapes together
-            - [x] prelude inclusion
-            - [ ] module loading
-    - Concurrency mechanism
-        - [ ] "Mix" tapes - preemptive quota-based interleaving of N tapes 
-            - [ ] Homogeninous execution - same code, different data
-                - [ ] parallelizing `for` loops
-            - [ ] Heterogenious execution - different code, different data
-                - [ ] FP style "apply to all" functional composition `(@f . @g)` 
-        - [ ] Tape "Tree" - Tape as scheduler and supervisor
-            - [ ] Tapes can have child tapes, which inherit quotas, etc. 
-            - [ ] Tapes can "supervise" child tapes
-            - [ ] Tree structure can be static or dynamic
-    - Execution receipt 
-        - [ ] Explicitly not a "proof"     
-        - [ ] The execution trace can be hashed to provide a receipt
-            - [ ] Hash should include source code, env, MXCL version, etc. 
+- Queue as Turing-Tape analogy enforces
+    * [x] linearity
+    * [x] atomicity of steps
+    * [x] correct continuation chaining
+- Tapes
+    - [x] basic sequential tape
+    - [x] Spliced tape - chains tapes together
+    - [ ] Mix tape - pre-emptive quota-based pseudo-parallelism 
  
 <!----------------------------------------------------------------------------->
 ## Layer 4: Object System & MOP
 <!----------------------------------------------------------------------------->
     
-Layer 3 builds upon the previous layers to provide a meta-circular object 
+Layer 4 builds upon the previous layers to provide a meta-circular object 
 system with a complete MOP. It also uses the Role substrate to provide a
 role for each of the core literal terms, and MXCL autoboxes it accordingly.
 
@@ -161,28 +144,11 @@ role for each of the core literal terms, and MXCL autoboxes it accordingly.
     - [ ] difference
     - [ ] excludes/aliases
     - [ ] override
-    
-- The classic MOP bootstrap
-    - [ ] Class isa Object
-    - [ ] Object isa Class
-    - [ ] Class instance-of Object
-- Object/Metaclass system 
+- Object System & MOP
     - [ ] constructing classes & roles 
     - [ ] creating instances
     - [ ] introspection via metaclasses
-    - [ ] class/role construction via metaclasses
-
-- Mutable objects
-    * [ ] using the Ref terms to create mutable objects
-    - [ ] Using `object.become` to change state
-
-- Operatives for ...
-    - Generics 
-        - [ ] use operatives to create typed containers (see also - Zig)
-    - ADTs
-        - [ ] given ADT definition, generate roles, functions, opagues, etc.
-    - Class creation
-        - [ ] declarative syntax sugar for classes, etc. 
+    - [ ] class/role constructable via metaclasses
  
 <!----------------------------------------------------------------------------->
 ## Layer $n: Capabilities, Channels & Effects

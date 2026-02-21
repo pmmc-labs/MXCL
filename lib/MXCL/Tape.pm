@@ -3,6 +3,8 @@ use v5.42;
 use experimental qw[ class switch ];
 
 class MXCL::Tape {
+    field $exprs :param :reader;
+
     field $queue :reader = +[];
     field $trace :reader = +[];
     field $steps :reader = 0;

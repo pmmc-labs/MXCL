@@ -11,7 +11,7 @@ use MXCL::Runtime;
 use MXCL::Allocator::Terms;
 use MXCL::Allocator::Roles;
 use MXCL::Allocator::Kontinues;
-use MXCL::Allocator::Sources;
+use MXCL::Allocator::Tokens;
 
 use MXCL::Tape;
 use MXCL::Tape::Spliced;
@@ -25,7 +25,7 @@ class MXCL::Context {
     field $terms     :reader;
     field $roles     :reader;
     field $kontinues :reader;
-    field $sources   :reader;
+    field $tokens    :reader;
 
     field $parser    :reader;
     field $compiler  :reader;
@@ -37,9 +37,9 @@ class MXCL::Context {
         $terms     = MXCL::Allocator::Terms->new( arena => $arena );
         $roles     = MXCL::Allocator::Roles->new( arena => $arena );
         $kontinues = MXCL::Allocator::Kontinues->new( arena => $arena );
-        $sources   = MXCL::Allocator::Sources->new( arena => $arena );
+        $tokens    = MXCL::Allocator::Tokens->new( arena => $arena );
 
-        $parser    = MXCL::Parser->new( alloc => $sources );
+        $parser    = MXCL::Parser->new( alloc => $tokens );
         $compiler  = MXCL::Compiler->new( parser => $parser, alloc => $terms );
         $runtime   = MXCL::Runtime->new;
         $machine   = MXCL::Machine->new;
@@ -61,25 +61,28 @@ class MXCL::Context {
     method evaluate ($env, $exprs, %opts) {
 
         if (exists $opts{load_prelude}) {
+            # Compile the prelude ...
+            my $prelude = $self->compile_source(q[
+                (let $NAME      "MXCL")
+                (let $VERSION   :v0.0.1)
+                (let $AUTHORITY :cpan:STEVAN)
+            ]);
+
             # Load in the prelude ...
             $tape->splice(
-                MXCL::Tape->new->enqueue(
+                MXCL::Tape->new( exprs => $prelude )->enqueue(
                     # discard the last value, but pass on the Env
                     $kontinues->Discard($env, $terms->Nil),
                     reverse map {
                         $kontinues->Discard($env, $terms->Nil),
                         $kontinues->EvalExpr($env, $_, $terms->Nil)
-                    } $self->compile_source(q[
-                        (let $NAME      "MXCL")
-                        (let $VERSION   :v0.0.1)
-                        (let $AUTHORITY :cpan:STEVAN)
-                    ])->@*
+                    } @$prelude
                 )
             );
         }
 
         $tape->splice(
-            MXCL::Tape->new->enqueue(
+            MXCL::Tape->new( exprs => $exprs )->enqueue(
                 $kontinues->Host($env, 'HALT', +{}, $terms->Nil),
                 reverse map {
                     $kontinues->Discard($env, $terms->Nil),

@@ -10,57 +10,66 @@ my $result = test_mxcl(q[
 
 (define Point (x y)
     (make-opaque
-        (<EQ> + (make-role
-            (let $x (make-ref x))
-            (let $y (make-ref y))
+        (<ORD> +
+            (make-role
+                (let $x (make-ref x))
+                (let $y (make-ref y))
 
-            (define == (p o)
-                (and
-                    (($x get) == (o get-x))
-                    (($y get) == (o get-y))
-                )
+                (define ->x  (p)   ($x get))
+                (define ->x! (p x) ($x set! x))
+
+                (define ->y  (p)   ($y get))
+                (define ->y! (p y) ($y set! y))
+
+                (define clear (p)
+                    (do
+                        ($x set! 0)
+                        ($y set! 0)
+                        ()))
+
+                (define == (p o)
+                    (and
+                        (($x get) == (o ->x))
+                        (($y get) == (o ->y))))
+
+                (define > (p o)
+                    (and
+                        (($x get) > (o ->x))
+                        (($y get) > (o ->y))))
             )
-
-            (define get-x  (p)   ($x get))
-            (define set-x! (p x) ($x set! x))
-
-            (define get-y  (p)   ($y get))
-            (define set-y! (p y) ($y set! y))
-
-            (define clear (p)
-                (do
-                    ($x set! 0)
-                    ($y set! 0)
-                    ()))
-        ))
+        )
     )
 )
 
 (let p (Point 10 20))
 (let p2 (Point 10 20))
 
-(is (p get-x) 10 "... get-x returns 10")
-(is (p get-y) 20 "... get-y returns 20")
+(is (p ->x) 10 "... ->x returns 10")
+(is (p ->y) 20 "... ->y returns 20")
 
-(is (p2 get-x) 10 "... p2 get-x returns 10")
-(is (p2 get-y) 20 "... p2 get-y returns 20")
+(is (p2 ->x) 10 "... p2 ->x returns 10")
+(is (p2 ->y) 20 "... p2 ->y returns 20")
 
 (ok (p == p2) "... p and p2 are equal")
 
 (p clear)
 
-(is (p get-x) 0 "... get-x returns 0")
-(is (p get-y) 0 "... get-y returns 0")
+(is (p ->x) 0 "... ->x returns 0")
+(is (p ->y) 0 "... ->y returns 0")
 
 (ok (p != p2) "... p and p2 are no longer equal")
+(ok (p < p2) "... p is less than p2")
+(ok (p2 > p) "... p2 is greater than p")
 
-(is (p2 get-x) 10 "... p2 get-x still returns 10")
-(is (p2 get-y) 20 "... p2 get-y still returns 20")
+(is (p2 ->x) 10 "... p2 ->x still returns 10")
+(is (p2 ->y) 20 "... p2 ->y still returns 20")
 
-(p2 set-x! 0)
-(p2 set-y! 0)
+(p2 ->x! 0)
+(p2 ->y! 0)
 
 (ok (p == p2) "... p and p2 are equal")
+(ok (p >= p2) "... p and p2 are gt equal")
+(ok (p <= p2) "... p and p2 are lt equal")
 
 ]);
 
