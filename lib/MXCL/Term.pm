@@ -3,8 +3,6 @@ use v5.42;
 use experimental qw[ class ];
 
 class MXCL::Term {
-    #use overload '""' => 'pprint';
-
     field $hash :param :reader;
     field $gen  :param :reader;
 
@@ -20,4 +18,5 @@ class MXCL::Term {
     method boolify { die "No boolify specified for ".$self->type }
 
     method pprint { $self->stringify }
+
 }

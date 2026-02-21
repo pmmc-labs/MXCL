@@ -2,9 +2,9 @@
 use v5.42;
 use experimental qw[ class ];
 
-use Digest::MD5 ();
-#use Digest::xxHash ();
 use Time::HiRes ();
+
+use MXCL::Internals;
 
 class MXCL::Arena {
     field $terms :reader = +{};
@@ -112,7 +112,7 @@ class MXCL::Arena {
         }
 
         my $start = [Time::HiRes::gettimeofday];
-        my $hash = Digest::MD5::md5_hex(
+        my $hash = MXCL::Internals::hash_data(
             (join '' => $type, map {
                  # FIXME: This is maybe a bit fragile
                  # and very opaque, we should make it
@@ -120,9 +120,9 @@ class MXCL::Arena {
                  blessed $_
                      ? $_->isa('MXCL::Term')
                          ? $_->hash
-                         : refaddr $_
+                         : MXCL::Internals::PANIC($_)
                      : ref $_
-                         ? refaddr $_
+                         ? MXCL::Internals::PANIC($_)
                          : $_
              } @values),
         );

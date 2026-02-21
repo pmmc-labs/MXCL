@@ -43,7 +43,8 @@ class MXCL::Allocator::Kontinues {
         # to do it again or not.
         given (blessed $k) {
             when ('MXCL::Term::Kontinue::Host') {
-                @args{qw[ effect config ]} = ($k->effect, $k->config)
+                # DO NOT DO THIS, these are not terms
+                # @args{qw[ effect config ]} = ($k->effect, $k->config)
             }
             when ('MXCL::Term::Kontinue::Return') {
                 ; # do nothing
@@ -100,8 +101,8 @@ class MXCL::Allocator::Kontinues {
     method Host ($env, $effect, $config, $stack) {
         $arena->allocate(MXCL::Term::Kontinue::Host::,
             env    => $env,
-            effect => $effect,
-            config => $config,
+            #effect => $effect,
+            #config => $config,
             stack  => $stack,
         )
     }
