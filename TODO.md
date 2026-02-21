@@ -5,6 +5,25 @@
 Lot's of TODOs, XXXs and FIXMEs in the source as well.
 
 <!----------------------------------------------------------------------------->
+## Sources
+<!----------------------------------------------------------------------------->
+
+- Parser terms are interned now
+    - where do we store them??
+
+- consider hasing the original source string
+    - useful for verification
+    - where do we store this?
+    
+- Consider adding a ParsedProgram abstraction
+    - this could carry the parse tree + hashed source
+    
+- Consider adding a CompiledProgram abstraction
+    - this would carry the ParsedProgram + compiled statements
+    - somehow associate Tapes with these 
+        - either directly containing, or indirectly via hash 
+
+<!----------------------------------------------------------------------------->
 ## Scopes
 <!----------------------------------------------------------------------------->
 
