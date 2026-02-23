@@ -90,11 +90,17 @@ class MXCL::Debugger {
     }
 
     my sub shorten_hash ($hash) { '#'.substr $hash, 0, 8 }
-    my sub shorten_type ($type) { $type =~ s/^MXCL\:\:Term\:\://r }
-
+    my sub shorten_type ($type) {
+        my $short = $type =~ s/^MXCL\:\:Term\:\://r;
+        $short =~ s/^Kontinue\:\:/k\//;
+        $short =~ s/^Role\:\:/r\//;
+        $short = "t/${short}" if $short =~ /^[^rk]/;
+        return $short;
+    }
 
     my sub pad ($string, $length, $on_end=false) {
-        my $pad = ' ' x ($length - length($string));
+        my $left = $length - length($string);
+        my $pad = $left > 0 ? ' ' x $left : '';
         return $on_end ? $string.$pad : $pad.$string;
     }
 
@@ -107,40 +113,75 @@ class MXCL::Debugger {
 
     my ($width, $height) = get_terminal_size;
 
-    method arena_stat_table ($arena) {
+    #┌┬┐
+    #├┼┤
+    #└┴┘
+    #╭┬╮
+    #├┼┤
+    #╰┴╯
+
+    method arena_timing_stat_table ($arena) {
         my $statz = $arena->statz;
         my $timez = $arena->timez;
         return [ split /\\n/ => sprintf q[
--- cache ----------------------------------------
-   alive : %d
-    hits : %d
-  misses : %d
--- times ----------------------------------------
-    hits (ms) : %.03f
-  misses (ms) : %.03f
- hashing (ms) : %.03f
-.................................................
-     MD5 (ms) : %.03f
--------------------------------------------------]
-         =>  (map { defined $_ ? $_ : 0 } $statz->@{qw[ alive hits misses ]}),
-             (map { $_ ? $_ * 1000 : 0 } $timez->@{qw[ hits misses hashing MD5 ]}),
+╭───────────────╮
+│ ARENA/TIMINGS │
+├───────────────┴─────────────╮
+│   allocs = %-16s │
+│   cached = %-16s │
+│  hashing = %-16s │
+│      MD5 = %-16s │
+╰─────────────────────────────╯]
+        => map sprintf('%.08f', $_),
+           map { $_ ? $_ * 1000 : 0 }
+           $timez->@{qw[ misses hits hashing MD5 ]}
         ]
     }
 
-    method arena_type_table ($arena) {
+    method arena_term_stat_table ($arena) {
+        my $statz = $arena->statz;
+        my $timez = $arena->timez;
+        return [ split /\\n/ => sprintf q[
+╭─────────────╮
+│ ARENA/TERMS │
+├─────────────┴───────────────╮
+│     live = %-16d │
+│   unique = %-16d │
+│     dups = %-16d │
+╰─────────────────────────────╯]
+        => map { defined $_ ? $_ : 0 }
+           $statz->@{qw[ alive misses hits ]},
+        ]
+    }
+
+    method arena_type_table ($arena, %options) {
         my $terms   = $arena->terms;
         my $typez   = $arena->typez;
-        my @sorted  = sort {
-            $typez->{$b}->{alive} <=> $typez->{$a}->{alive}
-        } keys %$typez;
+        my @sorted  = keys %$typez;
+
+        if ($options{sort_by_alive}) {
+            @sorted = sort {
+                $typez->{$b}->{alive} <=> $typez->{$a}->{alive}
+            } @sorted;
+        }
 
         my @lines;
-        foreach my $type (@sorted) {
+        push @lines => (
+             '╭─────────────╮',
+             '│ ARENA/TYPES │',
+            ('├──────┬──────┼──────┬───────────────────────╮'),
+             '│ live │ uniq │ dups │ types                 │',
+            ('├──────┼──────┼──────┼───────────────────────┤'),
+        );
+
+        foreach my ($type, $short) (map { $_, shorten_type($_) } @sorted) {
             push @lines =>
-                sprintf '%3d │ %s' =>
-                    $typez->{$type}->@{qw[ alive ]},
-                    colorize(shorten_type($type)),
+                sprintf '│ %4d │ %4d │ %4d │ %s │' =>
+                    $typez->{$type}->@{qw[ alive misses hits ]},
+                    colorize(pad($short, 21, true)),
         }
+
+        push @lines => ('╰──────┴──────┴──────┴───────────────────────╯');
 
         return \@lines;
     }
@@ -170,18 +211,18 @@ class MXCL::Debugger {
 
         my sub serializer ($term, %opts) {
             my $f = $opts{show_types}
-                ? sub ($x) { colorize($x->type) }
+                ? sub ($x) { colorize(shorten_type(blessed $x)).'<'.colorize(shorten_hash($x->hash)).'>' }
                 : sub ($x) { colorize(shorten_hash($x->hash), true) };
 
             my %bits = $term->DECOMPOSE;
             return join ' ' => map {
                 my $bit = $bits{$_};
                 blessed $bit
-                    ? (sprintf '%12s: %s' => $_, $f->($bit))
+                    ? (sprintf '%s: %s' => $_, $f->($bit))
                     : not(ref $bit)
-                        ? (sprintf '%12s: %s' => $_, colorize($bit))
+                        ? (sprintf '%s: %s' => $_, colorize($bit))
                         : (
-                            sprintf '%12s: %s%s' => $_,
+                            sprintf '%s: %s%s' => $_,
                                 (join ' ' =>
                                     map { $f->($_) }
                                     grep defined,
@@ -194,8 +235,8 @@ class MXCL::Debugger {
 
         my @lines;
         foreach my $hash (@sorted) {
-            my $short = colorize(shorten_hash($hash), true);
-            my $type  = colorize(pad($terms->{$hash}->type, 20, true));
+            my $short = colorize(shorten_hash($hash));
+            my $type  = colorize(shorten_type(blessed $terms->{$hash}));
             push @lines =>
                 sprintf '%3d %s %s %s' =>
                     $hashz->{$hash}->{alive},

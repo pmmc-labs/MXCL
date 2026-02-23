@@ -1,5 +1,55 @@
 
 
+
+── ARENA ───────────────────────────────────────────────────────────────────────
+   alive : 1209
+    hits : 480
+  misses : 729
+
+
+
+### │ Types               │
+────┼─────────────────────┼─────────────────────────────────────────────────────
+367 │ Cons                │       
+206 │ Sym                 │       
+140 │ Return              │       
+ 80 │ Apply::Expr         │       
+ 76 │ Slot::Defined       │       
+ 54 │ Eval::Rest          │       
+ 44 │ Apply::Applicative  │       
+ 35 │ Role                │       
+ 34 │ Native::Applicative │       
+ 32 │ Eval::Head          │       
+ 25 │ Eval::Expr          │       
+ 24 │ Scope::Leave        │       
+ 14 │ Num                 │       
+ 14 │ Native::Operative   │       
+ 12 │ Scope::Enter        │       
+ 12 │ IfElse              │       
+ 11 │ Discard             │       
+ 10 │ Apply::Operative    │       
+  7 │ Define              │       
+  3 │ Slot::Required      │       
+  2 │ Bool                │       
+  2 │ Tag                 │       
+  2 │ Host                │       
+  1 │ Lambda              │       
+  1 │ Nil                 │       
+  1 │ Str                 │       
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ```
 0b1e0e1e │ Int    10
 7564b7e3 │ Sym    "Foo"
