@@ -1,5 +1,40 @@
 # OBJECTS
 
+## Syntax Ideas
+
+
+
+```
+(class ^Point (<EQ>  <SHOW>)
+    (object ($self $x $y)
+        (define ->x  ()  ($x ->))
+        (define ->x! (x) ($x <- x))
+
+        (define ->y  ()  ($y ->))
+        (define ->y! (y) ($y <- y))
+
+        (define clear ()
+            (do ($self ->x! 0)
+                ($self ->y! 0)))    
+
+        (define equal-to (o)
+            (and (($x ->) == (o ->x))
+                 (($y ->) == (o ->y))))
+                 
+        (define show ()
+            (((("(" ~ $x) ~ ",") ~ $y) ~ ")"))
+    )
+)
+
+```
+
+## Role operators
+
+-  `A | B` for union
+-  `A & B` for intersection
+-  `A - B` for difference
+-  `A ^ B` for symmetric difference
+
 ## MOP
 
 - The classic MOP bootstrap
@@ -25,24 +60,3 @@
     - given ADT definition, generate roles, functions, opagues, etc.
 - Class creation
     - declarative syntax sugar for classes, etc. 
-
-```
-
-(class ^Point ($x $y) :does <EQ>
-
-    (define ->x  (p)   ($x ->))
-    (define ->x! (p x) ($x <- x))
-
-    (define ->y  (p)   ($y ->))
-    (define ->y! (p y) ($y <- y))
-
-    (define clear (p)
-        (do ($x <- 0)
-            ($y <- 0)))    
-
-    (define equal-to (p o)
-        (and (($x ->) == (o ->x))
-             (($y ->) == (o ->y))))
-)
-
-```

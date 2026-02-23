@@ -11,5 +11,7 @@ class MXCL::Term::Parser::Token :isa(MXCL::Term) {
 
     method stringify { $source }
 
-    method pprint { $self->stringify }
+    method pprint {
+        sprintf 'Token(%s)' => $self->stringify
+    }
 }

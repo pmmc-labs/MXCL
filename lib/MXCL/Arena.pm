@@ -9,6 +9,9 @@ use MXCL::Internals;
 class MXCL::Arena {
     field $terms :reader = +{};
 
+    # XXX - lets see where this goes
+    field $history :reader = +[];
+
     # TODO - this could be done better
     field $generations :reader = +[];
     field $current_gen :reader = 0;
@@ -83,6 +86,9 @@ class MXCL::Arena {
                 gen  => $current_gen,
                 %fields
             );
+
+            push @$history => $hash;
+
             $timez->{misses} += Time::HiRes::tv_interval( $start );
             # do not let stats interfere
             $statz->{misses}++;

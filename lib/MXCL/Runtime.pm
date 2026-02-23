@@ -456,14 +456,14 @@ class MXCL::Runtime {
         my $Ref = $roles->Role(
             $roles->Defined($terms->Sym('get'),
                 $terms->Applicative(
-                     name      => 'deref',
+                     name      => 'get:Ref',
                      signature => [ { name => 'ref' } ],
                      impl      => sub ($ref) { $terms->Deref($ref) }
                 )
             ),
             $roles->Defined($terms->Sym('set!'),
                 $terms->Applicative(
-                     name      => 'setref',
+                     name      => 'set:Ref',
                      signature => [ { name => 'ref' }, { name => 'value' } ],
                      impl      => sub ($ref, $value) { $terms->SetRef($ref, $value) }
                 )

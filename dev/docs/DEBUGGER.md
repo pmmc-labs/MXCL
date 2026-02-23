@@ -1,5 +1,15 @@
 
 
+```
+0b1e0e1e │ Int    10
+7564b7e3 │ Sym    "Foo"
+1edc5815 │ Cons   ( #7564b7e3 #0b1e0e1e )
+0818ff85 │ Lambda ( #b77723a5 #f13d876f )
+bcac42de │ Str    "Hello World"
+```
+
+
+
 
 ```
  > lambda      │ Lambda   │ 0b1e0e1e │ 001 |        

@@ -10,8 +10,7 @@ my $result = test_mxcl(q[
 
 (define Point (x y)
     (make-opaque
-        (<ORD> +
-            (make-role
+        (<ORD> + (make-role
                 (let $x (make-ref x))
                 (let $y (make-ref y))
 

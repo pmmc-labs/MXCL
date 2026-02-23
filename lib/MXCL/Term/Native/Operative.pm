@@ -13,6 +13,4 @@ class MXCL::Term::Native::Operative :isa(MXCL::Term) {
             join ', ' => map $_->stringify, $params->uncons
         ;
     }
-
-    method pprint { $name }
 }

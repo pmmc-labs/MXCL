@@ -8,6 +8,7 @@ use List::Util qw[ max min ];
 use Time::HiRes ();
 
 use MXCL::Context;
+use MXCL::Debugger;
 
 my $context = MXCL::Context->new;
 
@@ -44,36 +45,41 @@ TIMING:
 ;
 
 my $arena = $context->arena;
-foreach my ($i, $gen) (indexed $arena->generations->@*) {
-    say sprintf q[
-ARENA GEN[%d] - %s
--- cache ----------------------------------------
-   alive : %d
-    hits : %d
-  misses : %d
--- times ----------------------------------------
-    hits (ms) : %.03f
-  misses (ms) : %.03f
- hashing (ms) : %.03f
-.................................................
-     MD5 (ms) : %.03f
--------------------------------------------------]
-    =>  $i, $gen->{label},
-        (map { defined $_ ? $_ : 0 } $gen->{statz}->@{qw[ alive hits misses ]}),
-        (map { $_ ? $_ * 1000 : 0 } $gen->{timez}->@{qw[ hits misses hashing MD5 ]}),
-    ;
-}
 
-foreach my ($i, $tape) (indexed $context->tape->tapes->@*) {
-    say '-' x 120;
-    say "TAPE[ $i ]";
-    say '-' x 120;
-    say "QUEUE:";
-    say join "\n" => map $_->pprint, $tape->queue->@*;
-    say '-' x 120;
-    say "TRACE:";
-    say join "\n" => map $_->pprint, reverse $tape->trace->@*;
-}
+my $debugger = MXCL::Debugger->new;
+
+say $_ foreach $debugger->DEBUG_ARENA($arena)->@*
+
+# foreach my ($i, $gen) (indexed $arena->generations->@*) {
+#     say sprintf q[
+# ARENA GEN[%d] - %s
+# -- cache ----------------------------------------
+#    alive : %d
+#     hits : %d
+#   misses : %d
+# -- times ----------------------------------------
+#     hits (ms) : %.03f
+#   misses (ms) : %.03f
+#  hashing (ms) : %.03f
+# .................................................
+#      MD5 (ms) : %.03f
+# -------------------------------------------------]
+#     =>  $i, $gen->{label},
+#         (map { defined $_ ? $_ : 0 } $gen->{statz}->@{qw[ alive hits misses ]}),
+#         (map { $_ ? $_ * 1000 : 0 } $gen->{timez}->@{qw[ hits misses hashing MD5 ]}),
+#     ;
+# }
+#
+# foreach my ($i, $tape) (indexed $context->tape->tapes->@*) {
+#     say '-' x 120;
+#     say "TAPE[ $i ]";
+#     say '-' x 120;
+#     say "QUEUE:";
+#     say join "\n" => map $_->pprint, $tape->queue->@*;
+#     say '-' x 120;
+#     say "TRACE:";
+#     say join "\n" => map $_->pprint, reverse $tape->trace->@*;
+# }
 
 __END__
 
