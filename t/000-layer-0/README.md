@@ -175,13 +175,6 @@ from hashing.
 | `Term::Opaque` | `repr->hash`, `role->hash`, `uid` | `uid` is a unique counter — hash is intentionally unique |
 | `Term::Ref` | `uid` | `uid` is a unique string — hash is intentionally unique |
 
-### Parser Terms
-
-| Class | Hash inputs (ordered) | Notes |
-|-------|----------------------|-------|
-| `Term::Parser::Token` | `end`, `line`, `pos`, `source`, `start` | All plain scalars; position info included |
-| `Term::Parser::Compound` | `items[0]->hash`, `items[1]->hash`, ... | Positional expansion including bracket tokens |
-
 ### Role Terms
 
 | Class | Hash inputs (ordered) | Notes |
