@@ -41,9 +41,9 @@ class MXCL::Arena {
         # clear them each generation
         # so that we are just track
         # the new changes ...
-        $statz->%* = ();
-        $typez->%* = ();
-        $hashz->%* = ();
+        #$statz->%* = ();
+        #$typez->%* = ();
+        #$hashz->%* = ();
         #$timez->%* = ();
 
         # get the next gen marker

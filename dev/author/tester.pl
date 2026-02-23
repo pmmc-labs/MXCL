@@ -17,7 +17,7 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
-    (($NAME ~ $VERSION) ~ $AUTHORITY)
+    ()
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );
@@ -48,28 +48,12 @@ my $arena = $context->arena;
 
 my $debugger = MXCL::Debugger->new;
 
-say $_ foreach $debugger->DEBUG_ARENA($arena)->@*
+say $_ foreach (
+    $debugger->arena_stat_table($arena)->@*,
+    #$debugger->arena_type_table($arena)->@*,
+    $debugger->arena_hash_table($arena, sort_by_type => true)->@*
+);
 
-# foreach my ($i, $gen) (indexed $arena->generations->@*) {
-#     say sprintf q[
-# ARENA GEN[%d] - %s
-# -- cache ----------------------------------------
-#    alive : %d
-#     hits : %d
-#   misses : %d
-# -- times ----------------------------------------
-#     hits (ms) : %.03f
-#   misses (ms) : %.03f
-#  hashing (ms) : %.03f
-# .................................................
-#      MD5 (ms) : %.03f
-# -------------------------------------------------]
-#     =>  $i, $gen->{label},
-#         (map { defined $_ ? $_ : 0 } $gen->{statz}->@{qw[ alive hits misses ]}),
-#         (map { $_ ? $_ * 1000 : 0 } $gen->{timez}->@{qw[ hits misses hashing MD5 ]}),
-#     ;
-# }
-#
 # foreach my ($i, $tape) (indexed $context->tape->tapes->@*) {
 #     say '-' x 120;
 #     say "TAPE[ $i ]";

@@ -84,15 +84,18 @@ class MXCL::Debugger {
 
     my sub colorize ($string, $bg=false) {
         state %seen;
-        my $color = [ map { clamp( 0, 255, ((rand() * 25) * 10)) } qw[ r g b ] ];
+        my $color = [ map { clamp( 100, 255, rand() * 205 ) } qw[ r g b ] ];
         #die Dumper $color;
         $seen{$string} //= $bg ? bg_color( $color, $string ) : fg_color( $color, $string )
     }
 
-    my sub shorten ($hash) { substr $hash, 0, 8 }
+    my sub shorten_hash ($hash) { '#'.substr $hash, 0, 8 }
+    my sub shorten_type ($type) { $type =~ s/^MXCL\:\:Term\:\://r }
 
-    my sub pad ($string, $length) {
-        ((' ' x ($length - length($string))).$string)
+
+    my sub pad ($string, $length, $on_end=false) {
+        my $pad = ' ' x ($length - length($string));
+        return $on_end ? $string.$pad : $pad.$string;
     }
 
     my sub trim ($string, $length) {
@@ -102,22 +105,103 @@ class MXCL::Debugger {
 
     sub get_terminal_size { GetTerminalSize() }
 
-    method DEBUG_ARENA ($arena) {
-        my $terms   = $arena->terms;
-        my $history = $arena->history;
+    my ($width, $height) = get_terminal_size;
 
-        my ($width, $height) = get_terminal_size;
+    method arena_stat_table ($arena) {
+        my $statz = $arena->statz;
+        my $timez = $arena->timez;
+        return [ split /\\n/ => sprintf q[
+-- cache ----------------------------------------
+   alive : %d
+    hits : %d
+  misses : %d
+-- times ----------------------------------------
+    hits (ms) : %.03f
+  misses (ms) : %.03f
+ hashing (ms) : %.03f
+.................................................
+     MD5 (ms) : %.03f
+-------------------------------------------------]
+         =>  (map { defined $_ ? $_ : 0 } $statz->@{qw[ alive hits misses ]}),
+             (map { $_ ? $_ * 1000 : 0 } $timez->@{qw[ hits misses hashing MD5 ]}),
+        ]
+    }
+
+    method arena_type_table ($arena) {
+        my $terms   = $arena->terms;
+        my $typez   = $arena->typez;
+        my @sorted  = sort {
+            $typez->{$b}->{alive} <=> $typez->{$a}->{alive}
+        } keys %$typez;
 
         my @lines;
-        foreach my $hash (@$history) {
-            my $short = colorize(shorten($hash));
-            my $type  = colorize(pad($terms->{$hash}->type, 20), true);
-            my $rest = $width - ((8 + 3) + (20 + 3));
+        foreach my $type (@sorted) {
             push @lines =>
-                sprintf '%s | %s | %s' =>
+                sprintf '%3d │ %s' =>
+                    $typez->{$type}->@{qw[ alive ]},
+                    colorize(shorten_type($type)),
+        }
+
+        return \@lines;
+    }
+
+    method arena_hash_table ($arena, %options) {
+        my $terms   = $arena->terms;
+        my $history = $arena->history;
+        my $hashz   = $arena->hashz;
+        my @sorted  = @$history;
+
+        $options{sort_by_alive} //= $options{top_k};
+
+        if ($options{sort_by_alive}) {
+            @sorted = sort {
+                $hashz->{$b}->{alive} <=> $hashz->{$a}->{alive}
+            } @sorted;
+
+            if (my $top_k = $options{top_k}) {
+                @sorted = grep { $hashz->{$_}->{alive} >= $top_k } @sorted;
+            }
+        }
+        elsif ($options{sort_by_type}) {
+            @sorted = sort {
+                $terms->{$a}->type cmp $terms->{$b}->type
+            } @sorted;
+        }
+
+        my sub serializer ($term, %opts) {
+            my $f = $opts{show_types}
+                ? sub ($x) { colorize($x->type) }
+                : sub ($x) { colorize(shorten_hash($x->hash), true) };
+
+            my %bits = $term->DECOMPOSE;
+            return join ' ' => map {
+                my $bit = $bits{$_};
+                blessed $bit
+                    ? (sprintf '%12s: %s' => $_, $f->($bit))
+                    : not(ref $bit)
+                        ? (sprintf '%12s: %s' => $_, colorize($bit))
+                        : (
+                            sprintf '%12s: %s%s' => $_,
+                                (join ' ' =>
+                                    map { $f->($_) }
+                                    grep defined,
+                                    [@$bit]->@[ 0 .. 10 ]
+                                ),
+                                (scalar(@$bit) > 10 ? ' ...' : '')
+                        )
+            } sort { $a cmp $b } grep !/^__/, keys %bits;
+        }
+
+        my @lines;
+        foreach my $hash (@sorted) {
+            my $short = colorize(shorten_hash($hash), true);
+            my $type  = colorize(pad($terms->{$hash}->type, 20, true));
+            push @lines =>
+                sprintf '%3d %s %s %s' =>
+                    $hashz->{$hash}->{alive},
                     $short,
                     $type,
-                    trim($terms->{$hash}->pprint, $rest),
+                    serializer($terms->{$hash}, %options)
         }
 
         return \@lines;
