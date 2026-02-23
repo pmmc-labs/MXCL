@@ -11,7 +11,6 @@ use MXCL::Runtime;
 use MXCL::Allocator::Terms;
 use MXCL::Allocator::Roles;
 use MXCL::Allocator::Kontinues;
-use MXCL::Allocator::Tokens;
 
 use MXCL::Tape;
 use MXCL::Tape::Spliced;
@@ -25,7 +24,6 @@ class MXCL::Context {
     field $terms     :reader;
     field $roles     :reader;
     field $kontinues :reader;
-    field $tokens    :reader;
 
     field $parser    :reader;
     field $compiler  :reader;
@@ -37,9 +35,8 @@ class MXCL::Context {
         $terms     = MXCL::Allocator::Terms->new( arena => $arena );
         $roles     = MXCL::Allocator::Roles->new( arena => $arena );
         $kontinues = MXCL::Allocator::Kontinues->new( arena => $arena );
-        $tokens    = MXCL::Allocator::Tokens->new( arena => $arena );
 
-        $parser    = MXCL::Parser->new( alloc => $tokens );
+        $parser    = MXCL::Parser->new;
         $compiler  = MXCL::Compiler->new( parser => $parser, alloc => $terms );
         $runtime   = MXCL::Runtime->new;
         $machine   = MXCL::Machine->new;

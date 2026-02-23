@@ -2,11 +2,7 @@
 use v5.42;
 use experimental qw[ class switch ];
 
-use MXCL::Term::Parser::Token;
-use MXCL::Term::Parser::Compound;
-
 class MXCL::Parser {
-    field $alloc :param :reader;
 
     method parse ($source) {
         my $tokens = $self->tokenize($source);
@@ -38,7 +34,7 @@ class MXCL::Parser {
                 my $start = $char_at - $line_at;
                 $char_at = pos($source);
 
-                push @tokens => $alloc->Token(
+                push @tokens => $self->Token(
                     source => $match,
                     start  => $start,
                     end    => $char_at - $line_at,
@@ -67,10 +63,10 @@ class MXCL::Parser {
     }
 
     method build_compound ($builder) {
-        return $alloc->Compound(
-            ($builder->open  // $alloc->Token(source => '(')),
+        return $self->Compound(
+            ($builder->open  // $self->Token(source => '(')),
             ($builder->items->@*),
-            ($builder->close // $alloc->Token(source => ')')),
+            ($builder->close // $self->Token(source => ')')),
         )
     }
 
@@ -117,6 +113,62 @@ class MXCL::Parser {
 
         return $close;
     }
+
+    method Token (%args) {
+        MXCL::Term::Parser::Token->new( %args )
+    }
+
+    method Compound (@items) {
+        MXCL::Term::Parser::Compound->new( items => \@items )
+    }
+}
+
+class MXCL::Term::Parser::Token {
+    field $source :param :reader;
+    field $start  :param :reader = -1;
+    field $end    :param :reader = -1;
+    field $line   :param :reader = -1;
+    field $pos    :param :reader = -1;
+
+    method stringify { $source }
+
+    method pprint {
+        sprintf 'Token(%s)' => $self->stringify
+    }
+
+    # XXX - maybe save for later
+    # method DECOMPOSE { (end => $end, line => $line, pos => $pos, source => $source, start => $start) }
+    # sub COMPOSE {
+    #     my ($class, %args) = @_;
+    #     return (%args, hash => MXCL::Internals::hash_fields($class, @args{qw[ source ]}))
+    # }
+}
+
+class MXCL::Term::Parser::Compound {
+    field $items :param;
+
+    method open  { $items->[0] }
+    method close { $items->[-1] }
+
+    method items {
+        my @items = @$items;
+        shift @items;
+        pop @items;
+        return \@items;
+    }
+
+    method stringify {
+        sprintf 'Compound:%s' => (join ', ' => map $_->stringify, @$items)
+    }
+
+    method pprint { $self->stringify }
+
+    # XXX - maybe save for later
+    # method DECOMPOSE { (items => $items) }
+    # sub COMPOSE {
+    #     my ($class, %args) = @_;
+    #     return (%args, hash => MXCL::Internals::hash_fields($class, @{$args{items}}))
+    # }
 }
 
 class MXCL::Parser::CompoundBuilder {

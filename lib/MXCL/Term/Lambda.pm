@@ -2,6 +2,8 @@
 use v5.42;
 use experimental qw[ class switch ];
 
+use MXCL::Internals;
+
 class MXCL::Term::Lambda :isa(MXCL::Term) {
     field $name   :param :reader;
     field $params :param :reader;
@@ -34,5 +36,12 @@ class MXCL::Term::Lambda :isa(MXCL::Term) {
 
     method pprint {
         sprintf '(lambda %s %s)' => $params->pprint, $body->pprint
+    }
+
+    method DECOMPOSE { (body => $body, env => $env, name => $name, params => $params) }
+
+    sub COMPOSE {
+        my ($class, %args) = @_;
+        return (%args, hash => MXCL::Internals::hash_fields($class, @args{qw[ body env name params ]}))
     }
 }

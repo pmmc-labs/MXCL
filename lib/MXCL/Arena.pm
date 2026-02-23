@@ -4,8 +4,6 @@ use experimental qw[ class ];
 
 use Time::HiRes ();
 
-use MXCL::Internals;
-
 class MXCL::Arena {
     field $terms :reader = +{};
 
@@ -54,9 +52,10 @@ class MXCL::Arena {
     }
 
     method allocate ($type, %fields) {
-        # check timing for hashing
-        my $hash_start = [Time::HiRes::gettimeofday];
-        my $hash = $self->construct_hash($type, %fields);
+        # ask the type to compose its hash from fields
+        my $hash_start  = [Time::HiRes::gettimeofday];
+        my %with_hash   = $type->COMPOSE(%fields);
+        my $hash        = $with_hash{hash};
         $timez->{hashing} += Time::HiRes::tv_interval( $hash_start );
 
         # dont let stats interfere
@@ -82,9 +81,8 @@ class MXCL::Arena {
             $hashz->{$hash}{hits}++;
         } else {
             $terms->{ $hash } = $type->new(
-                hash => $hash,
-                gen  => $current_gen,
-                %fields
+                %with_hash,
+                gen => $current_gen,
             );
 
             push @$history => $hash;
@@ -97,42 +95,5 @@ class MXCL::Arena {
         }
 
         return $terms->{ $hash }
-    }
-
-    method construct_hash ($inv, %fields) {
-        my $type   = blessed $inv // $inv;
-        my @values = @fields{ sort { $a cmp $b } grep !/^__/, keys %fields };
-
-        if (scalar @values == 1 && ref $values[0] && !(blessed $values[0])) {
-            if (reftype $values[0] eq 'HASH') {
-                my $hashref = shift @values;
-                @values = map { $_, $hashref->{$_} } sort { $a cmp $b } keys %$hashref;
-            }
-            elsif (reftype $values[0] eq 'ARRAY') {
-                my $arrayref = shift @values;
-                @values = @$arrayref;
-            }
-            else {
-                die "BAD REF TYPE, NO HASH FOR YOU! ",join ', ' => @values;
-            }
-        }
-
-        my $start = [Time::HiRes::gettimeofday];
-        my $hash = MXCL::Internals::hash_data(
-            (join '' => $type, map {
-                 # FIXME: This is maybe a bit fragile
-                 # and very opaque, we should make it
-                 # easier to catch issues here.
-                 blessed $_
-                     ? $_->isa('MXCL::Term')
-                         ? $_->hash
-                         : MXCL::Internals::PANIC($_)
-                     : ref $_
-                         ? MXCL::Internals::PANIC($_)
-                         : $_
-             } @values),
-        );
-        $timez->{MD5} += Time::HiRes::tv_interval( $start );
-        return $hash;
     }
 }

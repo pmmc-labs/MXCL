@@ -2,6 +2,8 @@
 use v5.42;
 use experimental qw[ class ];
 
+use MXCL::Internals;
+
 class MXCL::Term::Hash :isa(MXCL::Term) {
     field $elements :param :reader;
 
@@ -26,5 +28,14 @@ class MXCL::Term::Hash :isa(MXCL::Term) {
                 map {
                     sprintf ':%s %s' => $_, $elements->{$_}->pprint
                 } keys %$elements
+    }
+
+    method DECOMPOSE { (elements => $elements) }
+
+    sub COMPOSE {
+        my ($class, %args) = @_;
+        my $elems = $args{elements};
+        return (%args, hash => MXCL::Internals::hash_fields($class,
+            map { $_, $elems->{$_} } sort keys %$elems))
     }
 }

@@ -1,6 +1,6 @@
 
 use v5.42;
-use experimental qw[ class switch ];
+use experimental qw[ class ];
 
 use MXCL::Arena;
 
@@ -31,68 +31,12 @@ class MXCL::Allocator::Kontinues {
 
     ## -------------------------------------------------------------------------
 
-    # XXX - this needs a better name
     method Update ($k, $env, $stack) {
-        my %args;
+        my %args = $k->DECOMPOSE;
         $args{env}   = $env;
         $args{stack} = $stack;
-        # XXX - and I can't decide if this given/when
-        # is really gross, or better than violating
-        # encapsulation and having the class give
-        # me this information, we shall see if we have
-        # to do it again or not.
-        given (blessed $k) {
-            when ('MXCL::Term::Kontinue::Host') {
-                # DO NOT DO THIS, these are not terms
-                # @args{qw[ effect config ]} = ($k->effect, $k->config)
-            }
-            when ('MXCL::Term::Kontinue::Return') {
-                ; # do nothing
-            }
-            when ('MXCL::Term::Kontinue::Discard') {
-                ; # do nothing
-            }
-            when ('MXCL::Term::Kontinue::Capture') {
-                @args{qw[ origin ]} = ($k->origin)
-            }
-            when ('MXCL::Term::Kontinue::IfElse') {
-                @args{qw[ condition if_true if_false ]} = ($k->condition, $k->if_true, $k->if_false)
-            }
-            when ('MXCL::Term::Kontinue::DoWhile') {
-                @args{qw[ condition body ]} = ($k->condition, $k->body)
-            }
-            when ('MXCL::Term::Kontinue::Eval::Expr') {
-                @args{qw[ expr ]} = ($k->expr)
-            }
-            when ('MXCL::Term::Kontinue::Eval::Head') {
-                @args{qw[ cons ]} = ($k->cons)
-            }
-            when ('MXCL::Term::Kontinue::Eval::Rest') {
-                @args{qw[ rest ]} = ($k->rest)
-            }
-            when ('MXCL::Term::Kontinue::Apply::Expr') {
-                @args{qw[ args ]} = ($k->args)
-            }
-            when ('MXCL::Term::Kontinue::Apply::Operative') {
-                @args{qw[ call ]} = ($k->call)
-            }
-            when ('MXCL::Term::Kontinue::Apply::Applicative') {
-                @args{qw[ call ]} = ($k->call)
-            }
-            when ('MXCL::Term::Kontinue::Define') {
-                @args{qw[ name ]} = ($k->name)
-            }
-            when ('MXCL::Term::Kontinue::Scope::Enter') {
-                @args{qw[ leave ]} = ($k->leave)
-            }
-            when ('MXCL::Term::Kontinue::Scope::Leave') {
-                @args{qw[ __deferred ]} = ($k->deferred);
-                $args{env} = $k->env; # preserve the env
-            }
-            default {
-                die 'BAD KONTINUE NO UPDATE FOR YOU!';
-            }
-        }
+        # Scope::Leave preserves its own env (it owns the scope boundary)
+        $args{env}   = $k->env if $k isa MXCL::Term::Kontinue::Scope::Leave;
         return $arena->allocate(blessed $k, %args);
     }
 
@@ -250,20 +194,3 @@ Eval::TOS
     @$expr
 
 =cut
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -2,6 +2,8 @@
 use v5.42;
 use experimental qw[ class ];
 
+use MXCL::Internals;
+
 class MXCL::Term::Native::Applicative :isa(MXCL::Term) {
     field $name    :param :reader;
     field $params  :param :reader;
@@ -12,5 +14,12 @@ class MXCL::Term::Native::Applicative :isa(MXCL::Term) {
             $name->stringify,
             join ', ' => map $_->stringify, $params->uncons
         ;
+    }
+
+    method DECOMPOSE { (name => $name, params => $params, __body => $__body) }
+
+    sub COMPOSE {
+        my ($class, %args) = @_;
+        return (%args, hash => MXCL::Internals::hash_fields($class, @args{qw[ name params ]}))
     }
 }

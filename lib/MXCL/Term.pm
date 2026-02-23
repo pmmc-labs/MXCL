@@ -19,4 +19,11 @@ class MXCL::Term {
 
     method pprint { $self->stringify }
 
+    method DECOMPOSE { () }
+
+    sub COMPOSE {
+        my ($class, %args) = @_;
+        die "COMPOSE not implemented for $class"
+    }
+
 }

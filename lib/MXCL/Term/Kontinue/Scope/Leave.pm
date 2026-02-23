@@ -11,4 +11,7 @@ class MXCL::Term::Kontinue::Scope::Leave :isa(MXCL::Term::Kontinue) {
         push @$__deferred => $callback;
         return;
     }
+
+    # COMPOSE inherited from Kontinue: hashes env+stack only (__deferred excluded)
+    method DECOMPOSE { ($self->SUPER::DECOMPOSE(), __deferred => $__deferred) }
 }

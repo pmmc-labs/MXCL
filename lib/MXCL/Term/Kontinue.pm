@@ -2,6 +2,8 @@
 use v5.42;
 use experimental qw[ class ];
 
+use MXCL::Internals;
+
 class MXCL::Term::Kontinue :isa(MXCL::Term) {
     field $stack :param :reader;
     field $env   :param :reader;
@@ -36,5 +38,12 @@ class MXCL::Term::Kontinue :isa(MXCL::Term) {
             ),
             $stack->pprint,
             substr($self->env->hash, 0, 8);
+    }
+
+    method DECOMPOSE { (env => $env, stack => $stack) }
+
+    sub COMPOSE {
+        my ($class, %args) = @_;
+        return (%args, hash => MXCL::Internals::hash_fields($class, @args{qw[ env stack ]}))
     }
 }

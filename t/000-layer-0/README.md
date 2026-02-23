@@ -133,6 +133,92 @@ The shared context is safe because terms are immutable and interned -- no
 test pollution. Tests that need isolation (e.g., generation tracking) create
 their own `MXCL::Context->new`.
 
+## Term Hash Construction Reference
+
+Each term type is content-addressed by an MD5 hash computed from its class
+name and a specific ordered sequence of field values. Terms contribute their
+own `->hash` to parent hashes (structural, not referential). Plain scalars
+(strings, numbers) contribute directly. Fields prefixed with `__` are excluded
+from hashing.
+
+### Scalar Terms
+
+| Class | Hash inputs (ordered) | Notes |
+|-------|----------------------|-------|
+| `Term::Nil` | _(type name only)_ | Singleton — no fields |
+| `Term::Bool` | `value` | Plain boolean scalar |
+| `Term::Num` | `value` | Plain numeric scalar |
+| `Term::Str` | `value` | Plain string scalar |
+| `Term::Sym` | `value` | Plain string scalar; distinct from Str |
+| `Term::Tag` | `value` | Plain string scalar; distinct from Sym |
+
+### Composite Terms
+
+| Class | Hash inputs (ordered) | Notes |
+|-------|----------------------|-------|
+| `Term::Cons` | `head->hash`, `tail->hash` | Recursive list structure |
+| `Term::Array` | `elements[0]->hash`, `elements[1]->hash`, ... | Positional expansion of arrayref |
+| `Term::Hash` | `key₁`, `elements{key₁}->hash`, `key₂`, ... | Keys sorted alphabetically, interleaved |
+
+### Function Terms
+
+| Class | Hash inputs (ordered) | Notes |
+|-------|----------------------|-------|
+| `Term::Lambda` | `body->hash`, `env->hash`, `name->hash`, `params->hash` | Closure captures env |
+| `Term::Native::Applicative` | `name->hash`, `params->hash` | `__body` (code ref) excluded |
+| `Term::Native::Operative` | `name->hash`, `params->hash` | `__body` (code ref) excluded |
+
+### Reference Terms
+
+| Class | Hash inputs (ordered) | Notes |
+|-------|----------------------|-------|
+| `Term::Opaque` | `repr->hash`, `role->hash`, `uid` | `uid` is a unique counter — hash is intentionally unique |
+| `Term::Ref` | `uid` | `uid` is a unique string — hash is intentionally unique |
+
+### Parser Terms
+
+| Class | Hash inputs (ordered) | Notes |
+|-------|----------------------|-------|
+| `Term::Parser::Token` | `end`, `line`, `pos`, `source`, `start` | All plain scalars; position info included |
+| `Term::Parser::Compound` | `items[0]->hash`, `items[1]->hash`, ... | Positional expansion including bracket tokens |
+
+### Role Terms
+
+| Class | Hash inputs (ordered) | Notes |
+|-------|----------------------|-------|
+| `Term::Role` | `slots[0]->hash`, `slots[1]->hash`, ... | Positional expansion of slots arrayref |
+| `Term::Role::Slot` | _(type name only)_ | Base; no fields |
+| `Term::Role::Slot::Defined` | `ident->hash`, `value->hash` | Named slot with a value |
+| `Term::Role::Slot::Required` | `ident->hash` | Named slot with no value |
+| `Term::Role::Slot::Conflict` | `lhs->hash`, `rhs->hash` | Both slots must share same ident |
+
+### Kontinue Terms
+
+All Kontinue types include `env->hash` and `stack->hash` as base fields. The
+table below shows additional fields per type, with full alphabetical ordering
+of ALL inputs used in the hash.
+
+| Class | Hash inputs (ordered) | Notes |
+|-------|----------------------|-------|
+| `Term::Kontinue::Return` | `env->hash`, `stack->hash` | No own fields |
+| `Term::Kontinue::Discard` | `env->hash`, `stack->hash` | No own fields |
+| `Term::Kontinue::Host` | `env->hash`, `stack->hash` | `effect`/`config` not yet proper Term fields |
+| `Term::Kontinue::Capture` | `env->hash`, `origin->hash`, `stack->hash` | |
+| `Term::Kontinue::Define` | `env->hash`, `name->hash`, `stack->hash` | |
+| `Term::Kontinue::Throw` | `env->hash`, `exception->hash`, `stack->hash` | |
+| `Term::Kontinue::Catch` | `env->hash`, `handler->hash`, `stack->hash` | |
+| `Term::Kontinue::IfElse` | `condition->hash`, `env->hash`, `if_false->hash`, `if_true->hash`, `stack->hash` | |
+| `Term::Kontinue::DoWhile` | `body->hash`, `condition->hash`, `env->hash`, `stack->hash` | |
+| `Term::Kontinue::Eval::Expr` | `env->hash`, `expr->hash`, `stack->hash` | |
+| `Term::Kontinue::Eval::Head` | `cons->hash`, `env->hash`, `stack->hash` | |
+| `Term::Kontinue::Eval::Rest` | `env->hash`, `rest->hash`, `stack->hash` | |
+| `Term::Kontinue::Eval::TOS` | `env->hash`, `stack->hash` | No own fields |
+| `Term::Kontinue::Apply::Expr` | `args->hash`, `env->hash`, `stack->hash` | |
+| `Term::Kontinue::Apply::Operative` | `call->hash`, `env->hash`, `stack->hash` | |
+| `Term::Kontinue::Apply::Applicative` | `call->hash`, `env->hash`, `stack->hash` | |
+| `Term::Kontinue::Scope::Enter` | `env->hash`, `leave->hash`, `stack->hash` | |
+| `Term::Kontinue::Scope::Leave` | `env->hash`, `stack->hash` | `__deferred` excluded; env preserved on Update |
+
 ## What Is Not Tested Here
 
 - **Stringify/pprint/numify** -- Display behavior is still evolving.
