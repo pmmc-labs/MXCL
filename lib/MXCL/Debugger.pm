@@ -92,9 +92,8 @@ class MXCL::Debugger {
     my sub shorten_hash ($hash) { substr $hash, 0, 8 }
     my sub shorten_type ($type) {
         my $short = $type =~ s/^MXCL\:\:Term\:\://r;
-        $short =~ s/^Kontinue\:\:/k\//;
-        $short =~ s/^Role\:\:/r\//;
-        $short = "t/${short}" if $short =~ /^[^rk]/;
+        $short =~ s/^Kontinue\:\://;
+        $short =~ s/^Role\:\://;
         return $short;
     }
 
@@ -113,12 +112,16 @@ class MXCL::Debugger {
 
     my ($width, $height) = get_terminal_size;
 
-    sub traverse_root ($root, $f, $depth=0) {
+    ## -------------------------------------------------------------------------
+
+    sub traverse_term ($root, $f, $depth=0) {
         $f->( $root, $depth );
         foreach my $child ( $root->children ) {
-            traverse_root( $child, $f, $depth + 1 );
+            traverse_term( $child, $f, $depth + 1 );
         }
     }
+
+    ## -------------------------------------------------------------------------
 
     #┌┬┐
     #├┼┤
@@ -127,22 +130,62 @@ class MXCL::Debugger {
     #├┼┤
     #╰┴╯
 
+    method stack ($top, $bottom) {
+        my $max_width = max( map length, (@$top, @$bottom) );
+        return [
+            map { pad($_, $max_width, true) } (@$top, @$bottom)
+        ]
+    }
+
+    method shelve ($left, $right, $divider=' ') {
+        my $max_height = max( scalar $left->@*, scalar $right->@* );
+
+        my $l_width = max( map length($_), @$left  );
+        my $r_width = max( map length($_), @$right );
+
+        my @lines;
+        foreach my $i (0 .. ($max_height - 1)) {
+            my $line = '';
+            if ($i < scalar @$left) {
+                $line .= pad($left->[$i], $l_width, true);
+            } else {
+                $line .= ' ' x $l_width;
+            }
+
+            $line .= $divider;
+
+            if ($i < scalar @$right) {
+                $line .= $right->[$i];
+            } else {
+                $line .= ' ' x $r_width;
+            }
+
+            push @lines => $line;
+        }
+        return \@lines;
+    }
+
     method term_tree ($term, %options) {
-        my $avail = $width - 54;
+        state $max_width = $width - 54;
+
+        $options{pprint_width} //= $max_width;
+        $options{pprint_width}   = $max_width if $options{pprint_width} > $max_width;
+
+        my $avail = $options{pprint_width};
         my %seen;
         my @lines;
         push @lines => (
             (sprintf ' %-39s │ %8s │ %s' => qw[ type hash pprint ]),
             (('─' x 41).'┼──────────┼'.('─' x $avail))
         );
-        traverse_root( $term, sub ($t, $d) {
+        traverse_term( $term, sub ($t, $d) {
             unless (exists $seen{ $t->hash }) {
                 my $indent = '';
                    $indent = '  ' x $d if $d;
                 my $branch = sprintf '%s- %s' => $indent, $t->type;
                 my $line   = sprintf '%-40s │ %s │ %s' =>
                              $branch,
-                             colorize(shorten_hash($t->hash)),
+                             shorten_hash($t->hash),
                              trim($t->pprint, $avail);
 
                 push @lines => $line;
@@ -152,8 +195,7 @@ class MXCL::Debugger {
         return \@lines;
     }
 
-    method arena_commit_table ($arena) {
-
+    method arena_commit_table ($arena, %options) {
         my $total = 0;
 
         my @lines;
@@ -196,11 +238,13 @@ class MXCL::Debugger {
             foreach my $root ($commit->roots->@*) {
                 push @lines => sprintf $row_fmt => shorten_hash($root->hash), $root->type;
             }
-            push @lines => $mid_div;
-            push @lines => sprintf $head_fmt => 'inserts';
-            push @lines => $mid_div;
-            foreach my $change ($commit->changed->@*) {
-                push @lines => sprintf $row_fmt => shorten_hash($change->hash), $change->type;
+            if ($options{show_inserts}) {
+                push @lines => $mid_div;
+                push @lines => sprintf $head_fmt => 'inserts';
+                push @lines => $mid_div;
+                foreach my $change ($commit->changed->@*) {
+                    push @lines => sprintf $row_fmt => shorten_hash($change->hash), $change->type;
+                }
             }
             push @lines => $bottom;
         }
@@ -211,7 +255,7 @@ class MXCL::Debugger {
     method arena_timing_stat_table ($arena) {
         my $statz = $arena->statz;
         my $timez = $arena->timez;
-        return [ split /\\n/ => sprintf q[
+        return [ grep $_, split /\n/ => sprintf q[
 ╭───────────────╮
 │ ARENA/TIMINGS │
 ├───────────────┴─────────────╮
@@ -229,7 +273,7 @@ class MXCL::Debugger {
     method arena_term_stat_table ($arena) {
         my $statz = $arena->statz;
         my $timez = $arena->timez;
-        return [ split /\\n/ => sprintf q[
+        return [ grep $_, split /\n/ => sprintf q[
 ╭─────────────╮
 │ ARENA/TERMS │
 ├─────────────┴───────────────╮
@@ -265,7 +309,7 @@ class MXCL::Debugger {
             push @lines =>
                 sprintf '│ %4d │ %4d │ %4d │ %s │' =>
                     $typez->{$type}->@{qw[ active allocated cached ]},
-                    colorize(pad($short, 21, true)),
+                    pad($short, 21, true),
         }
 
         push @lines => ('╰──────┴──────┴──────┴───────────────────────╯');

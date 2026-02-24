@@ -50,14 +50,20 @@ my $arena   = $context->arena;
 
 my $debugger = MXCL::Debugger->new;
 say $_ foreach (
-    $debugger->arena_term_stat_table($arena)->@*,
-    $debugger->arena_timing_stat_table($arena)->@*,
-    $debugger->term_tree($result->stack)->@*,
-    $debugger->arena_type_table($arena, sort_by_alive => true)->@*,
+    #debugger->shelve(
+        #$debugger->term_tree($result->stack, pprint_width => 60),
+        #$debugger->arena_commit_table($arena),
+        #$debugger->stack(
+            $debugger->stack(
+                $debugger->arena_term_stat_table($arena),
+                $debugger->arena_timing_stat_table($arena),
+            #),
+            #$debugger->arena_type_table($arena, sort_by_active => true)
+        #)
+    )->@*,
     #$debugger->arena_commit_table($arena)->@*,
     #$debugger->arena_hash_table($arena, show_types => true)->@*,
 );
-
 
 
 __END__
@@ -69,15 +75,4 @@ __END__
 
     (fact 1000)
 
-
-# foreach my ($i, $tape) (indexed $context->tape->tapes->@*) {
-#     say '-' x 120;
-#     say "TAPE[ $i ]";
-#     say '-' x 120;
-#     say "QUEUE:";
-#     say join "\n" => map $_->pprint, $tape->queue->@*;
-#     say '-' x 120;
-#     say "TRACE:";
-#     say join "\n" => map $_->pprint, reverse $tape->trace->@*;
-# }
 
