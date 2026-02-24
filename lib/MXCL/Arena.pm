@@ -36,25 +36,15 @@ class MXCL::Arena::Commit {
 class MXCL::Arena {
     field $storage :reader = +{};
 
-    # ...
     field $commit_log :reader = +[];
     field @staged;
-
-    # TODO - this could be done better
-    field $generations :reader = +[];
-    field $current_gen :reader = 0;
 
     field $statz :reader = +{};
     field $typez :reader = +{};
     field $hashz :reader = +{};
     field $timez :reader = +{};
 
-    # ... commits
-
-    method commit_generation ($label) {
-        # track the commits ...
-        push @$generations => +{ label  => $label };
-
+    method commit ($label) {
         push @$commit_log => MXCL::Arena::Commit->new(
             message => $label,
             parent  => $commit_log->[-1],
@@ -62,9 +52,6 @@ class MXCL::Arena {
         );
 
         @staged = ();
-
-        # get the next gen marker
-        $current_gen = scalar @$generations;
         $self;
     }
 
@@ -99,7 +86,6 @@ class MXCL::Arena {
         } else {
             $storage->{ $hash } = $type->new(
                 %with_hash,
-                gen => $current_gen,
             );
 
             push @staged => $storage->{ $hash };

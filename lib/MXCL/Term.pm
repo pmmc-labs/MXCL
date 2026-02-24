@@ -4,7 +4,6 @@ use experimental qw[ class ];
 
 class MXCL::Term {
     field $hash :param :reader;
-    field $gen  :param :reader;
 
     method type {
         my $type = __CLASS__ =~ s/^MXCL\:\:Term\:\://r;

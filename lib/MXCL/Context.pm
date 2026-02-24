@@ -43,7 +43,7 @@ class MXCL::Context {
         $tape      = MXCL::Tape::Spliced->new;
 
         $runtime->initialize_base_scope( $self );
-        $arena->commit_generation('context initialized');
+        $arena->commit('context initialized');
     }
 
     method base_scope {
@@ -52,7 +52,7 @@ class MXCL::Context {
 
     method compile_source ($source) {
         my $exprs = $compiler->compile( $source );
-        $arena->commit_generation('program compiled');
+        $arena->commit('program compiled');
         return $exprs;
     }
 
@@ -90,7 +90,7 @@ class MXCL::Context {
         );
 
         my $result = $machine->run( $self );
-        $arena->commit_generation('program executed');
+        $arena->commit('program executed');
         return $result;
     }
 }

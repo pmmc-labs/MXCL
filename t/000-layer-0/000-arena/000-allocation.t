@@ -18,9 +18,6 @@ isa_ok $num, 'MXCL::Term::Num', '... specifically a Num';
 ok defined($num->hash), '... term has a defined hash';
 ok length($num->hash) > 0, '... hash is a non-empty string';
 
-ok defined($num->gen), '... term has a defined gen';
-like $num->gen, qr/^\d+$/, '... gen is a number';
-
 # --- allocate via terms factory ---
 
 my $num2 = terms->Num(99);
@@ -30,9 +27,6 @@ isa_ok $num2, 'MXCL::Term::Num', '... specifically a Num';
 
 ok defined($num2->hash), '... factory term has a defined hash';
 ok length($num2->hash) > 0, '... hash is a non-empty string';
-
-ok defined($num2->gen), '... factory term has a defined gen';
-like $num2->gen, qr/^\d+$/, '... gen is a number';
 
 # --- allocate other types via factory ---
 
