@@ -89,7 +89,7 @@ class MXCL::Debugger {
         $seen{$string} //= $bg ? bg_color( $color, $string ) : fg_color( $color, $string )
     }
 
-    my sub shorten_hash ($hash) { '#'.substr $hash, 0, 8 }
+    my sub shorten_hash ($hash) { substr $hash, 0, 8 }
     my sub shorten_type ($type) {
         my $short = $type =~ s/^MXCL\:\:Term\:\://r;
         $short =~ s/^Kontinue\:\:/k\//;
@@ -119,6 +119,62 @@ class MXCL::Debugger {
     #╭┬╮
     #├┼┤
     #╰┴╯
+
+    method arena_commit_table ($arena) {
+
+        my $total = 0;
+
+        my @lines;
+        foreach my $commit ($arena->commit_log->@*) {
+            $total += scalar $commit->changed->@*;
+
+            my $msg_length  = max(length $commit->message, 40);
+            my $avail_space = $msg_length + 8;
+
+            my $top     = '╭──────────┬───────┬─'.('─' x $msg_length).'─╮';
+            my $head_b  = '├──────────┴───────┴─'.('─' x $msg_length).'─┤';
+            my $top_div = '├──────────┬─────────'.('─' x $msg_length).'─┤';
+            my $mid_div = '├──────────┼─────────'.('─' x $msg_length).'─┤';
+            my $bottom  = '╰──────────┴─────────'.('─' x $msg_length).'─╯';
+
+            my $header = sprintf "│ %-8s │ %4d+ │ %-${msg_length}s │" =>
+                shorten_hash($commit->hash),
+                (scalar $commit->changed->@*),
+                $commit->message;
+
+            my $head_fmt = "│ %8s │ ".(' ' x $avail_space)." │";
+            my $row_fmt  = "│ %8s │ %-${avail_space}s │";
+            my $stat_fmt = "│ %-8s : %-${avail_space}s │";
+
+
+            push @lines => (
+                $top,
+                $header,
+                $head_b,
+            );
+
+            if (my $parent = $commit->parent) {
+                push @lines => sprintf $stat_fmt => 'parent', shorten_hash($parent->hash);
+            }
+
+            push @lines => sprintf $stat_fmt => 'terms', $total;
+            push @lines => $top_div;
+            push @lines => sprintf $head_fmt => 'roots';
+            push @lines => $mid_div;
+            foreach my $root ($commit->roots->@*) {
+                push @lines => sprintf $row_fmt => shorten_hash($root->hash), $root->type;
+            }
+            push @lines => $mid_div;
+            push @lines => sprintf $head_fmt => 'inserts';
+            push @lines => $mid_div;
+            foreach my $change ($commit->changed->@*) {
+                push @lines => sprintf $row_fmt => shorten_hash($change->hash), $change->type;
+            }
+            push @lines => $bottom;
+        }
+
+        return \@lines;
+    }
 
     method arena_timing_stat_table ($arena) {
         my $statz = $arena->statz;
@@ -155,9 +211,8 @@ class MXCL::Debugger {
     }
 
     method arena_type_table ($arena, %options) {
-        my $terms   = $arena->terms;
-        my $typez   = $arena->typez;
-        my @sorted  = keys %$typez;
+        my $typez  = $arena->typez;
+        my @sorted = keys %$typez;
 
         if ($options{sort_by_active}) {
             @sorted = sort {
@@ -187,10 +242,9 @@ class MXCL::Debugger {
     }
 
     method arena_hash_table ($arena, %options) {
-        my $terms   = $arena->index;
-        my $history = $arena->terms;
+        my $terms   = $arena->storage;
         my $hashz   = $arena->hashz;
-        my @sorted  = @$history;
+        my @sorted  = map $_->hash, $arena->full_history;
 
         $options{sort_by_active} //= $options{top_k};
 

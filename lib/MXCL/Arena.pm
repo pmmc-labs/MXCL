@@ -49,6 +49,8 @@ class MXCL::Arena {
 
     method size { scalar keys %$storage }
 
+    method full_history { map $_->changed->@*, $commit_log->@* }
+
     method commit ($label, %opts) {
         my @roots     = @{ $opts{roots} // [] };
         my @reachable = @roots ? $self->reachable_from(@roots) : ();

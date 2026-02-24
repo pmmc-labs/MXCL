@@ -47,27 +47,14 @@ TIMING:
 ;
 
 my $arena   = $context->arena;
-my $initial = $arena->commit_log->[0];
-my @changes;
-foreach my $commit ($arena->commit_log->@*) {
-    push @changes => $commit->changed->@*;
-    say sprintf '%04d - Commit(%s)' => (scalar @changes), $commit->message;
-    if (my $parent = $commit->parent) {
-        say sprintf '  ^    parent : %s' => $parent->hash;
-        say sprintf '  +  inserted : %d' => scalar $commit->changed->@*;
-        say sprintf '  *   visible : %s' => scalar $commit->reachable->@*;
-        my @dropped = $arena->dropped_between( $commit->parent, $commit );
-        say sprintf '  -    unused : %s' => scalar @dropped;
-    }
-}
-
-#my $debugger = MXCL::Debugger->new;
-#say $_ foreach (
-#    $debugger->arena_term_stat_table($arena)->@*,
-#    $debugger->arena_timing_stat_table($arena)->@*,
-#    $debugger->arena_type_table($arena, sort_by_alive => true)->@*,
-#    $debugger->arena_hash_table($arena, show_types => true)->@*,
-#);
+my $debugger = MXCL::Debugger->new;
+say $_ foreach (
+    $debugger->arena_commit_table($arena)->@*,
+    #$debugger->arena_term_stat_table($arena)->@*,
+    #$debugger->arena_timing_stat_table($arena)->@*,
+    #$debugger->arena_type_table($arena, sort_by_alive => true)->@*,
+    #$debugger->arena_hash_table($arena, show_types => true)->@*,
+);
 
 
 
