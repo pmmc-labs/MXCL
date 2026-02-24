@@ -113,12 +113,44 @@ class MXCL::Debugger {
 
     my ($width, $height) = get_terminal_size;
 
+    sub traverse_root ($root, $f, $depth=0) {
+        $f->( $root, $depth );
+        foreach my $child ( $root->children ) {
+            traverse_root( $child, $f, $depth + 1 );
+        }
+    }
+
     #┌┬┐
     #├┼┤
     #└┴┘
     #╭┬╮
     #├┼┤
     #╰┴╯
+
+    method term_tree ($term, %options) {
+        my $avail = $width - 54;
+        my %seen;
+        my @lines;
+        push @lines => (
+            (sprintf ' %-39s │ %8s │ %s' => qw[ type hash pprint ]),
+            (('─' x 41).'┼──────────┼'.('─' x $avail))
+        );
+        traverse_root( $term, sub ($t, $d) {
+            unless (exists $seen{ $t->hash }) {
+                my $indent = '';
+                   $indent = '  ' x $d if $d;
+                my $branch = sprintf '%s- %s' => $indent, $t->type;
+                my $line   = sprintf '%-40s │ %s │ %s' =>
+                             $branch,
+                             colorize(shorten_hash($t->hash)),
+                             trim($t->pprint, $avail);
+
+                push @lines => $line;
+                $seen{$t->hash}++ if $options{filter_seen};
+            }
+        });
+        return \@lines;
+    }
 
     method arena_commit_table ($arena) {
 
