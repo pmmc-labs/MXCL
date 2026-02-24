@@ -34,8 +34,7 @@ class MXCL::Arena::Commit {
 
 
 class MXCL::Arena {
-    field $storage :reader = +{};
-
+    field $storage    :reader = +{};
     field $commit_log :reader = +[];
     field @staged;
 
