@@ -7,20 +7,23 @@ use Time::HiRes ();
 use MXCL::Internals;
 
 class MXCL::Arena::Commit {
-    field $parent   :param :reader;
-    field $message  :param :reader;
-    field $changed  :param :reader;
+    field $parent    :param :reader;
+    field $message   :param :reader;
+    field $changed   :param :reader;
+    field $reachable :param :reader = +[];
 
     method pprint {
         sprintf q[Commit(
-    msg     : %s,
-    parent  : %s,
-    changed :[
+    message   : %s,
+    parent    : %s,
+    changed   :[
         %s
-    ]
+    ],
+    reachable : %d terms
 )] =>  $message,
        ($parent ? $parent->hash : '~'),
-       join "\n        " => sort { $a cmp $b } map $_->hash, @$changed;
+       join("\n        " => sort { $a cmp $b } map $_->hash, @$changed),
+       scalar @$reachable;
     }
 
     method hash {
@@ -43,11 +46,17 @@ class MXCL::Arena {
     field $hashz :reader = +{};
     field $timez :reader = +{};
 
-    method commit ($label) {
+    method size { scalar keys %$storage }
+
+    method commit ($label, %opts) {
+        my @roots     = @{ $opts{roots} // [] };
+        my @reachable = @roots ? $self->reachable_from(@roots) : ();
+
         push @$commit_log => MXCL::Arena::Commit->new(
-            message => $label,
-            parent  => $commit_log->[-1],
-            changed => [ @staged ],
+            message   => $label,
+            parent    => $commit_log->[-1],
+            changed   => [ @staged ],
+            reachable => \@reachable,
         );
 
         @staged = ();
@@ -83,10 +92,7 @@ class MXCL::Arena {
             $typez->{$type}{cached}++;
             $hashz->{$hash}{cached}++;
         } else {
-            $storage->{ $hash } = $type->new(
-                %with_hash,
-            );
-
+            $storage->{ $hash } = $type->new(%with_hash);
             push @staged => $storage->{ $hash };
 
             $timez->{allocated} += Time::HiRes::tv_interval( $start );
@@ -97,5 +103,27 @@ class MXCL::Arena {
         }
 
         return $storage->{ $hash }
+    }
+
+    method walk ($cb) {
+        for my $commit (@$commit_log) {
+            $cb->($commit, $_) for @{$commit->changed};
+        }
+    }
+
+    method dropped_between ($commit_a, $commit_b) {
+        my %in_b = map { $_->hash => 1 } @{$commit_b->reachable};
+        return grep { !$in_b{ $_->hash } } @{$commit_a->reachable};
+    }
+
+    method reachable_from (@roots) {
+        my %seen;
+        my @queue = @roots;
+        while (my $term = shift @queue) {
+            next if exists $seen{ $term->hash };
+            $seen{ $term->hash } = $term;
+            push @queue, $term->children;
+        }
+        return values %seen;
     }
 }

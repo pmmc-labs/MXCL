@@ -4,7 +4,7 @@ use v5.42;
 use experimental qw[ class ];
 
 use Data::Dumper qw[ Dumper ];
-use List::Util qw[ max min ];
+use List::Util qw[ max min uniq ];
 use Time::HiRes ();
 
 use MXCL::Context;
@@ -46,10 +46,19 @@ TIMING:
     (map { $_ * 1000 } @timings{qw[ compile execute ]}),
 ;
 
-my $arena = $context->arena;
-
+my $arena   = $context->arena;
+my $initial = $arena->commit_log->[0];
+my @changes;
 foreach my $commit ($arena->commit_log->@*) {
-    say $commit->pprint;
+    push @changes => $commit->changed->@*;
+    say sprintf '%04d - Commit(%s)' => (scalar @changes), $commit->message;
+    if (my $parent = $commit->parent) {
+        say sprintf '  ^    parent : %s' => $parent->hash;
+        say sprintf '  +  inserted : %d' => scalar $commit->changed->@*;
+        say sprintf '  *   visible : %s' => scalar $commit->reachable->@*;
+        my @dropped = $arena->dropped_between( $commit->parent, $commit );
+        say sprintf '  -    unused : %s' => scalar @dropped;
+    }
 }
 
 #my $debugger = MXCL::Debugger->new;

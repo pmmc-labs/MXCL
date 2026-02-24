@@ -81,6 +81,32 @@ ok $changed_hashes{ $num1->hash },
 ok $changed_hashes{ $num2->hash },
     'Num(200) appears in commit->changed';
 
+# --- reachable snapshot is empty when no roots given ---
+
+is scalar @{$terms_commit->reachable}, 0,
+    'commit without roots has empty reachable snapshot';
+
+# --- commit with roots captures a reachable snapshot ---
+
+my $r1   = $terms->Num(1);
+my $r2   = $terms->Num(2);
+my $list = $terms->List($r1, $r2);
+
+$arena->commit("commit with roots", roots => [$list]);
+
+my $rooted_commit = $arena->commit_log->[-1];
+
+ok scalar @{$rooted_commit->reachable} >= 2,
+    'commit with roots has a non-empty reachable snapshot';
+
+my %reachable = map { $_->hash => 1 } @{$rooted_commit->reachable};
+
+ok $reachable{ $r1->hash },
+    'Num(1) appears in commit reachable snapshot';
+
+ok $reachable{ $r2->hash },
+    'Num(2) appears in commit reachable snapshot';
+
 # --- bare arena starts empty ---
 
 my $bare_arena = MXCL::Arena->new;
