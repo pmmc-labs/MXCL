@@ -28,8 +28,7 @@ class MXCL::Term::Cons :isa(MXCL::Term) {
 
     method DECOMPOSE { (head => $head, tail => $tail) }
 
-    sub COMPOSE {
-        my ($class, %args) = @_;
+    sub COMPOSE ($class, %args) {
         return (%args, hash => MXCL::Internals::hash_fields($class, @args{qw[ head tail ]}))
     }
 }

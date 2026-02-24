@@ -11,8 +11,7 @@ class MXCL::Term::Nil :isa(MXCL::Term) {
 
     method DECOMPOSE { () }
 
-    sub COMPOSE {
-        my ($class, %args) = @_;
+    sub COMPOSE ($class, %args) {
         return (hash => MXCL::Internals::hash_fields($class))
     }
 }

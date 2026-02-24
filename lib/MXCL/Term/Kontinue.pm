@@ -42,8 +42,7 @@ class MXCL::Term::Kontinue :isa(MXCL::Term) {
 
     method DECOMPOSE { (env => $env, stack => $stack) }
 
-    sub COMPOSE {
-        my ($class, %args) = @_;
+    sub COMPOSE ($class, %args) {
         return (%args, hash => MXCL::Internals::hash_fields($class, @args{qw[ env stack ]}))
     }
 }

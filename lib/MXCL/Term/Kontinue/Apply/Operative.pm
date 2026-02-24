@@ -9,8 +9,7 @@ class MXCL::Term::Kontinue::Apply::Operative :isa(MXCL::Term::Kontinue) {
 
     method DECOMPOSE { ($self->SUPER::DECOMPOSE(), call => $call) }
 
-    sub COMPOSE {
-        my ($class, %args) = @_;
+    sub COMPOSE ($class, %args) {
         return (%args, hash => MXCL::Internals::hash_fields($class, @args{qw[ call env stack ]}))
     }
 }

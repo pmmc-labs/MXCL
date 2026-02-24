@@ -15,8 +15,7 @@ class MXCL::Term::Kontinue::Scope::Enter :isa(MXCL::Term::Kontinue) {
 
     method DECOMPOSE { ($self->SUPER::DECOMPOSE(), leave => $leave) }
 
-    sub COMPOSE {
-        my ($class, %args) = @_;
+    sub COMPOSE ($class, %args) {
         return (%args, hash => MXCL::Internals::hash_fields($class, @args{qw[ env leave stack ]}))
     }
 }

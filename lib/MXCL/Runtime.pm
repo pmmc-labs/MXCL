@@ -5,8 +5,12 @@ use experimental qw[ class switch ];
 class MXCL::Runtime {
     field $base_scope = undef;
 
+    method base_scope {
+        $base_scope // die 'Base Scope is not initalized'
+    }
+
     # be lazy here
-    method base_scope ($context) {
+    method initialize_base_scope ($context) {
         return $base_scope if defined $base_scope;
 
         my $terms = $context->terms;

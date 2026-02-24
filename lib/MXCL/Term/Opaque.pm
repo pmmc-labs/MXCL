@@ -19,8 +19,7 @@ class MXCL::Term::Opaque :isa(MXCL::Term) {
 
     method DECOMPOSE { (repr => $repr, role => $role, uid => $uid) }
 
-    sub COMPOSE {
-        my ($class, %args) = @_;
+    sub COMPOSE ($class, %args) {
         return (%args, hash => MXCL::Internals::hash_fields($class, @args{qw[ repr role uid ]}))
     }
 }

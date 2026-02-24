@@ -46,8 +46,7 @@ class MXCL::Term::Role :isa(MXCL::Term) {
 
     method DECOMPOSE { (slots => $slots) }
 
-    sub COMPOSE {
-        my ($class, %args) = @_;
+    sub COMPOSE ($class, %args) {
         return (%args, hash => MXCL::Internals::hash_fields($class, @{$args{slots}}))
     }
 }

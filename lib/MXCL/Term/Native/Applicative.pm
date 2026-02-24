@@ -18,8 +18,7 @@ class MXCL::Term::Native::Applicative :isa(MXCL::Term) {
 
     method DECOMPOSE { (name => $name, params => $params, __body => $__body) }
 
-    sub COMPOSE {
-        my ($class, %args) = @_;
+    sub COMPOSE ($class, %args) {
         return (%args, hash => MXCL::Internals::hash_fields($class, @args{qw[ name params ]}))
     }
 }

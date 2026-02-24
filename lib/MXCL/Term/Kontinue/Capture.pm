@@ -9,8 +9,7 @@ class MXCL::Term::Kontinue::Capture :isa(MXCL::Term::Kontinue) {
 
     method DECOMPOSE { ($self->SUPER::DECOMPOSE(), origin => $origin) }
 
-    sub COMPOSE {
-        my ($class, %args) = @_;
+    sub COMPOSE ($class, %args) {
         return (%args, hash => MXCL::Internals::hash_fields($class, @args{qw[ env origin stack ]}))
     }
 }

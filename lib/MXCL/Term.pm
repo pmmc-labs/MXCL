@@ -21,8 +21,7 @@ class MXCL::Term {
 
     method DECOMPOSE { () }
 
-    sub COMPOSE {
-        my ($class, %args) = @_;
+    sub COMPOSE ($class, %args) {
         die "COMPOSE not implemented for $class"
     }
 

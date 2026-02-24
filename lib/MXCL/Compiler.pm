@@ -10,7 +10,6 @@ class MXCL::Compiler {
 
     method compile ($source) {
         my $compounds = $parser->parse($source);
-        $alloc->arena->commit_generation('parser finished');
         my $expanded  = $self->expand($compounds);
         return $expanded;
     }

@@ -4,20 +4,46 @@ use experimental qw[ class ];
 
 use Time::HiRes ();
 
-class MXCL::Arena {
-    field $terms :reader = +{};
+use MXCL::Internals;
 
-    # XXX - lets see where this goes
-    field $history :reader = +[];
+class MXCL::Arena::Commit {
+    field $parent   :param :reader;
+    field $message  :param :reader;
+    field $changed  :param :reader;
+
+    method pprint {
+        sprintf q[Commit(
+    msg     : %s,
+    parent  : %s,
+    changed :[
+        %s
+    ]
+)] =>  $message,
+       ($parent ? $parent->hash : '~'),
+       join "\n        " => sort { $a cmp $b } map $_->hash, @$changed;
+    }
+
+    method hash {
+        return MXCL::Internals::hash_fields(
+            blessed $self,
+            ($parent ? $parent->hash : ''),
+            sort { $a cmp $b } map $_->hash, @$changed
+        )
+    }
+}
+
+
+class MXCL::Arena {
+    field $storage :reader = +{};
+
+    # ...
+    field $commit_log :reader = +[];
+    field @staged;
 
     # TODO - this could be done better
     field $generations :reader = +[];
     field $current_gen :reader = 0;
 
-    # FIXME - these started out as stats
-    # trackers, but are not being used in
-    # commit tracking, so these will need
-    # work, but are fine-ish for now.
     field $statz :reader = +{};
     field $typez :reader = +{};
     field $hashz :reader = +{};
@@ -27,24 +53,15 @@ class MXCL::Arena {
 
     method commit_generation ($label) {
         # track the commits ...
-        push @$generations => +{
-            label  => $label,
-            # NOTE: this is not ideal, we should
-            # do it properly, but these two thing
-            # track enough information for now
-            statz  => +{ %$statz },
-            typez  => +{ %$typez },
-            hashz  => +{ %$hashz },
-            timez  => +{ %$timez },
-        };
+        push @$generations => +{ label  => $label };
 
-        # clear them each generation
-        # so that we are just track
-        # the new changes ...
-        #$statz->%* = ();
-        #$typez->%* = ();
-        #$hashz->%* = ();
-        #$timez->%* = ();
+        push @$commit_log => MXCL::Arena::Commit->new(
+            message => $label,
+            parent  => $commit_log->[-1],
+            changed => [ @staged ],
+        );
+
+        @staged = ();
 
         # get the next gen marker
         $current_gen = scalar @$generations;
@@ -59,41 +76,41 @@ class MXCL::Arena {
         $timez->{hashing} += Time::HiRes::tv_interval( $hash_start );
 
         # dont let stats interfere
-        $statz->{alive}++;
+        $statz->{active}++;
         $statz->{types}{$type}++;
         $statz->{hashes}{$hash}++;
 
-        $typez->{$type}{alive}++;
-        $typez->{$type}{hits}   //= 0;
-        $typez->{$type}{misses} //= 0;
+        $typez->{$type}{active}++;
+        $typez->{$type}{cached}    //= 0;
+        $typez->{$type}{allocated} //= 0;
 
-        $hashz->{$hash}{alive}++;
-        $hashz->{$hash}{hits}   //= 0;
-        $hashz->{$hash}{misses} //= 0;
+        $hashz->{$hash}{active}++;
+        $hashz->{$hash}{cached}    //= 0;
+        $hashz->{$hash}{allocated} //= 0;
 
-        # check timing for cache hits/misses
+        # check timing for cache cached/allocated
         my $start = [Time::HiRes::gettimeofday];
-        if (exists $terms->{ $hash }) {
-            $timez->{hits} += Time::HiRes::tv_interval( $start );
+        if (exists $storage->{ $hash }) {
+            $timez->{cached} += Time::HiRes::tv_interval( $start );
             # do not let stats interfere
-            $statz->{hits}++;
-            $typez->{$type}{hits}++;
-            $hashz->{$hash}{hits}++;
+            $statz->{cached}++;
+            $typez->{$type}{cached}++;
+            $hashz->{$hash}{cached}++;
         } else {
-            $terms->{ $hash } = $type->new(
+            $storage->{ $hash } = $type->new(
                 %with_hash,
                 gen => $current_gen,
             );
 
-            push @$history => $hash;
+            push @staged => $storage->{ $hash };
 
-            $timez->{misses} += Time::HiRes::tv_interval( $start );
+            $timez->{allocated} += Time::HiRes::tv_interval( $start );
             # do not let stats interfere
-            $statz->{misses}++;
-            $typez->{$type}{misses}++;
-            $hashz->{$hash}{misses}++;
+            $statz->{allocated}++;
+            $typez->{$type}{allocated}++;
+            $hashz->{$hash}{allocated}++;
         }
 
-        return $terms->{ $hash }
+        return $storage->{ $hash }
     }
 }

@@ -49,13 +49,13 @@ isnt refaddr($num42), refaddr($str42),
 
     # statz was cleared by the commit in Context ADJUST,
     # so we start with a clean slate for this generation
-    my $before = $fa->statz->{hits} // 0;
+    my $before = $fa->statz->{cached} // 0;
 
     $ft->Num(1);
-    my $after_first = $fa->statz->{hits} // 0;
+    my $after_first = $fa->statz->{cached} // 0;
 
     $ft->Num(1);
-    my $after_second = $fa->statz->{hits} // 0;
+    my $after_second = $fa->statz->{cached} // 0;
 
     is $after_second, $after_first + 1,
         'statz hits increments when allocating a duplicate term';

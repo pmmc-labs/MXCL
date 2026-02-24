@@ -12,8 +12,7 @@ class MXCL::Term::Ref :isa(MXCL::Term) {
 
     method DECOMPOSE { (uid => $uid) }
 
-    sub COMPOSE {
-        my ($class, %args) = @_;
+    sub COMPOSE ($class, %args) {
         return (%args, hash => MXCL::Internals::hash_fields($class, $args{uid}))
     }
 }

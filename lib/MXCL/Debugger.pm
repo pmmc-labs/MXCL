@@ -134,7 +134,7 @@ class MXCL::Debugger {
 ╰─────────────────────────────╯]
         => map sprintf('%.08f', $_),
            map { $_ ? $_ * 1000 : 0 }
-           $timez->@{qw[ misses hits hashing MD5 ]}
+           $timez->@{qw[ allocated cached hashing MD5 ]}
         ]
     }
 
@@ -150,7 +150,7 @@ class MXCL::Debugger {
 │     dups = %-16d │
 ╰─────────────────────────────╯]
         => map { defined $_ ? $_ : 0 }
-           $statz->@{qw[ alive misses hits ]},
+           $statz->@{qw[ active allocated cached ]},
         ]
     }
 
@@ -159,9 +159,9 @@ class MXCL::Debugger {
         my $typez   = $arena->typez;
         my @sorted  = keys %$typez;
 
-        if ($options{sort_by_alive}) {
+        if ($options{sort_by_active}) {
             @sorted = sort {
-                $typez->{$b}->{alive} <=> $typez->{$a}->{alive}
+                $typez->{$b}->{active} <=> $typez->{$a}->{active}
             } @sorted;
         }
 
@@ -177,7 +177,7 @@ class MXCL::Debugger {
         foreach my ($type, $short) (map { $_, shorten_type($_) } @sorted) {
             push @lines =>
                 sprintf '│ %4d │ %4d │ %4d │ %s │' =>
-                    $typez->{$type}->@{qw[ alive misses hits ]},
+                    $typez->{$type}->@{qw[ active allocated cached ]},
                     colorize(pad($short, 21, true)),
         }
 
@@ -187,20 +187,20 @@ class MXCL::Debugger {
     }
 
     method arena_hash_table ($arena, %options) {
-        my $terms   = $arena->terms;
-        my $history = $arena->history;
+        my $terms   = $arena->index;
+        my $history = $arena->terms;
         my $hashz   = $arena->hashz;
         my @sorted  = @$history;
 
-        $options{sort_by_alive} //= $options{top_k};
+        $options{sort_by_active} //= $options{top_k};
 
-        if ($options{sort_by_alive}) {
+        if ($options{sort_by_active}) {
             @sorted = sort {
-                $hashz->{$b}->{alive} <=> $hashz->{$a}->{alive}
+                $hashz->{$b}->{active} <=> $hashz->{$a}->{active}
             } @sorted;
 
             if (my $top_k = $options{top_k}) {
-                @sorted = grep { $hashz->{$_}->{alive} >= $top_k } @sorted;
+                @sorted = grep { $hashz->{$_}->{active} >= $top_k } @sorted;
             }
         }
         elsif ($options{sort_by_type}) {
@@ -239,7 +239,7 @@ class MXCL::Debugger {
             my $type  = colorize(shorten_type(blessed $terms->{$hash}));
             push @lines =>
                 sprintf '%3d %s %s %s' =>
-                    $hashz->{$hash}->{alive},
+                    $hashz->{$hash}->{active},
                     $short,
                     $type,
                     serializer($terms->{$hash}, %options)

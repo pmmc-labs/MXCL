@@ -21,8 +21,7 @@ class MXCL::Term::Array :isa(MXCL::Term) {
 
     method DECOMPOSE { (elements => $elements) }
 
-    sub COMPOSE {
-        my ($class, %args) = @_;
+    sub COMPOSE ($class, %args) {
         return (%args, hash => MXCL::Internals::hash_fields($class, @{$args{elements}}))
     }
 }

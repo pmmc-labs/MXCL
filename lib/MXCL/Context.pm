@@ -42,11 +42,12 @@ class MXCL::Context {
         $machine   = MXCL::Machine->new;
         $tape      = MXCL::Tape::Spliced->new;
 
+        $runtime->initialize_base_scope( $self );
         $arena->commit_generation('context initialized');
     }
 
     method base_scope {
-        $runtime->base_scope( $self )
+        $runtime->base_scope
     }
 
     method compile_source ($source) {

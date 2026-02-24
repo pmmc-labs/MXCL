@@ -10,8 +10,7 @@ class MXCL::Term::Kontinue::DoWhile :isa(MXCL::Term::Kontinue) {
 
     method DECOMPOSE { ($self->SUPER::DECOMPOSE(), body => $body, condition => $condition) }
 
-    sub COMPOSE {
-        my ($class, %args) = @_;
+    sub COMPOSE ($class, %args) {
         return (%args, hash => MXCL::Internals::hash_fields($class, @args{qw[ body condition env stack ]}))
     }
 }

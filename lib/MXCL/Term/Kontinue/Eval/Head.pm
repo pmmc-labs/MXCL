@@ -9,8 +9,7 @@ class MXCL::Term::Kontinue::Eval::Head :isa(MXCL::Term::Kontinue) {
 
     method DECOMPOSE { ($self->SUPER::DECOMPOSE(), cons => $cons) }
 
-    sub COMPOSE {
-        my ($class, %args) = @_;
+    sub COMPOSE ($class, %args) {
         return (%args, hash => MXCL::Internals::hash_fields($class, @args{qw[ cons env stack ]}))
     }
 }

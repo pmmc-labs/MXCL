@@ -40,8 +40,7 @@ class MXCL::Term::Lambda :isa(MXCL::Term) {
 
     method DECOMPOSE { (body => $body, env => $env, name => $name, params => $params) }
 
-    sub COMPOSE {
-        my ($class, %args) = @_;
+    sub COMPOSE ($class, %args) {
         return (%args, hash => MXCL::Internals::hash_fields($class, @args{qw[ body env name params ]}))
     }
 }
