@@ -29,10 +29,13 @@ purely about data, albiet code represented as data.
     - [x] all terms are hash-consed by their contents
     - [x] structural identify is hash identity
     - [x] terms are interned and deduplicated
-- Term metadata
-    * [ ] not included in the hashing
-    - [x] Arena generation
-    - [ ] related Token/Compound(s)
+- Arena Audit Trail
+    - [x] commit log: ordered chain of snapshots with parent linkage
+    - [x] each commit tracks newly allocated terms (`->changed`)
+    - [x] each commit optionally snapshots the reachable term set (`->reachable`)
+    - [x] `walk`: traverse all committed terms in order, with commit context
+    - [x] `reachable_from`: BFS from given roots following term structure
+    - [x] `dropped_between`: terms reachable in commit A but not in commit B    
 
 <!----------------------------------------------------------------------------->
 ## Layer 1: Role Substrate

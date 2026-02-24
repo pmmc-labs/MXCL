@@ -10,7 +10,8 @@ class MXCL::Arena::Commit {
     field $parent    :param :reader;
     field $message   :param :reader;
     field $changed   :param :reader;
-    field $reachable :param :reader = +[];
+    field $roots     :param :reader;
+    field $reachable :param :reader;
 
     method pprint {
         sprintf q[Commit(
@@ -56,6 +57,7 @@ class MXCL::Arena {
             message   => $label,
             parent    => $commit_log->[-1],
             changed   => [ @staged ],
+            roots     => \@roots,
             reachable => \@reachable,
         );
 

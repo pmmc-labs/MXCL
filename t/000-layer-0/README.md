@@ -6,7 +6,7 @@ Layer 0 defines the substrate -- what code *is* as data, independent of how
 it evaluates or where it runs. It answers the question: **What is code, before
 we ask what it does?**
 
-Three properties, chosen together, create the foundation:
+Four properties, chosen together, create the foundation:
 
 - **Homoiconicity** -- Code is s-expressions. The representation you write is
   the representation that exists at runtime. Terms are inspectable, serializable,
@@ -18,6 +18,10 @@ Three properties, chosen together, create the foundation:
 
 - **Content-addressing** -- Terms are identified by the MD5 hash of their
   structure. Identity is what a term *is* (its AST), not what it is *called*.
+
+- **Arena audit trail** -- The arena records a commit log of snapshots. Each
+  commit tracks what was newly allocated and what was reachable from live roots
+  at that point, enabling structural diffing between execution boundaries.
 
 ## What This Suite Proves
 
@@ -48,9 +52,10 @@ identical content yields the same object reference.
 
 | File | Tests | What It Covers |
 |------|-------|----------------|
-| `000-allocation.t` | 18 | Basic allocation via arena and factory, isa checks, hash/gen fields |
+| `000-allocation.t` | 14 | Basic allocation via arena and factory, isa checks, hash field |
 | `001-content-addressing.t` | 11 | Interning (same content = same ref), type in hash, stats tracking, nested hashing |
-| `002-generations.t` | 13 | Generation counter, commit snapshots, term gen tracking |
+| `002-commit-log.t` | 18 | Commit log growth, parent linkage, `->changed` term tracking, `->reachable` snapshot |
+| `003-walk.t` | 26 | `->children` on all term types, `walk` commit-ordered traversal, `reachable_from` BFS, `dropped_between` diffing |
 
 ### 001-scalars/ -- Scalar Terms
 
@@ -130,7 +135,7 @@ use Test::MXCL qw[ terms arena compiler parser ];
 ```
 
 The shared context is safe because terms are immutable and interned -- no
-test pollution. Tests that need isolation (e.g., generation tracking) create
+test pollution. Tests that need isolation (e.g., commit log inspection) create
 their own `MXCL::Context->new`.
 
 ## Term Hash Construction Reference
