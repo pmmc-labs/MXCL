@@ -50,11 +50,11 @@ my $arena   = $context->arena;
 
 my $debugger = MXCL::Debugger->new;
 say $_ foreach (
+    $debugger->arena_term_stat_table($arena)->@*,
+    $debugger->arena_timing_stat_table($arena)->@*,
     $debugger->term_tree($result->stack)->@*,
+    $debugger->arena_type_table($arena, sort_by_alive => true)->@*,
     #$debugger->arena_commit_table($arena)->@*,
-    #$debugger->arena_term_stat_table($arena)->@*,
-    #$debugger->arena_timing_stat_table($arena)->@*,
-    #$debugger->arena_type_table($arena, sort_by_alive => true)->@*,
     #$debugger->arena_hash_table($arena, show_types => true)->@*,
 );
 
