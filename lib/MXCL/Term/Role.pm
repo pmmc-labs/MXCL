@@ -40,6 +40,10 @@ class MXCL::Term::Role :isa(MXCL::Term) {
 
     # --------------------------------------------------------------------------
 
+    method stringify {
+        sprintf "(role %s)" => join ' ' => map $_->ident->pprint, @$slots
+    }
+
     method pprint {
         sprintf "(role %s)" => join ' ' => map $_->pprint, @$slots
     }

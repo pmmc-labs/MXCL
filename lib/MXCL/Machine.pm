@@ -54,17 +54,21 @@ class MXCL::Machine {
                 return $Konts->Update(
                     $prev,
                     $k->env,
-                    $Terms->List($Roles->Difference( $k->env, $k->origin ))
+                    $Terms->Append(
+                        $prev->stack,
+                        $Terms->List( $Roles->Difference( $k->env, $k->origin ) )
+                    )
                 );
             }
             when ('MXCL::Term::Kontinue::Define') {
                 my $name  = $k->name;
                 my $value = $k->stack->head;
 
-                my $local = $Roles->Union(
-                    $k->env,
-                    $Roles->Role($Roles->Defined( $name, $value ))
-                );
+                my $slot  = $value isa MXCL::Term::Role::Slot
+                    ? $value
+                    : $Roles->Defined( $name, $value );
+
+                my $local = $Roles->Union( $k->env, $Roles->Role( $slot ) );
 
                 # TODO
                 # - need to check if we have any conflicts
@@ -146,6 +150,17 @@ class MXCL::Machine {
             # ------------------------------------------------------------------
             # Appy
             # ------------------------------------------------------------------
+            when ('MXCL::Term::Kontinue::Apply::Stack') {
+
+                #say "STACK!!!!: ";
+                #say $k->stack->pprint;
+                #say "STACK!!!!: ";
+
+                return (
+                    $Konts->ApplyExpr( $k->env, $k->stack->tail, $Nil ),
+                    $self->evaluate_term( $context, $k->env, $k->stack->head ),
+                );
+            }
             when ('MXCL::Term::Kontinue::Apply::Expr') {
                 my $call = $k->stack->head;
                 my $args = $k->args;

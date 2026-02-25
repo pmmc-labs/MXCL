@@ -17,12 +17,7 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
-    (define fact (n)
-        (if (n == 0)
-            1
-            (n * (fact (n - 1)))))
-
-    (fact 5)
+    <ORD>
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );
@@ -45,9 +40,6 @@ TIMING:
 =>  ($result ? $result->stack->pprint : 'UNDEFINED'),
     (map { $_ * 1000 } @timings{qw[ compile execute ]}),
 ;
-
-warn Dumper $context->runtime->natives->functions;
-warn Dumper $context->runtime->natives->types;
 
 # my $arena   = $context->arena;
 # my $debugger = MXCL::Debugger->new;

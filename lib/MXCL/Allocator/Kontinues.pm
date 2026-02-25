@@ -18,6 +18,7 @@ use MXCL::Term::Kontinue::Eval::Head;
 use MXCL::Term::Kontinue::Eval::Rest;
 
 use MXCL::Term::Kontinue::Apply::Expr;
+use MXCL::Term::Kontinue::Apply::Stack;
 use MXCL::Term::Kontinue::Apply::Operative;
 use MXCL::Term::Kontinue::Apply::Applicative;
 
@@ -146,6 +147,13 @@ class MXCL::Allocator::Kontinues {
     }
 
     ## -------------------------------------------------------------------------
+
+    method ApplyStack ($env, $stack) {
+        $arena->allocate(MXCL::Term::Kontinue::Apply::Stack::,
+            env   => $env,
+            stack => $stack,
+        )
+    }
 
     method ApplyExpr ($env, $args, $stack) {
         $arena->allocate(MXCL::Term::Kontinue::Apply::Expr::,

@@ -42,7 +42,7 @@ class MXCL::Context {
         $machine   = MXCL::Machine->new;
         $tape      = MXCL::Tape::Spliced->new;
 
-        $runtime->initialize_base_scope( $self );
+        $runtime->initialize( $self );
         $arena->commit('context initialized',
             roots => [
                 $runtime->base_scope
@@ -66,11 +66,9 @@ class MXCL::Context {
 
         if (exists $opts{load_prelude}) {
             # Compile the prelude ...
-            my $prelude = $self->compile_source(q[
-                (let $NAME      "MXCL")
-                (let $VERSION   :v0.0.1)
-                (let $AUTHORITY :cpan:STEVAN)
-            ]);
+            my $prelude = $self->compile_source(
+                $runtime->prelude->source
+            );
 
             # Load in the prelude ...
             $tape->splice(

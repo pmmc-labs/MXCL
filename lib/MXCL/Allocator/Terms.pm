@@ -39,7 +39,6 @@ class MXCL::Allocator::Terms {
     # store the refs
     field $refs  :param :reader = +{};
     # store the lifted, and orig-impls
-    field $by_name :param :reader = +{};
     field $lifted  :param :reader = +{};
     field $impls   :param :reader = +{};
 
@@ -181,9 +180,8 @@ class MXCL::Allocator::Terms {
                 warn "HMMM, DUPLICATE APPLICATIVE HASH for ${name} with same CODE refaddrs (${hash})";
             }
         } else {
-            $lifted ->{ $hash } = $bound;
-            $impls  ->{ $hash } = $body;
-            $by_name->{ $name } = $applicative;
+            $lifted->{ $hash } = $bound;
+            $impls->{  $hash } = $body;
         }
 
         return $applicative;
@@ -245,9 +243,8 @@ class MXCL::Allocator::Terms {
                 warn "HMMM, DUPLICATE OPERATIVE HASH for ${name} with same CODE refaddrs (${hash})";
             }
         } else {
-            $lifted ->{ $hash } = $bound;
-            $impls  ->{ $hash } = $body;
-            $by_name->{ $name } = $operative;
+            $lifted->{ $hash } = $bound;
+            $impls->{  $hash } = $body;
         }
 
         return $operative;
@@ -257,8 +254,26 @@ class MXCL::Allocator::Terms {
     ## Native Utils
     ## -------------------------------------------------------------------------
 
-    method BindNative ($name) {
-        return $by_name->{ $name } // die "Could not find native(${name})";
+    method BindNative ($name, $spec) {
+        my $kind = $spec->{kind};
+        if ($kind eq 'operative') {
+            return $self->Operative(
+                name      => $name,
+                signature => $spec->{signature},
+                impl      => $spec->{impl},
+            );
+        }
+        elsif ($kind eq 'applicative') {
+            return $self->Applicative(
+                name      => $name,
+                signature => $spec->{signature},
+                returns   => $spec->{returns},
+                impl      => $spec->{impl},
+            );
+        }
+        else {
+            die "Unknown Native kind($kind) for $name";
+        }
     }
 
     ## -------------------------------------------------------------------------
@@ -296,6 +311,7 @@ class MXCL::Allocator::Terms {
     }
 
     method Append ($first, $second) {
+        # TODO: if one other the other is Nil, don't do all this work
         $self->List( $self->Uncons($first), $self->Uncons($second) )
     }
 
