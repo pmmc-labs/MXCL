@@ -2,8 +2,12 @@
 use v5.42;
 use experimental qw[ class switch ];
 
+use MXCL::Runtime::Natives;
+
 class MXCL::Runtime {
     field $base_scope = undef;
+
+    field $natives :reader = MXCL::Runtime::Natives->new;
 
     method base_scope {
         $base_scope // die 'Base Scope is not initalized'
@@ -22,33 +26,42 @@ class MXCL::Runtime {
         ## ---------------------------------------------------------------------
 
         my sub type_predicate ($name, $klass) {
-            return $terms->Applicative(
+            return $natives->register($name, $terms->Applicative(
                 name      => $name,
                 signature => [{ name => 'term' }],
                 returns   => 'Bool',
                 impl      => sub ($term) { $term->isa($klass) },
-            )
+            ))
         }
 
         my sub binary_op ($name, $coercion, $returns, $impl) {
             $coercion = undef if $coercion eq '*';
-            return $terms->Applicative(
+            my $op = $terms->Applicative(
                 name      => $name,
                 signature => [ { name => 'lhs', coerce => $coercion },
                                { name => 'rhs', coerce => $coercion } ],
                 returns   => $returns,
                 impl      => $impl,
-            )
+            );
+
+            if ($name =~ /\:/) {
+                my ($method, $type) = split /\:/ => $name;
+                $natives->register_method($type, $method, $op);
+            } else {
+                $natives->register($name, $op);
+            }
+
+            return $op;
         }
 
         my sub unary_op ($name, $coercion, $returns, $impl) {
             $coercion = undef if $coercion eq '*';
-            return $terms->Applicative(
+            return $natives->register($name, $terms->Applicative(
                 name      => $name,
                 signature => [ { name => 'lhs', coerce => $coercion } ],
                 returns   => $returns,
                 impl      => $impl,
-            )
+            ))
         }
 
         ## ---------------------------------------------------------------------
@@ -85,7 +98,7 @@ class MXCL::Runtime {
 
         my $not = unary_op('not', 'boolify', 'Bool', sub ($n) { !$n });
 
-        my $and = $terms->Operative(
+        my $and = $natives->register('and', $terms->Operative(
             name => 'and',
             signature => [
                 { name => 'lhs' },
@@ -97,9 +110,9 @@ class MXCL::Runtime {
                     $konts->EvalExpr( $env, $lhs, $terms->Nil ),
                 )
             }
-        );
+        ));
 
-        my $or = $terms->Operative(
+        my $or = $natives->register('or', $terms->Operative(
             name => 'or',
             signature => [
                 { name => 'lhs' },
@@ -111,7 +124,7 @@ class MXCL::Runtime {
                     $konts->EvalExpr( $env, $lhs, $terms->Nil ),
                 )
             }
-        );
+        ));
 
         ## ---------------------------------------------------------------------
         ## Control structures
@@ -121,7 +134,7 @@ class MXCL::Runtime {
         ## mean that all changes to the env will get reverted after Leave.
         ## ---------------------------------------------------------------------
 
-        my $do = $terms->Operative(
+        my $do = $natives->register('do', $terms->Operative(
             name => 'do',
             signature => [{ name => '@' }],
             impl => sub ($env, @exprs) {
@@ -132,9 +145,9 @@ class MXCL::Runtime {
                     } @exprs),
                 )
             }
-        );
+        ));
 
-        my $if = $terms->Operative(
+        my $if = $natives->register('if', $terms->Operative(
             name => 'if',
             signature => [
                 { name => 'cond'     },
@@ -147,11 +160,11 @@ class MXCL::Runtime {
                     $konts->EvalExpr( $env, $cond, $terms->Nil ),
                 )
             }
-        );
+        ));
 
         # TODO - test this, without mutable variables
         # this is not a very useful thing.
-        my $while = $terms->Operative(
+        my $while = $natives->register('while', $terms->Operative(
             name => 'while',
             signature => [
                 { name => 'cond' },
@@ -163,13 +176,29 @@ class MXCL::Runtime {
                     $konts->EvalExpr( $env, $cond, $terms->Nil ),
                 )
             }
-        );
+        ));
 
         ## ---------------------------------------------------------------------
         ## Definitions
         ## ---------------------------------------------------------------------
 
-        my $define = $terms->Operative(
+        my $bind = $natives->register('bind', $terms->Operative(
+            name => 'bind',
+            signature => [
+                { name => 'name' },
+                { name => 'params' },
+                { name => 'binding' },
+            ],
+            impl => sub ($env, $name, $params, $binding) {
+                my $native = $terms->BindNative( $binding );
+                # TODO:
+                # Should confirm that these $params
+                # match the params in the $native
+                return $konts->Define( $env, $name, $terms->List($native) );
+            }
+        ));
+
+        my $define = $natives->register('define', $terms->Operative(
             name => 'define',
             signature => [
                 { name => 'name' },
@@ -183,13 +212,19 @@ class MXCL::Runtime {
                     $terms->List( $terms->Lambda( $params, $body, $env, $name ) )
                 );
             }
-        );
+        ));
 
-        my $role = $terms->Operative(
+        my $role = $natives->register('role', $terms->Operative(
             name => 'role',
             signature => [{ name => '@' }],
             impl => sub ($env, @args) {
                 my ($name, @exprs) = @args;
+
+                # TODO:
+                # - need to add things to the local env
+                #    - `require`
+                #    - `does`
+
                 return (
                     $konts->Define( $env, $name, $terms->Nil ),
                     $konts->Scope( $env, $terms->Nil )->wrap(
@@ -201,9 +236,9 @@ class MXCL::Runtime {
                     )
                 )
             }
-        );
+        ));
 
-        my $let = $terms->Operative(
+        my $let = $natives->register('let', $terms->Operative(
             name => 'let',
             signature => [
                 { name => 'name' },
@@ -215,7 +250,7 @@ class MXCL::Runtime {
                     $konts->EvalExpr( $env, $value, $terms->Nil )
                 );
             }
-        );
+        ));
 
         ## ---------------------------------------------------------------------
         ## Core Roles
@@ -335,7 +370,7 @@ class MXCL::Runtime {
         ## Core Datatypes
         ## ---------------------------------------------------------------------
 
-        my $lambda = $terms->Operative(
+        my $lambda = $natives->register('lambda', $terms->Operative(
             name => 'lambda',
             signature => [
                 { name => 'params' },
@@ -347,11 +382,11 @@ class MXCL::Runtime {
                     $terms->List( $terms->Lambda( $params, $body, $env ) )
                 );
             }
-        );
+        ));
 
         # ...
 
-        my $make_role = $terms->Operative(
+        my $make_role = $natives->register('make-role', $terms->Operative(
             name => 'make-role',
             signature => [{ name => '@' }],
             impl => sub ($env, @exprs) {
@@ -363,7 +398,7 @@ class MXCL::Runtime {
                     } @exprs),
                 )
             }
-        );
+        ));
 
         my $Role = $roles->Union(
             $roles->Role(
@@ -381,23 +416,23 @@ class MXCL::Runtime {
 
         # ...
 
-        my $make_opaque = $terms->Applicative(
+        my $make_opaque = $natives->register('make-opaque', $terms->Applicative(
             name      => 'make-opaque',
             signature => [ { name => 'role' } ],
             impl      => sub ($role) {
                 $terms->Opaque($role)
             }
-        );
+        ));
 
         # ...
 
-        my $make_array = $terms->Applicative(
+        my $make_array = $natives->register('make-array', $terms->Applicative(
             name      => 'make-array',
             signature => [ { name => '@' } ],
             impl      => sub (@elements) {
                 $terms->Array(@elements)
             }
-        );
+        ));
 
         my $Array = $roles->Role(
             $roles->Defined($terms->Sym('length'),
@@ -418,7 +453,7 @@ class MXCL::Runtime {
 
         # ...
 
-        my $make_hash = $terms->Applicative(
+        my $make_hash = $natives->register('make-hash', $terms->Applicative(
             name      => 'make-hash',
             signature => [ { name => '@' } ],
             impl      => sub (@elements) {
@@ -428,7 +463,7 @@ class MXCL::Runtime {
                 }
                 return $terms->Hash(%elements);
             }
-        );
+        ));
 
         my $Hash = $roles->Role(
             $roles->Defined($terms->Sym('length'),
@@ -449,13 +484,13 @@ class MXCL::Runtime {
 
         # ...
 
-        my $make_ref = $terms->Applicative(
+        my $make_ref = $natives->register('make-ref', $terms->Applicative(
              name      => 'make-ref',
              signature => [ { name => 'value' } ],
              impl      => sub ($value) {
                 $terms->Ref($value)
              }
-        );
+        ));
 
         my $Ref = $roles->Role(
             $roles->Defined($terms->Sym('get'),
@@ -479,6 +514,7 @@ class MXCL::Runtime {
         ## ---------------------------------------------------------------------
 
         $base_scope = $roles->Role(
+            $roles->Defined($terms->Sym('bind'),              $bind),
             $roles->Defined($terms->Sym('define'),            $define),
             $roles->Defined($terms->Sym('let'),               $let),
             $roles->Defined($terms->Sym('lambda'),            $lambda),
@@ -505,6 +541,7 @@ class MXCL::Runtime {
             $roles->Defined($terms->Sym('make-array'),        $make_array),
             $roles->Defined($terms->Sym('make-hash'),         $make_hash),
             $roles->Defined($terms->Sym('make-ref'),          $make_ref),
+            # TODO - define these in the prelude
             $roles->Defined($terms->Sym('MXCL::Term::Bool'),  $Bool),
             $roles->Defined($terms->Sym('MXCL::Term::Num'),   $Num),
             $roles->Defined($terms->Sym('MXCL::Term::Str'),   $Str),

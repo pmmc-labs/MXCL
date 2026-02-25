@@ -46,24 +46,26 @@ TIMING:
     (map { $_ * 1000 } @timings{qw[ compile execute ]}),
 ;
 
-my $arena   = $context->arena;
+warn Dumper $context->runtime->natives->functions;
+warn Dumper $context->runtime->natives->types;
 
-my $debugger = MXCL::Debugger->new;
-say $_ foreach (
-    #debugger->shelve(
-        #$debugger->term_tree($result->stack, pprint_width => 60),
-        #$debugger->arena_commit_table($arena),
-        #$debugger->stack(
-            $debugger->stack(
-                $debugger->arena_term_stat_table($arena),
-                $debugger->arena_timing_stat_table($arena),
-            #),
-            #$debugger->arena_type_table($arena, sort_by_active => true)
-        #)
-    )->@*,
-    #$debugger->arena_commit_table($arena)->@*,
-    #$debugger->arena_hash_table($arena, show_types => true)->@*,
-);
+# my $arena   = $context->arena;
+# my $debugger = MXCL::Debugger->new;
+# say $_ foreach (
+#     #debugger->shelve(
+#         #$debugger->term_tree($result->stack, pprint_width => 60),
+#         #$debugger->arena_commit_table($arena),
+#         #$debugger->stack(
+#             $debugger->stack(
+#                 $debugger->arena_term_stat_table($arena),
+#                 $debugger->arena_timing_stat_table($arena),
+#             #),
+#             #$debugger->arena_type_table($arena, sort_by_active => true)
+#         #)
+#     )->@*,
+#     #$debugger->arena_commit_table($arena)->@*,
+#     #$debugger->arena_hash_table($arena, show_types => true)->@*,
+# );
 
 
 __END__

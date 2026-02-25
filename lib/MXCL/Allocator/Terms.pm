@@ -39,8 +39,9 @@ class MXCL::Allocator::Terms {
     # store the refs
     field $refs  :param :reader = +{};
     # store the lifted, and orig-impls
-    field $lifted :param :reader = +{};
-    field $impls  :param :reader = +{};
+    field $by_name :param :reader = +{};
+    field $lifted  :param :reader = +{};
+    field $impls   :param :reader = +{};
 
     # intialize ...
     ADJUST {
@@ -180,8 +181,9 @@ class MXCL::Allocator::Terms {
                 warn "HMMM, DUPLICATE APPLICATIVE HASH for ${name} with same CODE refaddrs (${hash})";
             }
         } else {
-            $lifted->{ $hash } = $bound;
-            $impls ->{ $hash } = $body;
+            $lifted ->{ $hash } = $bound;
+            $impls  ->{ $hash } = $body;
+            $by_name->{ $name } = $applicative;
         }
 
         return $applicative;
@@ -243,11 +245,20 @@ class MXCL::Allocator::Terms {
                 warn "HMMM, DUPLICATE OPERATIVE HASH for ${name} with same CODE refaddrs (${hash})";
             }
         } else {
-            $lifted->{ $hash } = $bound;
-            $impls ->{ $hash } = $body;
+            $lifted ->{ $hash } = $bound;
+            $impls  ->{ $hash } = $body;
+            $by_name->{ $name } = $operative;
         }
 
         return $operative;
+    }
+
+    ## -------------------------------------------------------------------------
+    ## Native Utils
+    ## -------------------------------------------------------------------------
+
+    method BindNative ($name) {
+        return $by_name->{ $name } // die "Could not find native(${name})";
     }
 
     ## -------------------------------------------------------------------------
