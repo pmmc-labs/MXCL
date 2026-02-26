@@ -180,16 +180,20 @@ class MXCL::Machine {
                     return $Konts->ApplyOperative( $env, $call, $args );
                 }
                 else {
-                    my $autobox = $env->lookup(blessed $call);
+                    my $autobox = $env->lookup($call->type);
 
-                    die "Could not find role to autobox ".blessed $call
-                        unless $autobox isa MXCL::Term::Role::Slot::Defined;
+                    unless ($autobox isa MXCL::Term::Role::Slot::Defined) {
+
+                        say "WTF! ",join "\n" => $call->type, $autobox, $env->stringify;
+
+                        die "Could not find role to autobox ".$call->type;
+                    }
 
                     my $role = $autobox->value;
                     my $name = $args->head; # should be Sym
                     my $slot = $role->lookup( $name->value );
 
-                    die "Bad Slot! ".(join '/' => blessed $call, $name->value)
+                    die "Bad Slot! ".(join '/' => $call->type, $name->value)
                         unless $slot isa MXCL::Term::Role::Slot::Defined;
 
                     my $method = $slot->value;

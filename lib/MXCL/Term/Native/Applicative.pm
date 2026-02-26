@@ -12,7 +12,7 @@ class MXCL::Term::Native::Applicative :isa(MXCL::Term) {
     method stringify {
         sprintf 'native:applicative[%s](%s)' =>
             $name->stringify,
-            join ', ' => map $_->stringify, $params->uncons
+            ($params isa MXCL::Term::Nil ? '' : join ', ' => map $_->stringify, $params->uncons)
         ;
     }
 

@@ -176,8 +176,6 @@ class MXCL::Allocator::Terms {
             my $impl = $impls->{ $hash };
             if (refaddr $impl != refaddr $body) {
                 die "BAD! DUPLICATE APPLICATIVE HASH for ${name} but different CODE refaddrs (${hash})";
-            } else {
-                warn "HMMM, DUPLICATE APPLICATIVE HASH for ${name} with same CODE refaddrs (${hash})";
             }
         } else {
             $lifted->{ $hash } = $bound;
@@ -239,8 +237,6 @@ class MXCL::Allocator::Terms {
             my $impl = $impls->{ $hash };
             if (refaddr $impl != refaddr $body) {
                 die "BAD! DUPLICATE OPERATIVE HASH for ${name} but different CODE refaddrs (${hash})";
-            } else {
-                warn "HMMM, DUPLICATE OPERATIVE HASH for ${name} with same CODE refaddrs (${hash})";
             }
         } else {
             $lifted->{ $hash } = $bound;
