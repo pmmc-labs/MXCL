@@ -49,14 +49,14 @@ package Test::MXCL {
         my $context = MXCL::Context->new->initialize;
         my $runtime = $context->runtime;
 
-        $runtime->natives->functions->{'Test/ok'} = +{
+        $runtime->primitives->functions->{'Test/ok'} = +{
             kind      => 'applicative',
             signature => [{ name => 'got', coerce => 'boolify' }, { name => 'msg', coerce => 'stringify' }],
             returns   => 'Nil',
             impl      => sub ($got, $msg) { $Tester->ok( $got, $msg ) },
         };
 
-        $runtime->natives->functions->{'Test/is'} = +{
+        $runtime->primitives->functions->{'Test/is'} = +{
             kind      => 'applicative',
             signature => [{ name => 'got' }, { name => 'expected' }, { name => 'msg', coerce => 'stringify' }],
             returns   => 'Nil',
@@ -71,14 +71,14 @@ package Test::MXCL {
             }
         };
 
-        $runtime->natives->functions->{'Test/done-testing'} = +{
+        $runtime->primitives->functions->{'Test/done-testing'} = +{
             kind      => 'applicative',
             signature => [],
             returns   => 'Nil',
             impl      => sub () { $Tester->done_testing }
         };
 
-        my $f = $runtime->natives->functions;
+        my $f = $runtime->primitives->functions;
 
         my $test_header = q[
             ;; BEGIN TEST HEADER

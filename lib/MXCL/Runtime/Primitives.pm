@@ -3,7 +3,7 @@
 use v5.42;
 use experimental qw[ class ];
 
-class MXCL::Runtime::Natives {
+class MXCL::Runtime::Primitives {
     field $functions :reader = +{};
     field $types     :reader = +{};
 
