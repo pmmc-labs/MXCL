@@ -24,7 +24,7 @@ class MXCL::Machine {
         state $Roles = $context->roles;
         state $Nil   = $Terms->Nil;
 
-        say "STEP[", $context->tape->steps, "] ",$k->pprint;
+        #say "STEP[", $context->tape->steps, "] ",$k->pprint;
 
         given (blessed $k) {
             # ------------------------------------------------------------------
@@ -182,10 +182,12 @@ class MXCL::Machine {
                 else {
                     my $autobox = $env->lookup($call->type);
 
+                    # FIXME: this is gross!!!!
+                    unless (defined $autobox) {
+                        $autobox = $context->prelude_scope->lookup($call->type);
+                    }
+
                     unless ($autobox isa MXCL::Term::Role::Slot::Defined) {
-
-                        say "WTF! ",join "\n" => $call->type, $autobox, $env->stringify;
-
                         die "Could not find role to autobox ".$call->type;
                     }
 

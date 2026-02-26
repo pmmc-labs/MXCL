@@ -41,6 +41,8 @@ TIMING:
     (map { $_ * 1000 } @timings{qw[ compile execute ]}),
 ;
 
+say join "\n" => map $_->pprint, $context->tape->tapes->[0]->trace->@*
+
 # my $arena   = $context->arena;
 # my $debugger = MXCL::Debugger->new;
 # say $_ foreach (

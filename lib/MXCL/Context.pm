@@ -63,6 +63,12 @@ class MXCL::Context {
         );
     }
 
+    method prelude_scope {
+        # FIXME: this is gross, see also the
+        # autoboxing in Machine.pm
+        $tape->tapes->[0]->trace->[0]->env
+    }
+
     method base_scope {
         $runtime->base_scope
     }
