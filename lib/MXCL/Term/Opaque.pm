@@ -4,10 +4,16 @@ use experimental qw[ class ];
 
 use MXCL::Internals;
 
+use Carp ();
+
 class MXCL::Term::Opaque :isa(MXCL::Term) {
     field $uid  :param :reader;
     field $repr :param :reader;
     field $role :param :reader;
+
+    ADJUST {
+        $role isa MXCL::Term::Role || Carp::confess("WHOAT!");
+    }
 
     method stringify {
         sprintf 'opaque<%s>[%s](%s)' => $uid, $repr->stringify, $role->hash;

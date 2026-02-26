@@ -44,9 +44,6 @@ class MXCL::Context {
 
         $runtime->initialize( $self );
 
-        # REMOVE ME
-        $arena->commit('context initialized', roots => [ $runtime->base_scope ]);
-
         my $scope   = $runtime->base_scope;
         my $prelude = $runtime->prelude->artifact;
 
@@ -91,9 +88,6 @@ class MXCL::Context {
         );
 
         my $result = $machine->run( $self );
-
-        # REMOVE ME
-        $arena->commit('program executed', roots => [ $result->env, $result->stack ]);
 
         return $result;
     }

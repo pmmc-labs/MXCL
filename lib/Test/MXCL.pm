@@ -91,7 +91,13 @@ package Test::MXCL {
 
         my $test = $context->compile_source($test_header.$source);
 
-        return $context->evaluate( $context->base_scope, $test );
+        try {
+            return $context->evaluate( $context->base_scope, $test );
+        } catch ($e) {
+            say "GOT ERROR! ",$e;
+            say "TRACE:";
+            say join "\n" => map $_->pprint, $context->tape->tapes->[-1]->trace->@*;
+        }
     }
 
 }
