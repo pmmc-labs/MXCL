@@ -43,10 +43,23 @@ class MXCL::Context {
         $tape      = MXCL::Tape::Spliced->new;
 
         $runtime->initialize( $self );
-        $arena->commit('context initialized',
-            roots => [
-                $runtime->base_scope
-            ]
+
+        # REMOVE ME
+        $arena->commit('context initialized', roots => [ $runtime->base_scope ]);
+
+        my $scope   = $runtime->base_scope;
+        my $prelude = $runtime->prelude->artifact;
+
+        # Splice in the prelude ...
+        $tape->splice(
+            MXCL::Tape->new( exprs => $prelude )->enqueue(
+                # discard the last value, but pass on the Env
+                $kontinues->Discard($scope, $terms->Nil),
+                reverse map {
+                    $kontinues->Discard($scope, $terms->Nil),
+                    $kontinues->EvalExpr($scope, $_, $terms->Nil)
+                } @$prelude
+            )
         );
     }
 
@@ -60,21 +73,6 @@ class MXCL::Context {
     }
 
     method evaluate ($env, $exprs, %opts) {
-
-        my $prelude = $runtime->prelude->artifact;
-
-        # Splice in the prelude ...
-        $tape->splice(
-            MXCL::Tape->new( exprs => $prelude )->enqueue(
-                # discard the last value, but pass on the Env
-                $kontinues->Discard($env, $terms->Nil),
-                reverse map {
-                    $kontinues->Discard($env, $terms->Nil),
-                    $kontinues->EvalExpr($env, $_, $terms->Nil)
-                } @$prelude
-            )
-        );
-
         # Splice in the program ...
         $tape->splice(
             MXCL::Tape->new( exprs => $exprs )->enqueue(
@@ -87,12 +85,10 @@ class MXCL::Context {
         );
 
         my $result = $machine->run( $self );
-        $arena->commit('program executed',
-            roots => [
-                $result->env,
-                $result->stack
-            ]
-        );
+
+        # REMOVE ME
+        $arena->commit('program executed', roots => [ $result->env, $result->stack ]);
+
         return $result;
     }
 }

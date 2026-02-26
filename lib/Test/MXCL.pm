@@ -42,52 +42,56 @@ package Test::MXCL {
     # --------------------------------------------------------------------------
 
     sub test_mxcl ($source) {
-        state $Tester = Test::Builder->new;
+        my $Tester = Test::Builder->new;
 
         local $Test::Builder::Level = $Test::Builder::Level + 6;
 
-        state $context = ctx;
-        state $runtime = $context->runtime;
-        state $terms   = $context->terms;
-        state $roles   = $context->roles;
+        my $context = MXCL::Context->new;
+        my $runtime = $context->runtime;
 
-        my sub wrap_slot ($name, $args, $body) {
-            $roles->Defined(
-                $terms->Sym( $name ),
-                $terms->Applicative(
-                    name      => $name,
-                    signature => $args,
-                    returns   => 'Nil',
-                    impl      => $body,
-                )
-            )
-        }
+        $runtime->natives->functions->{'Test/ok'} = +{
+            kind      => 'applicative',
+            signature => [{ name => 'got', coerce => 'boolify' }, { name => 'msg', coerce => 'stringify' }],
+            returns   => 'Nil',
+            impl      => sub ($got, $msg) { $Tester->ok( $got, $msg ) },
+        };
 
-        state $testing_scope = $roles->Union(
-            $roles->Role(
-                wrap_slot('ok', [{ name => 'got', coerce => 'boolify' }, { name => 'msg', coerce => 'stringify' }],
-                    sub ($got, $msg) { $Tester->ok( $got, $msg ) }
-                ),
-                wrap_slot('is', [{ name => 'got' }, { name => 'expected' }, { name => 'msg', coerce => 'stringify' }],
-                    sub ($got, $expected, $msg) {
-                        if ($got->eq($expected)) {
-                            $Tester->ok(true, $msg);
-                        } else {
-                            $Tester->ok(false, $msg);
-                            $Tester->diag("       got: ".$got->pprint);
-                            $Tester->diag("  expected: ".$expected->pprint);
-                        }
-                    }
-                ),
-                wrap_slot('done-testing', [], sub () { $Tester->done_testing }),
-            ),
-            # FIXME: this should have the prelude and it does not
-            $context->base_scope
-        );
+        $runtime->natives->functions->{'Test/is'} = +{
+            kind      => 'applicative',
+            signature => [{ name => 'got' }, { name => 'expected' }, { name => 'msg', coerce => 'stringify' }],
+            returns   => 'Nil',
+            impl      => sub ($got, $expected, $msg) {
+                if ($got->eq($expected)) {
+                    $Tester->ok(true, $msg);
+                } else {
+                    $Tester->ok(false, $msg);
+                    $Tester->diag("       got: ".$got->pprint);
+                    $Tester->diag("  expected: ".$expected->pprint);
+                }
+            }
+        };
 
-        my $test = $context->compile_source($source);
+        $runtime->natives->functions->{'Test/done-testing'} = +{
+            kind      => 'applicative',
+            signature => [],
+            returns   => 'Nil',
+            impl      => sub () { $Tester->done_testing }
+        };
 
-        return $context->evaluate( $testing_scope, $test );
+        my $test_header = q[
+            ;; BEGIN TEST HEADER
+
+            (bind ok (got msg) "Test/ok")
+            (bind is (got expected msg) "Test/is")
+
+            (bind done-testing () "Test/done-testing")
+
+            ;; END TEST HEADER
+        ];
+
+        my $test = $context->compile_source($test_header.$source);
+
+        return $context->evaluate( $context->base_scope, $test );
     }
 
 }

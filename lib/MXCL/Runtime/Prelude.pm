@@ -106,7 +106,8 @@ class MXCL::Runtime::Prelude {
                 (bind at     (h k) "Hash::at"))
 
             (role Role (with <EQ>)
-                (define == (r1 r2) (eq? r1 r2)))
+                (define == (r1 r2) (eq? r1 r2))
+                (define +  (r1 r2) "Role::compose"))
 
         ];
     }
