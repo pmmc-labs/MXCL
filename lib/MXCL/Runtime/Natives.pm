@@ -11,6 +11,7 @@ class MXCL::Runtime::Natives {
     method lookup_method ($type, $name) { $types->{ $type }->{ $name } }
 
     method initialize ($context) {
+
         my $terms = $context->terms;
         my $roles = $context->roles;
         my $konts = $context->kontinues;
@@ -63,6 +64,9 @@ class MXCL::Runtime::Natives {
                     else {
                         $spec = $self->lookup( $ident );
                     }
+
+                    #use Data::Dumper qw[ Dumper ];
+                    #say Dumper [ $binding->value, $spec ];
 
                     my $native = $terms->BindNative( $binding->value, $spec );
                     # TODO:

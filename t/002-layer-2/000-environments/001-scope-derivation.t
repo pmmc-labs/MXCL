@@ -36,7 +36,7 @@ test_mxcl(q[
 # A let at the top level (not inside a do) propagates up to the returned env.
 
 {
-    my $ctx = MXCL::Context->new;
+    my $ctx = MXCL::Context->new->initialize;
 
     my $result = $ctx->evaluate(
         $ctx->base_scope,
@@ -53,7 +53,7 @@ test_mxcl(q[
 # inside do never propagate to the returned Host continuation.
 
 {
-    my $ctx = MXCL::Context->new;
+    my $ctx = MXCL::Context->new->initialize;
 
     my $result = $ctx->evaluate(
         $ctx->base_scope,

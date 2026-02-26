@@ -11,7 +11,7 @@ class MXCL::Runtime {
     field $base_scope :reader = undef;
 
     method initialize ($context) {
-        return $base_scope if defined $base_scope;
+        #return $base_scope if defined $base_scope;
 
         $natives->initialize($context);
         $prelude->initialize($context);

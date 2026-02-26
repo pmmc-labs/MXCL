@@ -19,7 +19,6 @@ use MXCL::Debugger;
 
 class MXCL::Context {
     field $arena     :reader;
-    field $tape      :reader;
 
     field $terms     :reader;
     field $roles     :reader;
@@ -29,6 +28,10 @@ class MXCL::Context {
     field $compiler  :reader;
     field $machine   :reader;
     field $runtime   :reader;
+
+    field $tape;
+    field @scopes;
+    field $initialized = false;
 
     ADJUST {
         $arena     = MXCL::Arena->new;
@@ -40,35 +43,45 @@ class MXCL::Context {
         $compiler  = MXCL::Compiler->new( parser => $parser, alloc => $terms );
         $runtime   = MXCL::Runtime->new;
         $machine   = MXCL::Machine->new;
-        $tape      = MXCL::Tape::Spliced->new;
+    }
+
+    method tape {
+        $tape // die "TAPE IS NOT READY YET!";
+    }
+
+    method initialize (%options) {
+        return if $initialized;
 
         $runtime->initialize( $self );
 
         my $scope   = $runtime->base_scope;
         my $prelude = $runtime->prelude->artifact;
 
+        push @scopes => $scope;
+
         # Splice in the prelude ...
-        $tape->splice(
-            MXCL::Tape->new( exprs => $prelude )->enqueue(
-                # discard the last value, but pass on the Env
+        $tape = MXCL::Tape->new( exprs => $prelude )->enqueue(
+            $kontinues->Host($scope, 'HALT', +{}, $terms->Nil),
+            reverse map {
                 $kontinues->Discard($scope, $terms->Nil),
-                reverse map {
-                    $kontinues->Discard($scope, $terms->Nil),
-                    $kontinues->EvalExpr($scope, $_, $terms->Nil)
-                } @$prelude
-            )
+                $kontinues->EvalExpr($scope, $_, $terms->Nil)
+            } @$prelude
         );
+
+        my $result = $machine->run( $self );
+
+        push @scopes => $result->env;
+
+        $tape = MXCL::Tape::Spliced->new;
+
+        $initialized = true;
+
+        return $self;
     }
 
-    method prelude_scope {
-        # FIXME: this is gross, see also the
-        # autoboxing in Machine.pm
-        $tape->tapes->[0]->trace->[0]->env
-    }
+    method prelude_scope { $scopes[1] }
 
-    method base_scope {
-        $runtime->base_scope
-    }
+    method base_scope { $scopes[-1] }
 
     method compile_source ($source) {
         my $exprs = $compiler->compile( $source );

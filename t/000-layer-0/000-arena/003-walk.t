@@ -11,6 +11,8 @@ my $ctx   = MXCL::Context->new;
 my $arena = $ctx->arena;
 my $terms = $ctx->terms;
 
+$ctx->arena->commit('context initialized');
+
 # -----------------------------------------------------------------------
 # children
 # -----------------------------------------------------------------------

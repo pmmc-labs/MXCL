@@ -9,9 +9,11 @@ use MXCL::Context;
 
 # --- use a fresh context for isolation ---
 
-my $ctx   = MXCL::Context->new;
+my $ctx   = MXCL::Context->new->initialize;
 my $arena = $ctx->arena;
 my $terms = $ctx->terms;
+
+$ctx->arena->commit('context initialized');
 
 # --- fresh context has one commit ("context initialized") ---
 

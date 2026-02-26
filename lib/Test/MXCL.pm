@@ -31,7 +31,7 @@ package Test::MXCL {
 
     # --------------------------------------------------------------------------
 
-    sub ctx      { state $CTX //= MXCL::Context->new }
+    sub ctx      { state $CTX //= MXCL::Context->new->initialize }
     sub arena    { ctx->arena }
     sub terms    { ctx->terms }
     sub roles    { ctx->roles }
@@ -46,7 +46,7 @@ package Test::MXCL {
 
         local $Test::Builder::Level = $Test::Builder::Level + 6;
 
-        my $context = MXCL::Context->new;
+        my $context = MXCL::Context->new->initialize;
         my $runtime = $context->runtime;
 
         $runtime->natives->functions->{'Test/ok'} = +{
@@ -78,6 +78,8 @@ package Test::MXCL {
             impl      => sub () { $Tester->done_testing }
         };
 
+        my $f = $runtime->natives->functions;
+
         my $test_header = q[
             ;; BEGIN TEST HEADER
 
@@ -94,9 +96,10 @@ package Test::MXCL {
         try {
             return $context->evaluate( $context->base_scope, $test );
         } catch ($e) {
-            say "GOT ERROR! ",$e;
-            say "TRACE:";
+            #say "TRACE:";
+            say "TAPES? ", join "\n" => map $_->pprint, $context->tape->tapes->[-1]->exprs->@*;
             say join "\n" => map $_->pprint, $context->tape->tapes->[-1]->trace->@*;
+            die "GOT ERROR! ",$e;
         }
     }
 
