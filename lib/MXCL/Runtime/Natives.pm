@@ -191,7 +191,7 @@ class MXCL::Runtime::Natives {
                     );
                 }
             },
-            'with' => +{
+            'with' => +{ # TODO - this should be an applicative
                 kind      => 'operative',
                 signature => [{ name => '@' }],
                 impl => sub ($env, $lhs, $rhs) {

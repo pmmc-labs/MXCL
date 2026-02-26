@@ -24,6 +24,8 @@ class MXCL::Machine {
         state $Roles = $context->roles;
         state $Nil   = $Terms->Nil;
 
+        #say "STEP[", $context->tape->steps, "] ",$k->pprint;
+
         given (blessed $k) {
             # ------------------------------------------------------------------
             # Threading of Env & Stack

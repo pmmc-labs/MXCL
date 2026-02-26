@@ -56,33 +56,26 @@ class MXCL::Context {
 
     method compile_source ($source) {
         my $exprs = $compiler->compile( $source );
-        $arena->commit('program compiled',
-            roots => $exprs
-        );
         return $exprs;
     }
 
     method evaluate ($env, $exprs, %opts) {
 
-        if (exists $opts{load_prelude}) {
-            # Compile the prelude ...
-            my $prelude = $self->compile_source(
-                $runtime->prelude->source
-            );
+        my $prelude = $runtime->prelude->artifact;
 
-            # Load in the prelude ...
-            $tape->splice(
-                MXCL::Tape->new( exprs => $prelude )->enqueue(
-                    # discard the last value, but pass on the Env
+        # Splice in the prelude ...
+        $tape->splice(
+            MXCL::Tape->new( exprs => $prelude )->enqueue(
+                # discard the last value, but pass on the Env
+                $kontinues->Discard($env, $terms->Nil),
+                reverse map {
                     $kontinues->Discard($env, $terms->Nil),
-                    reverse map {
-                        $kontinues->Discard($env, $terms->Nil),
-                        $kontinues->EvalExpr($env, $_, $terms->Nil)
-                    } @$prelude
-                )
-            );
-        }
+                    $kontinues->EvalExpr($env, $_, $terms->Nil)
+                } @$prelude
+            )
+        );
 
+        # Splice in the program ...
         $tape->splice(
             MXCL::Tape->new( exprs => $exprs )->enqueue(
                 $kontinues->Host($env, 'HALT', +{}, $terms->Nil),
@@ -94,7 +87,6 @@ class MXCL::Context {
         );
 
         my $result = $machine->run( $self );
-
         $arena->commit('program executed',
             roots => [
                 $result->env,

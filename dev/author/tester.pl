@@ -26,7 +26,7 @@ say "PROGRAM:";
 say $_->pprint foreach @$exprs;
 
 my $start_run = [Time::HiRes::gettimeofday];
-my $result = $context->evaluate( $context->base_scope, $exprs, load_prelude => true );
+my $result = $context->evaluate( $context->base_scope, $exprs );
 $timings{execute} += Time::HiRes::tv_interval( $start_run );
 
 say sprintf q[

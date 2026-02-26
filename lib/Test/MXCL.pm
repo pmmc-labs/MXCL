@@ -81,6 +81,7 @@ package Test::MXCL {
                 ),
                 wrap_slot('done-testing', [], sub () { $Tester->done_testing }),
             ),
+            # FIXME: this should have the prelude and it does not
             $context->base_scope
         );
 
