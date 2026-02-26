@@ -4,49 +4,54 @@ use v5.42;
 use experimental qw[ class ];
 
 class MXCL::Runtime::Primitives {
-    field $functions :reader = +{};
-    field $types     :reader = +{};
+    field $functions :reader = undef;
+    field $types     :reader = undef;
 
     method lookup        ($name)        { $functions->{ $name } }
     method lookup_method ($type, $name) { $types->{ $type }->{ $name } }
 
     method initialize ($context) {
+        $self->initialize_functions($context);
+        $self->initialize_types($context);
+        return $self;
+    }
 
+    my sub type_predicate ($klass) {
+        return +{
+            kind      => 'applicative',
+            signature => [{ name => 'term' }],
+            returns   => 'Bool',
+            impl      => sub ($term) { $term->isa($klass) },
+        }
+    }
+
+    my sub binary_op ($coercion, $returns, $impl) {
+        $coercion = undef if $coercion eq '*';
+        return +{
+            kind      => 'applicative',
+            signature => [ { name => 'lhs', coerce => $coercion },
+                           { name => 'rhs', coerce => $coercion } ],
+            returns   => $returns,
+            impl      => $impl,
+        }
+    }
+
+    my sub unary_op ($coercion, $returns, $impl) {
+        $coercion = undef if $coercion eq '*';
+        return +{
+            kind      => 'applicative',
+            signature => [ { name => 'lhs', coerce => $coercion } ],
+            returns   => $returns,
+            impl      => $impl,
+        }
+    }
+
+    method initialize_functions ($context) {
         my $terms = $context->terms;
         my $roles = $context->roles;
         my $konts = $context->kontinues;
 
-        my sub type_predicate ($klass) {
-            return +{
-                kind      => 'applicative',
-                signature => [{ name => 'term' }],
-                returns   => 'Bool',
-                impl      => sub ($term) { $term->isa($klass) },
-            }
-        }
-
-        my sub binary_op ($coercion, $returns, $impl) {
-            $coercion = undef if $coercion eq '*';
-            return +{
-                kind      => 'applicative',
-                signature => [ { name => 'lhs', coerce => $coercion },
-                               { name => 'rhs', coerce => $coercion } ],
-                returns   => $returns,
-                impl      => $impl,
-            }
-        }
-
-        my sub unary_op ($coercion, $returns, $impl) {
-            $coercion = undef if $coercion eq '*';
-            return +{
-                kind      => 'applicative',
-                signature => [ { name => 'lhs', coerce => $coercion } ],
-                returns   => $returns,
-                impl      => $impl,
-            }
-        }
-
-        $functions = +{
+        $functions //= +{
             'bind'    => +{
                 kind      => 'operative',
                 signature => [
@@ -283,8 +288,13 @@ class MXCL::Runtime::Primitives {
                 }
             },
         };
+    }
 
-        $types = +{
+    method initialize_types ($context) {
+        my $terms = $context->terms;
+        my $roles = $context->roles;
+
+        $types //= +{
             'Bool' => +{
                 '==' => binary_op('boolify', 'Bool', sub ($n, $m) { $n == $m }),
             },
@@ -346,8 +356,6 @@ class MXCL::Runtime::Primitives {
                 },
             }
         };
-
-        $self;
     }
 
 }

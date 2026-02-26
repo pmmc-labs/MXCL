@@ -42,43 +42,45 @@ package Test::MXCL {
     # --------------------------------------------------------------------------
 
     sub test_mxcl ($source) {
-        my $Tester = Test::Builder->new;
+        state $Tester = Test::Builder->new;
 
         local $Test::Builder::Level = $Test::Builder::Level + 6;
 
-        my $context = MXCL::Context->new->initialize;
-        my $runtime = $context->runtime;
+        state $context = MXCL::Context->new->initialize;
+        state $runtime = do {
+            my $r = $context->runtime;
 
-        $runtime->primitives->functions->{'Test/ok'} = +{
-            kind      => 'applicative',
-            signature => [{ name => 'got', coerce => 'boolify' }, { name => 'msg', coerce => 'stringify' }],
-            returns   => 'Nil',
-            impl      => sub ($got, $msg) { $Tester->ok( $got, $msg ) },
-        };
+            $r->primitives->functions->{'Test/ok'} = +{
+                kind      => 'applicative',
+                signature => [{ name => 'got', coerce => 'boolify' }, { name => 'msg', coerce => 'stringify' }],
+                returns   => 'Nil',
+                impl      => sub ($got, $msg) { $Tester->ok( $got, $msg ) },
+            };
 
-        $runtime->primitives->functions->{'Test/is'} = +{
-            kind      => 'applicative',
-            signature => [{ name => 'got' }, { name => 'expected' }, { name => 'msg', coerce => 'stringify' }],
-            returns   => 'Nil',
-            impl      => sub ($got, $expected, $msg) {
-                if ($got->eq($expected)) {
-                    $Tester->ok(true, $msg);
-                } else {
-                    $Tester->ok(false, $msg);
-                    $Tester->diag("       got: ".$got->pprint);
-                    $Tester->diag("  expected: ".$expected->pprint);
+            $r->primitives->functions->{'Test/is'} = +{
+                kind      => 'applicative',
+                signature => [{ name => 'got' }, { name => 'expected' }, { name => 'msg', coerce => 'stringify' }],
+                returns   => 'Nil',
+                impl      => sub ($got, $expected, $msg) {
+                    if ($got->eq($expected)) {
+                        $Tester->ok(true, $msg);
+                    } else {
+                        $Tester->ok(false, $msg);
+                        $Tester->diag("       got: ".$got->pprint);
+                        $Tester->diag("  expected: ".$expected->pprint);
+                    }
                 }
-            }
-        };
+            };
 
-        $runtime->primitives->functions->{'Test/done-testing'} = +{
-            kind      => 'applicative',
-            signature => [],
-            returns   => 'Nil',
-            impl      => sub () { $Tester->done_testing }
-        };
+            $r->primitives->functions->{'Test/done-testing'} = +{
+                kind      => 'applicative',
+                signature => [],
+                returns   => 'Nil',
+                impl      => sub () { $Tester->done_testing }
+            };
 
-        my $f = $runtime->primitives->functions;
+            $r;
+        };
 
         my $test_header = q[
             ;; BEGIN TEST HEADER

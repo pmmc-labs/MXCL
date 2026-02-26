@@ -11,22 +11,21 @@ class MXCL::Runtime {
     field $base_scope :reader = undef;
 
     method initialize ($context) {
-        #return $base_scope if defined $base_scope;
+        $base_scope //= do {
+            $primitives->initialize($context);
+            $prelude->initialize($context);
 
-        $primitives->initialize($context);
-        $prelude->initialize($context);
+            $context->roles->Role(
+                $context->roles->Defined(
+                    $context->terms->Sym('bind'),
+                    $context->terms->BindNative('bind',
+                        $primitives->lookup('bind')
+                    )
+                )
+            );
+        };
 
-        my $terms = $context->terms;
-        my $roles = $context->roles;
-
-        $base_scope = $roles->Role(
-            $roles->Defined(
-                $terms->Sym('bind'),
-                $terms->BindNative('bind', $primitives->lookup('bind'))
-            )
-        );
-
-        return $base_scope;
+        return $self;
     }
 
 }

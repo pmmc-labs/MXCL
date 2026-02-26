@@ -9,6 +9,7 @@ class MXCL::Runtime::Prelude {
 
     method initialize ($context) {
         $artifact //= $context->compile_source( $SOURCE );
+        return $self;
     }
 
     method source { $SOURCE }
