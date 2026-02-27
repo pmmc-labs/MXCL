@@ -3,8 +3,11 @@ use v5.42;
 use experimental qw[ class switch ];
 
 class MXCL::Parser {
+    field %stash;
 
     method parse ($source) {
+        $stash{source} = $source;
+
         my $tokens = $self->tokenize($source);
 
         my @exprs;
@@ -71,6 +74,8 @@ class MXCL::Parser {
     }
 
     method parse_compound ( $compound, $tokens ) {
+        die "Missing closing bracket in ".$stash{source} unless @$tokens;
+
         if ($self->is_closing_bracket($tokens->[0])) {
             my $close = shift @$tokens;
             $compound->close = $self->do_brackets_match($compound, $close);

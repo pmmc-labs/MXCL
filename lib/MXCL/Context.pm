@@ -128,10 +128,12 @@ class MXCL::Context {
         my $IO = MXCL::Runtime::Core::IO->new->initialize($self);
         my $IO_module = $IO->artifact;
 
+        ## Load the IO module ...
+
         # Splice in the IO module ...
         $tape->splice(
             MXCL::Tape->new( exprs => $IO_module )->enqueue(
-                $kontinues->Discard($scopes[-1], $terms->Nil),
+                $kontinues->Host($scopes[-1], 'HALT', +{}, $terms->Nil),
                 reverse map {
                     $kontinues->Discard($scopes[-1], $terms->Nil),
                     $kontinues->EvalExpr($scopes[-1], $_, $terms->Nil)
@@ -139,13 +141,18 @@ class MXCL::Context {
             )
         );
 
+        push @scopes => $machine->run( $self )->env;
+        $modules{'IO'} = $IO;
+
+        ## Load the Test module ...
+
         my $Test = MXCL::Runtime::Core::Test->new->initialize($self);
         my $Test_module = $Test->artifact;
 
         # Splice in the Test module ...
         $tape->splice(
             MXCL::Tape->new( exprs => $Test_module )->enqueue(
-                $kontinues->Discard($scopes[-1], $terms->Nil),
+                $kontinues->Host($scopes[-1], 'HALT', +{}, $terms->Nil),
                 reverse map {
                     $kontinues->Discard($scopes[-1], $terms->Nil),
                     $kontinues->EvalExpr($scopes[-1], $_, $terms->Nil)
@@ -153,8 +160,7 @@ class MXCL::Context {
             )
         );
 
-
-        $modules{'IO'}   = $IO;
+        push @scopes => $machine->run( $self )->env;
         $modules{'Test'} = $Test;
 
         ## ------------------------------------------------

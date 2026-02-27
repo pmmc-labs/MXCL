@@ -214,7 +214,9 @@ class MXCL::Machine {
                 elsif ($call isa MXCL::Term::Lambda) {
                     my @params = $Terms->Uncons($call->params);
                     my @args   = $Terms->Uncons($args);
-                    die "Arity mismatch" if scalar @params != scalar @args;
+
+                    die "Arity mismatch in ",$call->name->stringify
+                        if scalar @params != scalar @args;
 
                     my $local = $Roles->Union(
                         $call->env,
