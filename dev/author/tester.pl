@@ -10,14 +10,13 @@ use Time::HiRes ();
 use MXCL::Context;
 use MXCL::Debugger;
 
-my $context = MXCL::Context->new;
+my $context = MXCL::Context->new->initialize;
 
 my %timings;
 
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
-    <ORD>
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );
@@ -40,26 +39,6 @@ TIMING:
 =>  ($result ? $result->stack->pprint : 'UNDEFINED'),
     (map { $_ * 1000 } @timings{qw[ compile execute ]}),
 ;
-
-say join "\n" => map $_->pprint, $context->tape->tapes->[0]->trace->@*
-
-# my $arena   = $context->arena;
-# my $debugger = MXCL::Debugger->new;
-# say $_ foreach (
-#     #debugger->shelve(
-#         #$debugger->term_tree($result->stack, pprint_width => 60),
-#         #$debugger->arena_commit_table($arena),
-#         #$debugger->stack(
-#             $debugger->stack(
-#                 $debugger->arena_term_stat_table($arena),
-#                 $debugger->arena_timing_stat_table($arena),
-#             #),
-#             #$debugger->arena_type_table($arena, sort_by_active => true)
-#         #)
-#     )->@*,
-#     #$debugger->arena_commit_table($arena)->@*,
-#     #$debugger->arena_hash_table($arena, show_types => true)->@*,
-# );
 
 
 __END__

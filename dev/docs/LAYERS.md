@@ -64,6 +64,9 @@ This layer also provides the Environment and Scope abstractions using roles
 as the name lookup mechanism, and the environment operations are implemented
 as role operations.
 
+- Minimal Bootstrap & Prelude
+    * [x] prelude environment (only `bind`) 
+    * [x] prelude bootstraping of core language
 - Environments & Scopes
     - [x] deriving scopes
     - [x] name resolution
@@ -107,8 +110,9 @@ provides access to the runtime.
 - Kontinue Terms
     - [ ] first-class, exposed in the language
     - [x] content addressed 
-- Step until Host
+- Step until Host & Errors
     - [x] runs until a `Host` continuation is reaches, then returns
+    - [ ] Errors captured and passed to host to handle
 - Builtin mechanisms
     - [x] `if`, `while` to control execution
     - [x] `define`, `let` to handle naming things

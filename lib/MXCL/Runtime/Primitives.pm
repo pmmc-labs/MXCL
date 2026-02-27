@@ -287,6 +287,14 @@ class MXCL::Runtime::Primitives {
                     return $terms->Hash(%elements);
                 }
             },
+            'say'   => +{
+                kind      => 'applicative',
+                signature => [ { name => '@' } ],
+                impl      => sub (@elements) {
+                    say map $_->stringify, @elements;
+                    return $terms->Nil;
+                }
+            },
         };
     }
 

@@ -1,0 +1,42 @@
+
+(let $count (make-ref 0))
+(let $fails (make-ref 0))
+
+(define diag (msg)
+    (say "# " msg))
+
+(define todo (msg)
+    (diag ("TODO:" ~ msg)))
+
+(define pass (msg)
+    (do
+        ($count set! (($count get) + 1))
+        (say ("ok " ~ ($count get)) (" - " ~ msg))))
+
+(define fail (msg)
+    (do
+        ($count set! (($count get) + 1))
+        ($fails set! (($fails get) + 1))
+        (say ("not ok " ~ ($count get)) (" - " ~ msg))))
+
+(define ok (test msg)
+    (if test (pass msg) (fail msg)))
+
+(define is (got expected msg)
+    (do
+        (let result (eq? got expected))
+        (ok result msg)
+        (or result
+            (do
+                (diag ("Failed test " ~ msg))
+                (diag ("       got: " ~ got))
+                (diag ("  expected: " ~ expected))))))
+
+(define done-testing ()
+    (if (($fails get) != 0)
+        (do (say ("1.." ~ ($count get)))
+            (diag (("looks like you failed " ~ ($fails get)) ~
+                            (" test(s) of " ~ ($count get)))))
+        (say ("1.." ~ ($count get)))))
+
+

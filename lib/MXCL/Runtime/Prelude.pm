@@ -54,6 +54,8 @@ class MXCL::Runtime::Prelude {
             (bind make-array  (@)     "make-array")
             (bind make-hash   (@)     "make-hash")
 
+            (bind say (@) "say")
+
             ;; ----------------------------------------------------------
             ;; Abstact Roles
             ;; ----------------------------------------------------------
