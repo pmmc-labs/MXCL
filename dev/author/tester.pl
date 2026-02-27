@@ -17,6 +17,12 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
+    (define fact (n)
+        (if (n == 0)
+            1
+            (n * (fact (n - 1)))))
+
+    (fact 1000)
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );

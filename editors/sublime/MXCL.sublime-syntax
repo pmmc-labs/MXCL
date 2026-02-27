@@ -141,29 +141,19 @@ contexts:
     - match: '<[A-Z][A-Z0-9]*>'
       scope: entity.name.type.mxcl
 
-  # $name — conventional prefix for mutable reference variables
-  variable:
-    - match: '\$[^\s\(\)\{\}\[\]]+'
-      scope: variable.other.mxcl
-
-  # ->name  ->name!  — method accessor / setter names
-  method-accessor:
-    - match: '->[^\s\(\)\{\}\[\]]+'
-      scope: variable.function.method.mxcl
-
   # ---------------------------------------------------------------------------
   # Keywords
   # ---------------------------------------------------------------------------
 
   # Operatives: receive unevaluated AST (i.e. special forms / control flow)
   keyword-control:
-    - match: '(?:if|do|while|and|or|not){{token_end}}'
+    - match: '(?:role|define|lambda|require|with){{token_end}}'
       scope: keyword.control.mxcl
 
   # Binding / declaration operatives
   keyword-binding:
-    - match: '(?:let|define|lambda|require|with|role|bind|quote){{token_end}}'
-      scope: keyword.other.mxcl
+    - match: '(?:bind){{token_end}}'
+      scope: variable.function.method.mxcl
 
   # ---------------------------------------------------------------------------
   # Built-in applicative functions
@@ -172,6 +162,7 @@ contexts:
     - match: |-
         (?x)
         (?:
+          if | do | while | and | or | not | let | quote |
           nil\?   | bool\?  | num\?   | str\?    | sym\?  |
           lambda\?| array\? | ref\?   | opaque\? | role\? |
           eq\?    |
