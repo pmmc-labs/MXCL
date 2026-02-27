@@ -82,7 +82,7 @@
     (bind ~  (n m) "Str::~"))
 
 (role Role (with <EQ>)
-    (bind + (r1 r2) "Role::compose")
+    (bind ++ (r1 r2) "Role::compose")
     (define == (r1 r2) (eq? r1 r2)))
 
 (role Ref (with <EQ>)

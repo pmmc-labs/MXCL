@@ -1,0 +1,73 @@
+
+(role <Point> (with <ORD>)
+    (require .x)
+    (require .y)
+
+    (define + (p o)
+        (p .clone
+            ((p .x) + (o .x))
+            ((p .y) + (o .y))
+        ))
+
+    (define == (p o)
+        (and
+            ((p .x) == (o .x))
+            ((p .y) == (o .y))))
+
+    (define > (p o)
+        (and
+            ((p .x) > (o .x))
+            ((p .y) > (o .))))
+
+)
+
+(define Point (x y)
+    (make-opaque (
+        <Point> ++ (make-role
+            (define .x (p) x)
+            (define .y (p) y)
+
+            (define .clone (p x y) (Point x y))
+        ))
+    )
+)
+
+(define MutablePoint (x y)
+    (make-opaque (
+        <Point> ++ (make-role
+            (let $x (make-ref x))
+            (let $y (make-ref y))
+
+            (define .x (p) ($x get))
+            (define .y (p) ($y get))
+
+            (define .x! (p x) ($x set! x))
+            (define .y! (p y) ($y set! y))
+
+            (define .clone (p x y) (Point x y))
+        ))
+    )
+)
+
+(let p1 (Point 10 20))
+(let p2 (Point 100 200))
+
+(let mp1 (MutablePoint 10 20))
+
+(ok (mp1 == p1) "... points and mutable points can be equal")
+
+(let p3 (p1 + p2))
+
+(ok (mp1 != p3) "... these are not equal")
+
+(mp1 .x! (p3 .x))
+(mp1 .y! (p3 .y))
+
+(ok (mp1 == p3) "... these are equal now")
+
+(is (p3 .x) 110 "... got the expected value")
+(is (p3 .y) 220 "... got the expected value")
+
+(ok ((p1 + p2) < (p2 + p2)) "... complex comparison")
+
+(done-testing)
