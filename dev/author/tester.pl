@@ -17,57 +17,11 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
-    (let $output (make-channel))
-    (let $count  (make-ref 0))
-    (let $fails  (make-ref 0))
-
-    (define diag (msg)
-        ($output write ("# " ~ msg)))
-
-    (define out (msg)
-        ($output write msg))
-
-    (define todo (msg)
-        (diag ("TODO:" ~ msg)))
-
-    (define pass (msg)
-        (do
-            ($count set! (($count get) + 1))
-            (out (("ok " ~ ($count get)) ~ (" - " ~ msg)))))
-
-    (define fail (msg)
-        (do
-            ($count set! (($count get) + 1))
-            ($fails set! (($fails get) + 1))
-            (out (("not ok " ~ ($count get)) ~ (" - " ~ msg)))))
-
-    (define ok (test msg)
-        (if test (pass msg) (fail msg)))
-
-    (define is (got expected msg)
-        (do
-            (let result (eq? got expected))
-            (ok result msg)
-            (or result
-                (do
-                    (diag ("Failed test " ~ msg))
-                    (diag ("       got: " ~ got))
-                    (diag ("  expected: " ~ expected))))))
-
-    (define done-testing ()
-        (if (($fails get) != 0)
-            (do (out ("1.." ~ ($count get)))
-                (diag (("looks like you failed " ~ ($fails get)) ~
-                                (" test(s) of " ~ ($count get)))))
-            (out ("1.." ~ ($count get)))))
-
-
     (ok true "... this is true")
     (is 10 10 "... these are equal")
     (is 10 20 "... these are equal")
-    (done-testing)
 
-    $output
+    (done-testing)
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );
@@ -91,7 +45,6 @@ TIMING:
     (map { $_ * 1000 } @timings{qw[ compile execute ]}),
 ;
 
-say join "\n" => map $_->pprint, reverse $result->stack->head->buffer->@*;
 
 
 __END__

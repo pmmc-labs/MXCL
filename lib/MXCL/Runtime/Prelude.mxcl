@@ -109,13 +109,13 @@
 ;; Meta Information
 ;; ----------------------------------------------------------
 
-(let $NAME      "MXCL")
-(let $ABSTRACT  "MXCL - Matt's eXtensible {Config,Control,Command} Language")
-(let $VERSION   :v0.0.1)
-(let $AUTHORITY :cpan:STEVAN)
+(let ^NAME      "MXCL")
+(let ^ABSTRACT  "MXCL - Matt's eXtensible {Config,Control,Command} Language")
+(let ^VERSION   :v0.0.1)
+(let ^AUTHORITY :cpan:STEVAN)
 
-(let $COPYRIGHT "Copyright (C) 2026, Stevan Little")
-(let $LICENSE   "Apache License, Version 2.0")
+(let ^COPYRIGHT "Copyright (C) 2026, Stevan Little")
+(let ^LICENSE   "Apache License, Version 2.0")
 
 ;; ----------------------------------------------------------
 ;; End Prelude

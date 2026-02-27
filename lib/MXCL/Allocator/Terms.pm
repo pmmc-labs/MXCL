@@ -105,7 +105,9 @@ class MXCL::Allocator::Terms {
     method Channel () {
         state $nonce = 0;
         my $uid = sprintf 'channel:%d' => ++$nonce; # unique channel identity
-        return $arena->allocate(MXCL::Term::Channel::, uid => $uid );
+        my $channel = $arena->allocate(MXCL::Term::Channel::, uid => $uid );
+        $channels->{ $uid } = $channel;
+        return $channel;
     }
 
     ## -------------------------------------------------------------------------
