@@ -24,7 +24,7 @@ class MXCL::Parser {
         my $line_no = 0;
         my $line_at = 0;
         my $char_at = 0;
-        while ($source =~ m/(\+\{|\}|\+\[|\]|\(|\)|"(?:[^"\\])*"|;[^\n]*|\s|[^\s\(\)\{\}\[\]]+)/g) {
+        while ($source =~ m/(\'|\+\{|\}|\+\[|\]|\(|\)|"(?:[^"\\])*"|;[^\n]*|\s|[^\s\(\)\'\{\}\[\]]+)/g) {
             my $match = $1;
             if ($match eq "\n") {
                 $line_no++;
@@ -100,7 +100,7 @@ class MXCL::Parser {
     method do_brackets_match ($compound, $close) {
         given ($close->source) {
             when (')') {
-                $compound->open->source eq '('
+                $compound->open->source eq '(' || $compound->open->source eq '`'
                     || die ("Unbalanced Brackets: Expected ) and got "
                             .$compound->open->source)
             }

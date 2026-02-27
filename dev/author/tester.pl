@@ -17,11 +17,7 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
-    (ok true "... this is true")
-    (is 10 10 "... these are equal")
-    (is 10 20 "... these are equal")
-
-    (done-testing)
+    ( '(10 + 20) <-eval )
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );
@@ -41,7 +37,7 @@ TIMING:
  compile (ms) : %.03f
  execute (ms) : %.03f
 -------------------------------------------------]
-=>  ($result ? $result->stack->pprint : 'UNDEFINED'),
+=>  ($result ? $result->stack->head->pprint : 'UNDEFINED'),
     (map { $_ * 1000 } @timings{qw[ compile execute ]}),
 ;
 

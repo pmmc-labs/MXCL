@@ -55,6 +55,7 @@ class MXCL::Compiler {
         # ...
         my @list = map $self->expand_expression( $_ ), @items;
 
+        unshift @list => $alloc->Sym('quote')       if $open eq "'";
         unshift @list => $alloc->Sym('make-hash')   if $open eq "+{";
         unshift @list => $alloc->Sym('make-array')  if $open eq "+[";
 

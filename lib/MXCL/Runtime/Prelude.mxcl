@@ -34,6 +34,10 @@
 (bind role    (@) "role")
 (bind lambda  (params body) "lambda")
 
+(bind cons    (head tail)  "cons")
+(bind quote   (value)      "quote")
+(bind eval    (expr)      "eval")
+
 (bind make-opaque  (role)  "make-opaque")
 (bind make-ref     (value) "make-ref")
 (bind make-role    (@)     "make-role")
@@ -104,6 +108,9 @@
     (define ==  (ch1 ch2) (eq? ch1 ch2))
     (bind read  (ch)      "Channel::read")
     (bind write (ch data) "Channel::write"))
+
+(role Cons ()
+    (define <-eval (expr) (eval expr)))
 
 ;; ----------------------------------------------------------
 ;; Meta Information

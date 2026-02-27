@@ -127,6 +127,10 @@ class MXCL::Machine {
             # ------------------------------------------------------------------
             # Eval
             # ------------------------------------------------------------------
+            when ('MXCL::Term::Kontinue::Eval::TOS') {
+                my $expr = $k->stack->head;
+                return $self->evaluate_term( $context, $k->env, $expr );
+            }
             when ('MXCL::Term::Kontinue::Eval::Expr') {
                 return $self->evaluate_term( $context, $k->env, $k->expr );
             }
@@ -195,7 +199,7 @@ class MXCL::Machine {
                     my $name = $args->head; # should be Sym
                     my $slot = $role->lookup( $name->value );
 
-                    die "Bad Slot! ".(join '/' => $call->type, $name->value)
+                    die "Bad Slot! ".($slot ? $slot->pprint : 'Absent')." for ".(join '/' => $call->type, $name->value)
                         unless $slot isa MXCL::Term::Role::Slot::Defined;
 
                     my $method = $slot->value;

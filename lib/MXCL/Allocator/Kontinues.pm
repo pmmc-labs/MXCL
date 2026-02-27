@@ -16,6 +16,7 @@ use MXCL::Term::Kontinue::DoWhile;
 use MXCL::Term::Kontinue::Eval::Expr;
 use MXCL::Term::Kontinue::Eval::Head;
 use MXCL::Term::Kontinue::Eval::Rest;
+use MXCL::Term::Kontinue::Eval::TOS;
 
 use MXCL::Term::Kontinue::Apply::Expr;
 use MXCL::Term::Kontinue::Apply::Stack;
@@ -142,6 +143,13 @@ class MXCL::Allocator::Kontinues {
         $arena->allocate(MXCL::Term::Kontinue::Eval::Rest::,
             env   => $env,
             rest  => $rest,
+            stack => $stack,
+        )
+    }
+
+    method EvalTOS ($env, $stack) {
+        $arena->allocate(MXCL::Term::Kontinue::Eval::TOS::,
+            env   => $env,
             stack => $stack,
         )
     }

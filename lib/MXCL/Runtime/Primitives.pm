@@ -235,6 +235,30 @@ class MXCL::Runtime::Primitives {
                 }
             },
             # CONSTRUCT
+            'cons' => +{
+                kind      => 'applicative',
+                signature => [ { name => 'head' }, { name => 'tail' } ],
+                impl      => sub ($head, $tail) {
+                    $terms->Cons( $head, $tail )
+                }
+            },
+            'eval' => +{
+                kind      => 'operative',
+                signature => [ { name => 'expr' } ],
+                impl      => sub ($env, $expr) {
+                    return (
+                        $konts->EvalTOS( $env, $terms->Nil ),
+                        $konts->EvalExpr( $env, $expr, $terms->Nil )
+                    )
+                }
+            },
+            'quote' => +{
+                kind      => 'operative',
+                signature => [ { name => 'value' } ],
+                impl      => sub ($env, $value) {
+                    $konts->Return( $env, $terms->List( $value ) )
+                }
+            },
             'lambda'      => +{
                 kind      => 'operative',
                 signature => [

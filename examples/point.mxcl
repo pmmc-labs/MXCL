@@ -2,6 +2,7 @@
 (role <Point> (with <ORD>)
     (require .x)
     (require .y)
+    (require .clone)
 
     (define + (p o)
         (p .clone
