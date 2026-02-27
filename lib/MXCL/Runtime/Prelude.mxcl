@@ -1,3 +1,6 @@
+;; ----------------------------------------------------------
+;; Begin Prelude
+;; ----------------------------------------------------------
 
 ;; ----------------------------------------------------------
 ;; Native function bindings
@@ -23,21 +26,20 @@
 (bind do    (@)                     "do")
 (bind if    (cond if-true if-false) "if")
 (bind while (cond body)             "while")
+(bind let   (name value)            "let")
 
-(bind let     (name value) "let")
 (bind define  (name params body) "define")
 (bind require (name) "require")
 (bind with    (role) "with")
 (bind role    (@) "role")
+(bind lambda  (params body) "lambda")
 
-(bind lambda      (params body) "lambda")
-(bind make-opaque (role)  "make-opaque")
-(bind make-ref    (value) "make-ref")
-(bind make-role   (@)     "make-role")
-(bind make-array  (@)     "make-array")
-(bind make-hash   (@)     "make-hash")
-
-(bind say (@) "say")
+(bind make-opaque  (role)  "make-opaque")
+(bind make-ref     (value) "make-ref")
+(bind make-role    (@)     "make-role")
+(bind make-array   (@)     "make-array")
+(bind make-hash    (@)     "make-hash")
+(bind make-channel ()      "make-channel")
 
 ;; ----------------------------------------------------------
 ;; Abstact Roles
@@ -79,19 +81,43 @@
     (bind >  (n m) "Str::>")
     (bind ~  (n m) "Str::~"))
 
-(role Ref ()
-    (bind get  (r)   "Ref::get")
-    (bind set! (r v) "Ref::set"))
-
-(role Array ()
-    (bind length (a)   "Array::length")
-    (bind at     (a i) "Array::at"))
-
-(role Hash ()
-    (bind length (h)   "Hash::length")
-    (bind at     (h k) "Hash::at"))
-
 (role Role (with <EQ>)
     (bind + (r1 r2) "Role::compose")
     (define == (r1 r2) (eq? r1 r2)))
+
+(role Ref (with <EQ>)
+    (define == (r1 r2) (eq? r1 r2))
+    (bind get  (r)   "Ref::get")
+    (bind set! (r v) "Ref::set"))
+
+(role Array (with <EQ>)
+    (define ==   (a1 a2) (eq? a1 a2))
+    (bind length (a)   "Array::length")
+    (bind at     (a i) "Array::at"))
+
+(role Hash (with <EQ>)
+    (define ==   (h1 h2) (eq? h1 h2))
+    (bind length (h)   "Hash::length")
+    (bind at     (h k) "Hash::at"))
+
+(role Channel (with <EQ>)
+    (define ==  (ch1 ch2) (eq? ch1 ch2))
+    (bind read  (ch)      "Channel::read")
+    (bind write (ch data) "Channel::write"))
+
+;; ----------------------------------------------------------
+;; Meta Information
+;; ----------------------------------------------------------
+
+(let $NAME      "MXCL")
+(let $ABSTRACT  "MXCL - Matt's eXtensible {Config,Control,Command} Language")
+(let $VERSION   :v0.0.1)
+(let $AUTHORITY :cpan:STEVAN)
+
+(let $COPYRIGHT "Copyright (C) 2026, Stevan Little")
+(let $LICENSE   "Apache License, Version 2.0")
+
+;; ----------------------------------------------------------
+;; End Prelude
+;; ----------------------------------------------------------
 

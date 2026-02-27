@@ -166,8 +166,7 @@ contexts:
           nil\?   | bool\?  | num\?   | str\?    | sym\?  |
           lambda\?| array\? | ref\?   | opaque\? | role\? |
           eq\?    |
-          make-opaque | make-ref | make-role | make-array | make-hash |
-          say
+          make-opaque | make-ref | make-role | make-array | make-hash | make-channel
         ){{token_end}}
       scope: support.function.builtin.mxcl
 

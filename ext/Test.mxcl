@@ -1,9 +1,13 @@
 
-(let $count (make-ref 0))
-(let $fails (make-ref 0))
+(let $output (make-channel))
+(let $count  (make-ref 0))
+(let $fails  (make-ref 0))
 
 (define diag (msg)
-    (say "# " msg))
+    ($output write ("# " ~ msg)))
+
+(define out (msg)
+    ($output write msg))
 
 (define todo (msg)
     (diag ("TODO:" ~ msg)))
@@ -11,13 +15,13 @@
 (define pass (msg)
     (do
         ($count set! (($count get) + 1))
-        (say ("ok " ~ ($count get)) (" - " ~ msg))))
+        (out (("ok " ~ ($count get)) ~ (" - " ~ msg)))))
 
 (define fail (msg)
     (do
         ($count set! (($count get) + 1))
         ($fails set! (($fails get) + 1))
-        (say ("not ok " ~ ($count get)) (" - " ~ msg))))
+        (out (("not ok " ~ ($count get)) ~ (" - " ~ msg)))))
 
 (define ok (test msg)
     (if test (pass msg) (fail msg)))
@@ -34,9 +38,8 @@
 
 (define done-testing ()
     (if (($fails get) != 0)
-        (do (say ("1.." ~ ($count get)))
+        (do (out ("1.." ~ ($count get)))
             (diag (("looks like you failed " ~ ($fails get)) ~
                             (" test(s) of " ~ ($count get)))))
-        (say ("1.." ~ ($count get)))))
-
+        (out ("1.." ~ ($count get)))))
 

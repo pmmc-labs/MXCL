@@ -24,6 +24,7 @@ use MXCL::Term::Lambda;
 
 use MXCL::Term::Opaque;
 use MXCL::Term::Ref;
+use MXCL::Term::Channel;
 
 use MXCL::Term::Native::Applicative;
 use MXCL::Term::Native::Operative;
@@ -36,24 +37,19 @@ class MXCL::Allocator::Terms {
     field $true;
     field $false;
 
-    # store the refs
-    field $refs  :param :reader = +{};
-    # store the lifted, and orig-impls
+    # store the refs & channels
+    field $refs     :param :reader = +{};
+    field $channels :param :reader = +{};
+
+    # store the lifted, and orig-impls for natives
     field $lifted  :param :reader = +{};
-    field $impls   :param :reader = +{};
+    field $impls   :param :reader = +{}; # FIXME: this is redundant I think
 
-    # intialize ...
-    ADJUST {
-        $nil   = $arena->allocate(MXCL::Term::Nil::);
-        $true  = $arena->allocate(MXCL::Term::Bool::, value => true);
-        $false = $arena->allocate(MXCL::Term::Bool::, value => false);
-    }
+    method Nil   { $nil   //= $arena->allocate(MXCL::Term::Nil::) }
+    method True  { $true  //= $arena->allocate(MXCL::Term::Bool::, value => true)  }
+    method False { $false //= $arena->allocate(MXCL::Term::Bool::, value => false) }
 
-    method Nil   { $nil }
-    method True  { $true }
-    method False { $false }
-
-    method Bool ($value) { $value ? $true : $false }
+    method Bool ($value) { $value ? $self->True : $self->False }
 
     method Num ($value) { $arena->allocate(MXCL::Term::Num::, value => $value) }
     method Str ($value) { $arena->allocate(MXCL::Term::Str::, value => $value) }
@@ -83,10 +79,10 @@ class MXCL::Allocator::Terms {
 
     method Opaque ($role) {
         state $nonce = 0;
-        my $uid = ++$nonce; # unique object identity
+        my $uid = sprintf 'opaque:%d' => ++$nonce; # unique object identity
         $arena->allocate(MXCL::Term::Opaque::,
             uid  => $uid,
-            repr => $nil, # TODO: remove me (probably)
+            repr => $self->Nil, # TODO: remove me (probably)
             role => $role,
         );
     }
@@ -100,6 +96,16 @@ class MXCL::Allocator::Terms {
         my $uid = sprintf 'ref:%s:%d' => blessed $value, ++$nonce; # unique ref identity
         $refs->{ $uid } = $value;
         return $arena->allocate(MXCL::Term::Ref::, uid => $uid );
+    }
+
+    ## -------------------------------------------------------------------------
+    ## Channels (hashed by identity)
+    ## -------------------------------------------------------------------------
+
+    method Channel () {
+        state $nonce = 0;
+        my $uid = sprintf 'channel:%d' => ++$nonce; # unique channel identity
+        return $arena->allocate(MXCL::Term::Channel::, uid => $uid );
     }
 
     ## -------------------------------------------------------------------------
@@ -122,7 +128,7 @@ class MXCL::Allocator::Terms {
         my $returns     = $binding{returns};
         my $constructor = defined $returns
             ? ($returns eq 'Nil'
-                ? sub (@) { $nil }
+                ? sub (@) { $self->Nil }
                 : ($self->can( $returns ) || die "Cannot find ${returns} in Terms"))
             # if $returns has not been defined, it means we
             # do not need to inflate, so we use this little
@@ -290,7 +296,7 @@ class MXCL::Allocator::Terms {
     ## -------------------------------------------------------------------------
 
     method List (@items) {
-        my $list = $nil;
+        my $list = $self->Nil;
         foreach my $item (reverse @items) {
             $list = $self->Cons( $item, $list );
         }

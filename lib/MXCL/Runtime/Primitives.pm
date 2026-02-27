@@ -258,6 +258,11 @@ class MXCL::Runtime::Primitives {
                 signature => [ { name => 'value' } ],
                 impl      => sub ($value) { $terms->Ref($value) }
             },
+            'make-channel'=> +{
+                kind      => 'applicative',
+                signature => [],
+                impl      => sub () { $terms->Channel }
+            },
             'make-role'   => +{
                 kind      => 'operative',
                 signature => [{ name => '@' }],
@@ -332,6 +337,18 @@ class MXCL::Runtime::Primitives {
                     impl      => sub ($ref, $value) { $terms->SetRef($ref, $value) }
                 },
             },
+            'Channel' => +{
+                'read' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'ch' } ],
+                    impl      => sub ($ch) { $ch->read }
+                },
+                'write' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'ch' }, { name => 'data' } ],
+                    impl      => sub ($ch, $data) { $ch->write( $data ) }
+                },
+            },
             'Array' => +{
                 'length' => +{
                     kind      => 'applicative',
@@ -362,7 +379,7 @@ class MXCL::Runtime::Primitives {
                     signature => [ { name => 'r1' }, { name => 'r2' } ],
                     impl      => sub ($r1, $r2) { $roles->Union( $r1, $r2 ) }
                 },
-            }
+            },
         };
     }
 
