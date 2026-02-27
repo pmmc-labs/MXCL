@@ -1,0 +1,199 @@
+%YAML 1.2
+---
+name: MXCL
+file_extensions:
+  - mxcl
+scope: source.mxcl
+
+# token_end: a zero-width assertion that we are at the end of a token
+# (followed by whitespace, a bracket, or end of line).
+# Used to prevent partial keyword matches inside longer symbols like `define-foo`.
+variables:
+  token_end: '(?=[\s\(\)\{\}\[\]]|$)'
+
+contexts:
+
+  # ---------------------------------------------------------------------------
+  # Entry point — included by all bracket-body contexts
+  # ---------------------------------------------------------------------------
+  main:
+    - include: comment
+    - include: string
+    - include: hash-constructor
+    - include: array-constructor
+    - include: list
+    - include: quote
+    - include: number
+    - include: boolean
+    - include: nil
+    - include: tag
+    - include: abstract-role
+    - include: variable
+    - include: method-accessor
+    - include: keyword-control
+    - include: keyword-binding
+    - include: builtin-function
+    - include: operator
+    - include: symbol   # catch-all — must be last
+
+  # ---------------------------------------------------------------------------
+  # Comments  (; to end of line)
+  # ---------------------------------------------------------------------------
+  comment:
+    - match: ;.*$
+      scope: comment.line.semicolon.mxcl
+
+  # ---------------------------------------------------------------------------
+  # Strings  ("..." with \n and \t escapes)
+  # ---------------------------------------------------------------------------
+  string:
+    - match: '"'
+      scope: punctuation.definition.string.begin.mxcl
+      push: string-content
+
+  string-content:
+    - meta_scope: string.quoted.double.mxcl
+    - match: \\[nt"\\]
+      scope: constant.character.escape.mxcl
+    - match: '"'
+      scope: punctuation.definition.string.end.mxcl
+      pop: true
+
+  # ---------------------------------------------------------------------------
+  # Bracket forms
+  # ---------------------------------------------------------------------------
+
+  # (+{ ... }) — hash constructor; compiler inserts make-hash
+  hash-constructor:
+    - match: \+\{
+      scope: punctuation.section.block.begin.mxcl
+      push: hash-body
+
+  hash-body:
+    - meta_scope: meta.block.hash.mxcl
+    - match: \}
+      scope: punctuation.section.block.end.mxcl
+      pop: true
+    - include: main
+
+  # (+[ ... ]) — array constructor; compiler inserts make-array
+  array-constructor:
+    - match: \+\[
+      scope: punctuation.section.sequence.begin.mxcl
+      push: array-body
+
+  array-body:
+    - meta_scope: meta.sequence.array.mxcl
+    - match: \]
+      scope: punctuation.section.sequence.end.mxcl
+      pop: true
+    - include: main
+
+  # (( ... )) — list / function call
+  list:
+    - match: \(
+      scope: punctuation.section.parens.begin.mxcl
+      push: list-body
+
+  list-body:
+    - meta_scope: meta.parens.mxcl
+    - match: \)
+      scope: punctuation.section.parens.end.mxcl
+      pop: true
+    - include: main
+
+  # ---------------------------------------------------------------------------
+  # Quote prefix  ('expr → compiler inserts quote)
+  # Only meaningful immediately before a ( list, so we restrict with lookahead.
+  # ---------------------------------------------------------------------------
+  quote:
+    - match: |-
+        '(?=\()
+      scope: keyword.operator.quote.mxcl
+
+  # ---------------------------------------------------------------------------
+  # Literals
+  # ---------------------------------------------------------------------------
+
+  number:
+    - match: '-?\d+(?:\.\d+)?{{token_end}}'
+      scope: constant.numeric.mxcl
+
+  boolean:
+    - match: '(?:true|false){{token_end}}'
+      scope: constant.language.boolean.mxcl
+
+  nil:
+    - match: 'nil{{token_end}}'
+      scope: constant.language.null.mxcl
+
+  # :keyword — tag literals (used like Scheme symbols / keyword args)
+  tag:
+    - match: ':[^\s\(\)\{\}\[\]]+'
+      scope: constant.other.symbol.mxcl
+
+  # ---------------------------------------------------------------------------
+  # Naming conventions
+  # ---------------------------------------------------------------------------
+
+  # <NAME> — abstract role names, e.g. <EQ>, <ORD>
+  abstract-role:
+    - match: '<[A-Z][A-Z0-9]*>'
+      scope: entity.name.type.mxcl
+
+  # $name — conventional prefix for mutable reference variables
+  variable:
+    - match: '\$[^\s\(\)\{\}\[\]]+'
+      scope: variable.other.mxcl
+
+  # ->name  ->name!  — method accessor / setter names
+  method-accessor:
+    - match: '->[^\s\(\)\{\}\[\]]+'
+      scope: variable.function.method.mxcl
+
+  # ---------------------------------------------------------------------------
+  # Keywords
+  # ---------------------------------------------------------------------------
+
+  # Operatives: receive unevaluated AST (i.e. special forms / control flow)
+  keyword-control:
+    - match: '(?:if|do|while|and|or|not){{token_end}}'
+      scope: keyword.control.mxcl
+
+  # Binding / declaration operatives
+  keyword-binding:
+    - match: '(?:let|define|lambda|require|with|role|bind|quote){{token_end}}'
+      scope: keyword.other.mxcl
+
+  # ---------------------------------------------------------------------------
+  # Built-in applicative functions
+  # ---------------------------------------------------------------------------
+  builtin-function:
+    - match: |-
+        (?x)
+        (?:
+          nil\?   | bool\?  | num\?   | str\?    | sym\?  |
+          lambda\?| array\? | ref\?   | opaque\? | role\? |
+          eq\?    |
+          make-opaque | make-ref | make-role | make-array | make-hash |
+          say
+        ){{token_end}}
+      scope: support.function.builtin.mxcl
+
+  # ---------------------------------------------------------------------------
+  # Operators (role-method names used as infix operators)
+  # Order: longer patterns first to avoid partial matches (e.g. == before =)
+  # ---------------------------------------------------------------------------
+  operator:
+    - match: '(?:==|!=|>=|<=|&&|\|\||[+\-*/%~><]){{token_end}}'
+      scope: keyword.operator.mxcl
+
+  # ---------------------------------------------------------------------------
+  # Catch-all: consume any remaining token as a symbol.
+  # Must be last to avoid shadowing the rules above.
+  # Without this, the engine would retry patterns at every character position
+  # inside a multi-character token, potentially causing false keyword matches.
+  # ---------------------------------------------------------------------------
+  symbol:
+    - match: '[^\s\(\)\{\}\[\]]+'
+      scope: variable.other.symbol.mxcl
