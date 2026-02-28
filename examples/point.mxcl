@@ -39,11 +39,11 @@
             (let $x (make-ref x))
             (let $y (make-ref y))
 
-            (define .x (p) ($x get))
-            (define .y (p) ($y get))
+            (define .x (p) ($x .get))
+            (define .y (p) ($y .get))
 
-            (define .x! (p x) ($x set! x))
-            (define .y! (p y) ($y set! y))
+            (define .x! (p x) ($x .set! x))
+            (define .y! (p y) ($y .set! y))
 
             (define .clone (p x y) (Point x y))
         ))

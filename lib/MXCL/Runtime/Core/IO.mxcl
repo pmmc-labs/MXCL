@@ -3,9 +3,9 @@
 ;;
 ;; -----------------------------------------------------------------------------
 
-(define print (msg) (^STDOUT write msg))
-(define warn  (msg) (^STDERR write msg))
-(define readline () (^STDIN read))
+(define print (msg) (^STDOUT .write msg))
+(define warn  (msg) (^STDERR .write msg))
+(define readline () (^STDIN .read))
 
 ;; -----------------------------------------------------------------------------
 ;;

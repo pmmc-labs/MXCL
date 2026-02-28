@@ -17,7 +17,10 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
-    ( '(10 + 20) <-eval )
+    (ok true "... did this work?")
+    (ok true "... did this work?")
+
+    (done-testing)
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );

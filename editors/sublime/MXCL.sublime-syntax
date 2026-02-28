@@ -138,7 +138,7 @@ contexts:
 
   # <NAME> — abstract role names, e.g. <EQ>, <ORD>
   abstract-role:
-    - match: '<[A-Z][A-Z0-9]*>'
+    - match: '<[A-Z][A-Z0-9:]*>'
       scope: entity.name.type.mxcl
 
   # ---------------------------------------------------------------------------
@@ -147,7 +147,7 @@ contexts:
 
   # Operatives: receive unevaluated AST (i.e. special forms / control flow)
   keyword-control:
-    - match: '(?:role|define|lambda|require|with){{token_end}}'
+    - match: '(?:role|define|lambda|require|with|let){{token_end}}'
       scope: keyword.control.mxcl
 
   # Binding / declaration operatives
@@ -162,7 +162,7 @@ contexts:
     - match: |-
         (?x)
         (?:
-          if | do | while | and | or | not | let | quote |
+          if | do | while | and | or | not | quote | eval | cons |
           nil\?   | bool\?  | num\?   | str\?    | sym\?  |
           lambda\?| array\? | ref\?   | opaque\? | role\? |
           eq\?    |

@@ -26,8 +26,8 @@
 (bind do    (@)                     "do")
 (bind if    (cond if-true if-false) "if")
 (bind while (cond body)             "while")
-(bind let   (name value)            "let")
 
+(bind let   (name value)            "let")
 (bind define  (name params body) "define")
 (bind require (name) "require")
 (bind with    (role) "with")
@@ -91,26 +91,26 @@
 
 (role Ref (with <EQ>)
     (define == (r1 r2) (eq? r1 r2))
-    (bind get  (r)   "Ref::get")
-    (bind set! (r v) "Ref::set"))
+    (bind .get  (r)   "Ref::get")
+    (bind .set! (r v) "Ref::set"))
 
 (role Array (with <EQ>)
     (define ==   (a1 a2) (eq? a1 a2))
-    (bind length (a)   "Array::length")
-    (bind at     (a i) "Array::at"))
+    (bind .length (a)   "Array::length")
+    (bind .at     (a i) "Array::at"))
 
 (role Hash (with <EQ>)
     (define ==   (h1 h2) (eq? h1 h2))
-    (bind length (h)   "Hash::length")
-    (bind at     (h k) "Hash::at"))
+    (bind .length (h)   "Hash::length")
+    (bind .at     (h k) "Hash::at"))
 
 (role Channel (with <EQ>)
     (define ==  (ch1 ch2) (eq? ch1 ch2))
-    (bind read  (ch)      "Channel::read")
-    (bind write (ch data) "Channel::write"))
+    (bind .read  (ch)      "Channel::read")
+    (bind .write (ch data) "Channel::write"))
 
 (role Cons ()
-    (define <-eval (expr) (eval expr)))
+    (define .eval (expr) (eval expr)))
 
 ;; ----------------------------------------------------------
 ;; Meta Information

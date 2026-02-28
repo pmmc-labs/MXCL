@@ -1,52 +1,76 @@
 
 ;; -----------------------------------------------------------------------------
-;;
+;; Testing module
 ;; -----------------------------------------------------------------------------
+;; This is a Test::Builder role that
+;; can be used by all testing functions
+;; and will maintain global status of
+;; the test count, etc.
 
-(let $count  (make-ref 0))
-(let $fails  (make-ref 0))
+(role <Test::Builder> ()
 
-(define diag (msg)
-    (print ("# " ~ (msg ~ "\n"))))
+    ;; NOTE:
+    ;; this is Role level storage
+    ;; basically the equivalent of
+    ;; `static` in Java/JS/etc.
+    (let $count  (make-ref 0))
+    (let $fails  (make-ref 0))
 
-(define out (msg)
-    (print (msg ~ "\n")))
+    (define .diag ($ msg)
+        (print ("# " ~ (msg ~ "\n"))))
 
-(define todo (msg)
-    (diag ("TODO:" ~ msg)))
+    (define .out ($ msg)
+        (print (msg ~ "\n")))
 
-(define pass (msg)
-    (do
-        ($count set! (($count get) + 1))
-        (out (("ok " ~ ($count get)) ~ (" - " ~ msg)))))
+    (define .pass ($ msg)
+        (do
+            ($count .set! (($count .get) + 1))
+            ($ .out (("ok " ~ ($count .get)) ~ (" - " ~ msg)))))
 
-(define fail (msg)
-    (do
-        ($count set! (($count get) + 1))
-        ($fails set! (($fails get) + 1))
-        (out (("not ok " ~ ($count get)) ~ (" - " ~ msg)))))
+    (define .fail ($ msg)
+        (do
+            ($count .set! (($count .get) + 1))
+            ($fails .set! (($fails .get) + 1))
+            ($ .out (("not ok " ~ ($count .get)) ~ (" - " ~ msg)))))
 
-(define ok (test msg)
-    (if test (pass msg) (fail msg)))
+    (define .ok ($ test msg)
+        (if test ($ .pass msg) ($ .fail msg)))
 
-(define is (got expected msg)
-    (do
-        (let result (eq? got expected))
-        (ok result msg)
-        (or result
-            (do
-                (diag ("Failed test " ~ msg))
-                (diag ("       got: " ~ got))
-                (diag ("  expected: " ~ expected))))))
+    (define .is ($ got expected msg)
+        (do
+            (let result (eq? got expected))
+            ($ .ok result msg)
+            (or result
+                (do
+                    ($ .diag ("Failed test " ~ msg))
+                    ($ .diag ("       got: " ~ got))
+                    ($ .diag ("  expected: " ~ expected))))))
 
-(define done-testing ()
-    (if (($fails get) != 0)
-        (do (out ("1.." ~ ($count get)))
-            (diag (("looks like you failed " ~ ($fails get)) ~
-                            (" test(s) of " ~ ($count get)))))
-        (out ("1.." ~ ($count get)))))
+    (define .done-testing ($)
+        (if (($fails .get) != 0)
+            (do ($ .out ("1.." ~ ($count .get)))
+                ($ .diag (("looks like you failed " ~ ($fails .get)) ~
+                                    (" test(s) of " ~ ($count .get)))))
+            ($ .out ("1.." ~ ($count .get)))))
 
+)
 
 ;; -----------------------------------------------------------------------------
-;;
+;; Testing Functions
+;; -----------------------------------------------------------------------------
+;; This creates a singleton opaque instance of the Test::Builder
+;; and then wraps some basic Test functions to use it
+
+;; TODO:
+;; This should be wrapped in a scope and explicitly exported
+
+(let ^TEST_BUILDER (make-opaque <Test::Builder>))
+
+(define pass (msg)            (^TEST_BUILDER .pass msg))
+(define fail (msg)            (^TEST_BUILDER .fail msg))
+(define diag (msg)            (^TEST_BUILDER .diag msg))
+(define ok (got msg)          (^TEST_BUILDER .ok got msg))
+(define is (got expected msg) (^TEST_BUILDER .is got expected msg))
+(define done-testing ()       (^TEST_BUILDER .done-testing))
+
 ;; -----------------------------------------------------------------------------
