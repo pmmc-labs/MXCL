@@ -17,14 +17,13 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
-
-(let x (make-ref 10))
-(while ((x .get) > 0)
-    (do
-        (x .set! ((x .get) - 1))
-        (print (x .get))
-        (print "\n")))
-
+(+[
+   +[ 1 2 3 ]
+   +[ 4 5 6 ]
+   +[ 7 8 9 ]
+] .map
+    (-> (a)
+        (a .map (-> (x) (x * 2)))))
 
 
 ]);
@@ -56,11 +55,38 @@ TIMING:
 
 __END__
 
-    (define fact (n)
-        (if (n == 0)
-            1
-            (n * (fact (n - 1)))))
+(+[
+   +[ 1 2 3 ]
+   +[ 4 5 6 ]
+   +[ 7 8 9 ]
+] .map
+    (-> (a)
+        (a .map (-> (x) (x * 2)))))
 
-    (fact 10)
+(+[ 1 2 3 ] .map (-> (n) (n * 2)))
+
+;; will return nil
+(+[ 1 2 3 ] .foreach (-> (x)
+        (do
+            (print (("Got: " ~ x) ~ "\n"))
+            (x + 1))))
+
+
+(reduce 0 (-> (n m) (n + m)) (grep ( ->(x) (x > 5)) (map ( ->(x) (x * 2)) '(1 2 3 4))))
+
+(let x (make-ref 10))
+(while ((x .get) > 0)
+    (do
+        (x .set! ((x .get) - 1))
+        (print (x .get))
+        (print "\n")))
+
+
+(define fact (n)
+    (if (n == 0)
+        1
+        (n * (fact (n - 1)))))
+
+(fact 10)
 
 

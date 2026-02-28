@@ -319,5 +319,61 @@ class MXCL::Allocator::Terms {
         $self->List( $self->Uncons($first), $self->Uncons($second) )
     }
 
+    ## -------------------------------------------------------------------------
+    ## Array Utils
+    ## -------------------------------------------------------------------------
+
+
+    method ArrayReverse ($array) {
+        my @array = $array->elements->@*;
+        $self->Array( reverse @array );
+    }
+
+    method ArrayPush ($array, $item) {
+        if ($item isa MXCL::Term::Nil) {
+            return $array;
+        }
+        elsif ($item isa MXCL::Term::Cons) {
+            return $self->Array(
+                $array->elements->@*,
+                $item->uncons
+            )
+        }
+        else {
+            return $self->Array( $array->elements->@*, $item );
+        }
+    }
+
+    method ArrayPop ($array) {
+        my @array = $array->elements->@*;
+        pop @array;
+        $self->Array( @array );
+    }
+
+    method ArrayUnshift ($array, $item) {
+        if ($item isa MXCL::Term::Nil) {
+            return $array;
+        }
+        elsif ($item isa MXCL::Term::Cons) {
+            return $self->Array(
+                $item->uncons,
+                $array->elements->@*,
+            )
+        }
+        else {
+            return $self->Array( $item, $array->elements->@* );
+        }
+    }
+
+    method ArrayShift ($array) {
+        my @array = $array->elements->@*;
+        shift @array;
+        $self->Array( @array );
+    }
+
+    method ArraySplice ($array, $offset, $length) {
+        my @array = $array->elements->@*;
+        $self->Array( splice @array, $offset, $length )
+    }
 
 }

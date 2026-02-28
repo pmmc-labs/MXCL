@@ -163,6 +163,8 @@
     (bind .push    (a i)   "Array::push")
     (bind .unshift (a i)   "Array::unshift")
     (bind .splice  (a o l) "Array::splice")
+    (bind .foreach (a f)   "Array::foreach")
+    (bind .map     (a f)   "Array::map")
     ;; methods
     (define .join  (a sep) (join sep a)))
 

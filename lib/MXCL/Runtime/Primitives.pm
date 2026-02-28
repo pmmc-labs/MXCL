@@ -366,6 +366,7 @@ class MXCL::Runtime::Primitives {
     method initialize_types ($context) {
         my $terms = $context->terms;
         my $roles = $context->roles;
+        my $konts = $context->kontinues;
 
         $types //= +{
             'Bool' => +{
@@ -452,46 +453,17 @@ class MXCL::Runtime::Primitives {
                 'reverse' => +{
                     kind      => 'applicative',
                     signature => [ { name => 'array' } ],
-                    impl      => sub ($array) {
-                        my @array = $array->elements->@*;
-                        $terms->Array( reverse @array );
-                    },
+                    impl      => sub ($array) { $terms->ArrayReverse( $array ) },
                 },
                 'push' => +{
                     kind      => 'applicative',
                     signature => [ { name => 'array' }, { name => 'item' } ],
-                    impl      => sub ($array, $item) {
-                        if ($item isa MXCL::Term::Nil) {
-                            return $array;
-                        }
-                        elsif ($item isa MXCL::Term::Cons) {
-                            return $terms->Array(
-                                $array->elements->@*,
-                                $item->uncons
-                            )
-                        }
-                        else {
-                            return $terms->Array( $array->elements->@*, $item );
-                        }
-                    },
+                    impl      => sub ($array, $item) { $terms->ArrayPush( $array, $item ) },
                 },
                 'unshift'  => +{
                     kind      => 'applicative',
                     signature => [ { name => 'array' }, { name => 'item' } ],
-                    impl      => sub ($array, $item) {
-                        if ($item isa MXCL::Term::Nil) {
-                            return $array;
-                        }
-                        elsif ($item isa MXCL::Term::Cons) {
-                            return $terms->Array(
-                                $item->uncons,
-                                $array->elements->@*,
-                            )
-                        }
-                        else {
-                            return $terms->Array( $item, $array->elements->@* );
-                        }
-                    },
+                    impl      => sub ($array, $item) { $terms->ArrayUnshift( $array, $item ) },
                 },
                 'splice' => +{
                     kind      => 'applicative',
@@ -500,9 +472,44 @@ class MXCL::Runtime::Primitives {
                         { name => 'offset', coerce => 'numify' },
                         { name => 'length', coerce => 'numify' },
                     ],
-                    impl => sub ($array, $offset, $length) {
-                        my @array = $array->elements->@*;
-                        $terms->Array( splice @array, $offset, $length )
+                    impl => sub ($array, $offset, $length) { $terms->ArraySplice( $array, $offset, $length )},
+                },
+                'foreach' => +{
+                    kind      => 'operative',
+                    signature => [
+                        { name => 'array' },
+                        { name => 'f' },
+                    ],
+                    impl => sub ($env, $array, $f) {
+                        return $konts->EvalExpr(
+                            $env,
+                            $terms->List(
+                                $terms->Sym('do'),
+                                map {
+                                    $terms->List( $f, $_ )
+                                } $array->elements->@*
+                            ),
+                            $terms->Nil
+                        )
+                    },
+                },
+                'map' => +{
+                    kind      => 'operative',
+                    signature => [
+                        { name => 'array' },
+                        { name => 'f' },
+                    ],
+                    impl => sub ($env, $array, $f) {
+                        return $konts->EvalExpr(
+                            $env,
+                            $terms->List(
+                                $terms->Sym('make-array'),
+                                map {
+                                    $terms->List( $f, $_ )
+                                } $array->elements->@*
+                            ),
+                            $terms->Nil
+                        )
                     },
                 },
             },

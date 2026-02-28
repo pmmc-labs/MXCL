@@ -46,7 +46,7 @@ class MXCL::Machine {
                     unless $context->tape->has_next;
 
                 my $prev = $context->tape->next;
-                return $Konts->Update( $prev, $k->env, $Nil );
+                return $Konts->Update( $prev, $k->env, $prev->stack );
             }
             when ('MXCL::Term::Kontinue::Capture') {
                 die "EXPECTED KONTINUE IN QUEUE for Capture!"
