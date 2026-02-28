@@ -67,12 +67,14 @@ as role operations.
 - Minimal Bootstrap & Prelude
     * [x] prelude environment (only `bind`) 
     * [x] prelude bootstraping of core language
+
 - Environments & Scopes
     - [x] deriving scopes
     - [x] name resolution
     - [x] fixed-point for recursion
     * [x] Scopes are Roles
         * [x] Conflicts handled on lookup
+
 - Operatives
     - [x] arguments are unevaluated
     - [x] returns a list of continuation objects
@@ -81,12 +83,26 @@ as role operations.
     - [x] arguments are evaluated
     - [x] returns a term  
     - [x] can be user defined
+
 - Roles  
     * [x] environment capture
     * [x] compositon operations
 - Opaque
     * [x] an Operative wrapped around a Role
     - [x] dispatches based on first argument
+
+- Foundational Roles
+    - [x] EQ, ORD
+
+- Core Autoboxed Roles
+    - [x] core terms can be called as an object
+    - [x] Bool
+    * [x] Num
+    * [x] Str 
+    * [x] Ref 
+    * [x] Array
+    * [x] Hash
+    * [x] Cons
 
 - Callable Term Types
     - Applicative
@@ -136,18 +152,6 @@ Layer 4 builds upon the previous layers to provide a meta-circular object
 system with a complete MOP. It also uses the Role substrate to provide a
 role for each of the core literal terms, and MXCL autoboxes it accordingly.
 
-- Foundational Roles
-    - [x] EQ, ORD
-- Autoboxed core Terms
-    - [x] core terms can be called as an object
-    - [x] Bool
-    * [ ] Num
-    * [ ] Str 
-    * [x] Ref 
-    * [ ] Array
-    * [ ] Hash
-    * [ ] Cons
-    * [ ] Channel
 - Role Creation & Composition
     * [x] summation
     - [ ] difference

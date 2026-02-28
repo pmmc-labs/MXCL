@@ -395,12 +395,12 @@ class MXCL::Runtime::Primitives {
                 '>'  => binary_op('stringify', 'Bool', sub ($n, $m) { $n gt $m }),
                 '~'  => binary_op('stringify', 'Str',  sub ($n, $m) { $n . $m }),
 
-                'uc' => unary_op('stringify', 'Num', sub ($n) { uc($n) }),
-                'lc' => unary_op('stringify', 'Num', sub ($n) { lc($n) }),
-                'fc' => unary_op('stringify', 'Num', sub ($n) { fc($n) }),
+                'uc' => unary_op('stringify', 'Str', sub ($n) { uc($n) }),
+                'lc' => unary_op('stringify', 'Str', sub ($n) { lc($n) }),
+                'fc' => unary_op('stringify', 'Str', sub ($n) { fc($n) }),
 
-                'ucfirst' => unary_op('stringify', 'Num', sub ($n) { ucfirst($n) }),
-                'lcfirst' => unary_op('stringify', 'Num', sub ($n) { lcfirst($n) }),
+                'ucfirst' => unary_op('stringify', 'Str', sub ($n) { ucfirst($n) }),
+                'lcfirst' => unary_op('stringify', 'Str', sub ($n) { lcfirst($n) }),
 
                 'hex' => unary_op('stringify', 'Num', sub ($n) { hex($n) }),
                 'oct' => unary_op('stringify', 'Num', sub ($n) { oct($n) }),
@@ -515,7 +515,7 @@ class MXCL::Runtime::Primitives {
                 'at' => +{
                     kind      => 'applicative',
                     signature => [ { name => 'hash' }, { name => 'key', coerce => 'stringify' } ],
-                    impl      => sub ($hash, $key) { $hash->at( $key ) },
+                    impl      => sub ($hash, $key) { $hash->get( $key ) },
                 },
                 'delete' => +{
                     kind      => 'applicative',

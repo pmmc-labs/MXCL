@@ -115,7 +115,7 @@
     (bind .length  (n)   "Str::length")
     (bind .index   (n m) "Str::index")
     (bind .rindex  (n m) "Str::rindex")
-    (bind .split   (n p) "split")
+    (define .split (n p) (split p n))
     (bind .join    (n p) "join"))
 
 (role Role (with <EQ>)
