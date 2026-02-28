@@ -9,7 +9,7 @@ scope: source.mxcl
 # (followed by whitespace, a bracket, or end of line).
 # Used to prevent partial keyword matches inside longer symbols like `define-foo`.
 variables:
-  token_end: '(?=[\s\(\)\{\}\[\]]|$)'
+  token_end: '(?=[\s\(\)''\{\}\[\]]|$)'
 
 contexts:
 
@@ -29,6 +29,7 @@ contexts:
     - include: tag
     - include: abstract-role
     - include: variable
+    - include: global-variable
     - include: method-accessor
     - include: keyword-control
     - include: keyword-binding
@@ -107,8 +108,7 @@ contexts:
   # Only meaningful immediately before a ( list, so we restrict with lookahead.
   # ---------------------------------------------------------------------------
   quote:
-    - match: |-
-        '(?=\()
+    - match: "'"
       scope: keyword.operator.quote.mxcl
 
   # ---------------------------------------------------------------------------
@@ -129,17 +129,45 @@ contexts:
 
   # :keyword — tag literals (used like Scheme symbols / keyword args)
   tag:
-    - match: ':[^\s\(\)\{\}\[\]]+'
+    - match: ':[^\s\(\)''\{\}\[\]]+'
       scope: constant.other.symbol.mxcl
 
   # ---------------------------------------------------------------------------
   # Naming conventions
   # ---------------------------------------------------------------------------
 
-  # <NAME> — abstract role names, e.g. <EQ>, <ORD>
+  # <NAME> — abstract role names, e.g. <EQ>, <ORD>, <Test::Builder>
+  # Push/pop so meta_scope covers the whole <...> span, even inside list-body.
+  # Lookahead [^\s...>] prevents matching the bare < comparison operator.
   abstract-role:
-    - match: '<[A-Z][A-Z0-9:]*>'
-      scope: entity.name.type.mxcl
+    - match: '<(?=[^\s\(\)''\{\}\[\]>])'
+      push: abstract-role-body
+
+  abstract-role-body:
+    - meta_scope: entity.name.class.mxcl
+    - match: '>'
+      pop: true
+
+  # $name, ^NAME, .name — all sigil-prefixed identifiers share one color.
+  # Push/pop so meta_scope covers the whole token, even inside list-body.
+  # Lookaheads ensure the sigil is followed by actual content.
+
+  variable:
+    - match: '\$(?=[^\s\(\)''\{\}\[\]])'
+      push: sigil-body
+
+  global-variable:
+    - match: '\^(?=[^\s\(\)''\{\}\[\]])'
+      push: sigil-body
+
+  method-accessor:
+    - match: '\.(?=[^\s\(\)''\{\}\[\]])'
+      push: sigil-body
+
+  sigil-body:
+    - meta_scope: variable.other.mxcl
+    - match: '[^\s\(\)''\{\}\[\]]+'
+      pop: true
 
   # ---------------------------------------------------------------------------
   # Keywords
@@ -175,7 +203,7 @@ contexts:
   # Order: longer patterns first to avoid partial matches (e.g. == before =)
   # ---------------------------------------------------------------------------
   operator:
-    - match: '(?:==|!=|>=|<=|&&|\|\||[+\-*/%~><]){{token_end}}'
+    - match: '(?:\+\+|==|!=|>=|<=|&&|\|\||[+\-*/%~><]){{token_end}}'
       scope: keyword.operator.mxcl
 
   # ---------------------------------------------------------------------------
@@ -185,5 +213,5 @@ contexts:
   # inside a multi-character token, potentially causing false keyword matches.
   # ---------------------------------------------------------------------------
   symbol:
-    - match: '[^\s\(\)\{\}\[\]]+'
+    - match: '[^\s\(\)''\{\}\[\]]+'
       scope: variable.other.symbol.mxcl
