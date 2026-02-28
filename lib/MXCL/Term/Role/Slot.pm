@@ -50,7 +50,9 @@ class MXCL::Term::Role::Slot::Conflict :isa(MXCL::Term::Role::Slot) {
             || die 'Conflicted ident must be equal';
     }
 
-    method ident { $lhs->ident }
+    method ident {
+        $rhs->ident
+    }
 
     method pprint {
         sprintf 'conflicted:(%s ~ %s)' => $lhs->pprint, $rhs->pprint

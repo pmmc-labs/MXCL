@@ -97,12 +97,12 @@ as role operations.
 - Core Autoboxed Roles
     - [x] core terms can be called as an object
     - [x] Bool
-    * [x] Num
-    * [x] Str 
-    * [x] Ref 
-    * [x] Array
-    * [x] Hash
-    * [x] Cons
+    - [x] Num
+    - [x] Str 
+    - [x] Ref 
+    - [x] Array
+    - [x] Hash
+    - [x] Cons
 
 - Callable Term Types
     - Applicative

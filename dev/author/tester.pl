@@ -17,7 +17,14 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
-(", " .join +[ 1 2 3 ])
+
+(let x (make-ref 10))
+(while ((x .get) > 0)
+    (do
+        (x .set! ((x .get) - 1))
+        (print (x .get))
+        (print "\n")))
+
 
 
 ]);
@@ -38,7 +45,10 @@ TIMING:
  compile (ms) : %.03f
  execute (ms) : %.03f
 -------------------------------------------------]
-=>  ($result ? $result->stack->head->pprint : 'UNDEFINED'),
+=>  ($result ? do {
+        my $stack = $result->stack;
+        ($stack isa MXCL::Term::Cons ? $stack->head->pprint : '()');
+    } : 'UNDEFINED'),
     (map { $_ * 1000 } @timings{qw[ compile execute ]}),
 ;
 

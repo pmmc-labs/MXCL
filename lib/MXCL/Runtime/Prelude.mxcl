@@ -30,6 +30,7 @@
 (bind let     (name value)       "let")
 (bind define  (name params body) "define")
 (bind lambda  (params body)      "lambda")
+(bind ->      (params body)      "lambda")
 
 (bind role    (@)    "role")
 (bind require (name) "require")
@@ -51,6 +52,27 @@
 (bind make-array   (@)     "make-array")
 (bind make-hash    (@)     "make-hash")
 (bind make-channel ()      "make-channel")
+
+;; ----------------------------------------------------------
+;; Built-in Functions
+;; ----------------------------------------------------------
+
+(define map (f list)
+    (if (nil? list)
+        ()
+        (cons (f (head list)) (map f (tail list)))))
+
+(define grep (f list)
+    (if (nil? list)
+        ()
+        (if (f (head list))
+            (cons (head list) (grep f (tail list)))
+            (grep f (tail list)))))
+
+(define reduce (acc f list)
+    (if (nil? list)
+        acc
+        (reduce (f (head list) acc) f (tail list))))
 
 ;; ----------------------------------------------------------
 ;; Abstact Roles

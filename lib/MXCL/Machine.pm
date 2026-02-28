@@ -24,7 +24,7 @@ class MXCL::Machine {
         state $Roles = $context->roles;
         state $Nil   = $Terms->Nil;
 
-        #say "STEP[", $context->tape->steps, "] ",$k->pprint;
+        $ENV{DEBUG} && say "STEP[", $context->tape->steps, "] ",$k->pprint;
 
         given (blessed $k) {
             # ------------------------------------------------------------------
@@ -116,12 +116,14 @@ class MXCL::Machine {
                 my $condition = $k->stack->head;
                 if ($condition->value) {
                     return (
-                        $k,
-                        $Konts->EvalExpr( $k->env, $k->condition ),
-                        $self->evaluate_term( $context, $k->env, $k->body ),
+                        $Konts->DoWhile( $k->env, $k->condition, $k->body, $Nil ),
+                        $Konts->EvalExpr( $k->env, $k->condition, $Nil ),
+                        $Konts->EvalExpr( $k->env, $k->body, $Nil ),
                     );
                 } else {
-                    return ();
+                    return (
+                        $Konts->Return( $k->env, $Nil )
+                    );
                 }
             }
             # ------------------------------------------------------------------
