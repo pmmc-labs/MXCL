@@ -27,7 +27,6 @@ contexts:
     - include: boolean
     - include: nil
     - include: tag
-    - include: abstract-role
     - include: variable
     - include: global-variable
     - include: method-accessor
@@ -35,6 +34,7 @@ contexts:
     - include: keyword-binding
     - include: builtin-function
     - include: operator
+    - include: abstract-role
     - include: symbol   # catch-all — must be last
 
   # ---------------------------------------------------------------------------
@@ -193,7 +193,7 @@ contexts:
           if | do | while | and | or | not | quote | eval | cons |
           nil\?   | bool\?  | num\?   | str\?    | sym\?  |
           lambda\?| array\? | ref\?   | opaque\? | role\? |
-          eq\?    |
+          eq\?    | head | tail | join | split |
           make-opaque | make-ref | make-role | make-array | make-hash | make-channel
         ){{token_end}}
       scope: support.function.builtin.mxcl

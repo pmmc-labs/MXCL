@@ -242,6 +242,50 @@ class MXCL::Runtime::Primitives {
                     $terms->Cons( $head, $tail )
                 }
             },
+            'head' => +{
+                kind      => 'applicative',
+                signature => [ { name => 'cons' } ],
+                impl      => sub ($cons) { $cons->head }
+            },
+            'tail' => +{
+                kind      => 'applicative',
+                signature => [ { name => 'cons' } ],
+                impl      => sub ($cons) { $cons->tail }
+            },
+            'join' => +{
+                kind      => 'applicative',
+                signature => [
+                    { name => 'sep', coerce => 'stringify' },
+                    { name => 'cons' },
+                ],
+                returns => 'Str',
+                impl    => sub ($sep, $list) {
+                    if ($list isa MXCL::Term::Nil) {
+                        return $terms->Str('');
+                    }
+                    elsif ($list isa MXCL::Term::Cons) {
+                        return join $sep, map $_->stringify, $list->uncons;
+                    }
+                    elsif ($list isa MXCL::Term::Array) {
+                        return join $sep, map $_->stringify, $list->elements->@*;
+                    }
+                    # XXX - should we handle Hash??
+                    else {
+                        say "HI!";
+                        return $list->stringify;
+                    }
+                }
+            },
+            'split' => +{
+                kind      => 'applicative',
+                signature => [
+                    { name => 'pattern', coerce => 'stringify' },
+                    { name => 'string', coerce => 'stringify' },
+                ],
+                impl => sub ($pattern, $string) {
+                    $terms->List( map $terms->Str($_), split $pattern, $string )
+                }
+            },
             'eval' => +{
                 kind      => 'operative',
                 signature => [ { name => 'expr' } ],
@@ -325,7 +369,7 @@ class MXCL::Runtime::Primitives {
 
         $types //= +{
             'Bool' => +{
-                '==' => binary_op('boolify', 'Bool', sub ($n, $m) { $n == $m }),
+                '=='  => binary_op('boolify', 'Bool', sub ($n, $m) { $n == $m }),
             },
             'Num' => +{
                 '==' => binary_op('numify', 'Bool', sub ($n, $m) { $n == $m }),
@@ -335,11 +379,37 @@ class MXCL::Runtime::Primitives {
                 '*'  => binary_op('numify', 'Num',  sub ($n, $m) { $n * $m }),
                 '/'  => binary_op('numify', 'Num',  sub ($n, $m) { $n / $m }),
                 '%'  => binary_op('numify', 'Num',  sub ($n, $m) { $n % $m }),
+
+                'abs' => unary_op('numify', 'Num', sub ($n) { abs($n) }),
+                'cos' => unary_op('numify', 'Num', sub ($n) { cos($n) }),
+                'sin' => unary_op('numify', 'Num', sub ($n) { sin($n) }),
+                'int' => unary_op('numify', 'Num', sub ($n) { int($n) }),
+
+                'sqrt' => unary_op('numify', 'Num', sub ($n) { sqrt($n) }),
+                'rand' => unary_op('numify', 'Num', sub ($n) { rand($n) }),
+
+                'chr' => unary_op('numify', 'Str', sub ($n) { chr($n) }),
             },
             'Str' => +{
                 '==' => binary_op('stringify', 'Bool', sub ($n, $m) { $n eq $m }),
                 '>'  => binary_op('stringify', 'Bool', sub ($n, $m) { $n gt $m }),
                 '~'  => binary_op('stringify', 'Str',  sub ($n, $m) { $n . $m }),
+
+                'uc' => unary_op('stringify', 'Num', sub ($n) { uc($n) }),
+                'lc' => unary_op('stringify', 'Num', sub ($n) { lc($n) }),
+                'fc' => unary_op('stringify', 'Num', sub ($n) { fc($n) }),
+
+                'ucfirst' => unary_op('stringify', 'Num', sub ($n) { ucfirst($n) }),
+                'lcfirst' => unary_op('stringify', 'Num', sub ($n) { lcfirst($n) }),
+
+                'hex' => unary_op('stringify', 'Num', sub ($n) { hex($n) }),
+                'oct' => unary_op('stringify', 'Num', sub ($n) { oct($n) }),
+
+                'chomp'   => unary_op('stringify', 'Str', sub ($n) { chomp($n); $n }),
+                'length'  => unary_op('stringify', 'Num', sub ($n) { length($n); }),
+
+                'index'  => binary_op('stringify', 'Num',  sub ($n, $m) { index($n, $m)  }),
+                'rindex' => binary_op('stringify', 'Num',  sub ($n, $m) { rindex($n, $m) }),
             },
             'Ref' => +{
                 'get' => +{
@@ -374,10 +444,66 @@ class MXCL::Runtime::Primitives {
                     signature => [ { name => 'array' } ],
                     impl      => sub ($array) { $terms->Num( $array->length ) },
                 },
-                'at'     => +{
+                'at' => +{
                     kind      => 'applicative',
                     signature => [ { name => 'array' }, { name => 'index', coerce => 'numify' } ],
                     impl      => sub ($array, $index) { $array->at( $index ) },
+                },
+                'reverse' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'array' } ],
+                    impl      => sub ($array) {
+                        my @array = $array->elements->@*;
+                        $terms->Array( reverse @array );
+                    },
+                },
+                'push' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'array' }, { name => 'item' } ],
+                    impl      => sub ($array, $item) {
+                        if ($item isa MXCL::Term::Nil) {
+                            return $array;
+                        }
+                        elsif ($item isa MXCL::Term::Cons) {
+                            return $terms->Array(
+                                $array->elements->@*,
+                                $item->uncons
+                            )
+                        }
+                        else {
+                            return $terms->Array( $array->elements->@*, $item );
+                        }
+                    },
+                },
+                'unshift'  => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'array' }, { name => 'item' } ],
+                    impl      => sub ($array, $item) {
+                        if ($item isa MXCL::Term::Nil) {
+                            return $array;
+                        }
+                        elsif ($item isa MXCL::Term::Cons) {
+                            return $terms->Array(
+                                $item->uncons,
+                                $array->elements->@*,
+                            )
+                        }
+                        else {
+                            return $terms->Array( $item, $array->elements->@* );
+                        }
+                    },
+                },
+                'splice' => +{
+                    kind      => 'applicative',
+                    signature => [
+                        { name => 'array' },
+                        { name => 'offset', coerce => 'numify' },
+                        { name => 'length', coerce => 'numify' },
+                    ],
+                    impl => sub ($array, $offset, $length) {
+                        my @array = $array->elements->@*;
+                        $terms->Array( splice @array, $offset, $length )
+                    },
                 },
             },
             'Hash' => +{
@@ -388,8 +514,44 @@ class MXCL::Runtime::Primitives {
                 },
                 'at' => +{
                     kind      => 'applicative',
-                    signature => [ { name => 'hash' }, { name => 'index', coerce => 'stringify' } ],
-                    impl      => sub ($hash, $index) { $hash->at( $index ) },
+                    signature => [ { name => 'hash' }, { name => 'key', coerce => 'stringify' } ],
+                    impl      => sub ($hash, $key) { $hash->at( $key ) },
+                },
+                'delete' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'hash' }, { name => 'key', coerce => 'stringify' } ],
+                    impl      => sub ($hash, $key) {
+                        my %hash = $hash->elements->%*;
+                        delete $hash{ $key };
+                        $terms->Hash( %hash );
+                    },
+                },
+                'add' => +{
+                    kind      => 'applicative',
+                    signature => [
+                        { name => 'hash' },
+                        { name => 'key', coerce => 'stringify' },
+                        { name => 'value' },
+                    ],
+                    impl      => sub ($hash, $key, $value) {
+                        my %hash = $hash->elements->%*;
+                        $hash{ $key } = $value;
+                        $terms->Hash( %hash );
+                    },
+                },
+                'keys' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'hash' } ],
+                    impl      => sub ($hash) {
+                        $terms->List( map $terms->Str($_), keys $hash->elements->%* )
+                    },
+                },
+                'values' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'hash' } ],
+                    impl      => sub ($hash) {
+                        $terms->List( values $hash->elements->%* )
+                    },
                 },
             },
             'Role' => +{

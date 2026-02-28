@@ -146,6 +146,8 @@ role for each of the core literal terms, and MXCL autoboxes it accordingly.
     * [x] Ref 
     * [ ] Array
     * [ ] Hash
+    * [ ] Cons
+    * [ ] Channel
 - Role Creation & Composition
     * [x] summation
     - [ ] difference

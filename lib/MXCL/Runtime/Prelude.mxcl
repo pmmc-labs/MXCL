@@ -27,16 +27,23 @@
 (bind if    (cond if-true if-false) "if")
 (bind while (cond body)             "while")
 
-(bind let   (name value)            "let")
+(bind let     (name value)       "let")
 (bind define  (name params body) "define")
+(bind lambda  (params body)      "lambda")
+
+(bind role    (@)    "role")
 (bind require (name) "require")
 (bind with    (role) "with")
-(bind role    (@) "role")
-(bind lambda  (params body) "lambda")
 
-(bind cons    (head tail)  "cons")
-(bind quote   (value)      "quote")
-(bind eval    (expr)      "eval")
+(bind cons    (h t)  "cons")
+(bind head    (list) "head")
+(bind tail    (list) "tail")
+
+(bind quote   (value) "quote")
+(bind eval    (expr)  "eval")
+
+(bind join    (sep list) "join")
+(bind split   (sep str)  "split")
 
 (bind make-opaque  (role)  "make-opaque")
 (bind make-ref     (value) "make-ref")
@@ -67,50 +74,98 @@
 ;; ----------------------------------------------------------
 
 (role Bool (with <EQ>)
+    ;; native-operators
     (bind   == (n m) "Bool::==")
+    ;; operators
     (define && (n m) (and n m))
     (define || (n m) (or n m)))
 
 (role Num (with <ORD>)
+    ;; native-operators
     (bind == (n m) "Num::==")
     (bind >  (n m) "Num::>")
     (bind +  (n m) "Num::+")
     (bind -  (n m) "Num::-")
     (bind *  (n m) "Num::*")
     (bind /  (n m) "Num::/")
-    (bind %  (n m) "Num::%"))
+    (bind %  (n m) "Num::%")
+    ;; native-methods
+    (bind .abs  (n) "Num::abs")
+    (bind .cos  (n) "Num::cos")
+    (bind .sin  (n) "Num::sin")
+    (bind .int  (n) "Num::int")
+    (bind .sqrt (n) "Num::sqrt")
+    (bind .rand (n) "Num::rand")
+    (bind .chr  (n) "Num::chr"))
 
 (role Str (with <ORD>)
+    ;; native-operators
     (bind == (n m) "Str::==")
     (bind >  (n m) "Str::>")
-    (bind ~  (n m) "Str::~"))
+    (bind ~  (n m) "Str::~")
+    ;; native-methods
+    (bind .uc      (n)   "Str::uc")
+    (bind .lc      (n)   "Str::lc")
+    (bind .fc      (n)   "Str::fc")
+    (bind .ucfirst (n)   "Str::ucfirst")
+    (bind .lcfirst (n)   "Str::lcfirst")
+    (bind .hex     (n)   "Str::hex")
+    (bind .oct     (n)   "Str::oct")
+    (bind .chomp   (n)   "Str::chomp")
+    (bind .length  (n)   "Str::length")
+    (bind .index   (n m) "Str::index")
+    (bind .rindex  (n m) "Str::rindex")
+    (bind .split   (n p) "split")
+    (bind .join    (n p) "join"))
 
 (role Role (with <EQ>)
-    (bind ++ (r1 r2) "Role::compose")
-    (define == (r1 r2) (eq? r1 r2)))
+    ;; operators
+    (define == (r1 r2) (eq? r1 r2))
+    ;; native-methods
+    (bind ++ (r1 r2) "Role::compose"))
 
 (role Ref (with <EQ>)
+    ;; operators
     (define == (r1 r2) (eq? r1 r2))
+    ;; native-methods
     (bind .get  (r)   "Ref::get")
     (bind .set! (r v) "Ref::set"))
 
 (role Array (with <EQ>)
+    ;; operators
     (define ==   (a1 a2) (eq? a1 a2))
-    (bind .length (a)   "Array::length")
-    (bind .at     (a i) "Array::at"))
+    ;; native-methods
+    (bind .length  (a)     "Array::length")
+    (bind .at      (a i)   "Array::at")
+    (bind .reverse (a)     "Array::reverse")
+    (bind .push    (a i)   "Array::push")
+    (bind .unshift (a i)   "Array::unshift")
+    (bind .splice  (a o l) "Array::splice")
+    ;; methods
+    (define .join  (a sep) (join sep a)))
 
 (role Hash (with <EQ>)
+    ;; operators
     (define ==   (h1 h2) (eq? h1 h2))
-    (bind .length (h)   "Hash::length")
-    (bind .at     (h k) "Hash::at"))
+    ;; native-methods
+    (bind .length (h)     "Hash::length")
+    (bind .at     (h k)   "Hash::at")
+    (bind .add    (h k v) "Hash::add")
+    (bind .delete (h k)   "Hash::delete")
+    (bind .keys   (h)     "Hash::keys")
+    (bind .values (h)     "Hash::values"))
 
 (role Channel (with <EQ>)
+    ;; operators
     (define ==  (ch1 ch2) (eq? ch1 ch2))
+    ;; native-methods
     (bind .read  (ch)      "Channel::read")
     (bind .write (ch data) "Channel::write"))
 
 (role Cons ()
+    ;; methods
     (define .eval (expr) (eval expr)))
+
 
 ;; ----------------------------------------------------------
 ;; Meta Information
