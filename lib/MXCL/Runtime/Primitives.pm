@@ -47,9 +47,10 @@ class MXCL::Runtime::Primitives {
     }
 
     method initialize_functions ($context) {
-        my $terms = $context->terms;
-        my $roles = $context->roles;
-        my $konts = $context->kontinues;
+        my $terms     = $context->terms;
+        my $roles     = $context->roles;
+        my $konts     = $context->kontinues;
+        my $generator = $context->generator;
 
         $functions //= +{
             'bind'    => +{
@@ -100,10 +101,7 @@ class MXCL::Runtime::Primitives {
                     { name => 'rhs' },
                 ],
                 impl => sub ($env, $lhs, $rhs) {
-                    return (
-                        $konts->IfElse( $env, $lhs, $rhs, $lhs, $terms->Nil ),
-                        $konts->EvalExpr( $env, $lhs, $terms->Nil ),
-                    )
+                    return $generator->AndShortCircuit( $env, $lhs, $rhs )
                 }
             },
             'or'      => +{
@@ -113,10 +111,7 @@ class MXCL::Runtime::Primitives {
                     { name => 'rhs' },
                 ],
                 impl => sub ($env, $lhs, $rhs) {
-                    return (
-                        $konts->IfElse( $env, $lhs, $lhs, $rhs, $terms->Nil ),
-                        $konts->EvalExpr( $env, $lhs, $terms->Nil ),
-                    )
+                    return $generator->OrShortCircuit( $env, $lhs, $rhs )
                 }
             },
             # CONTROL
@@ -124,12 +119,7 @@ class MXCL::Runtime::Primitives {
                 kind      => 'operative',
                 signature => [{ name => '@' }],
                 impl => sub ($env, @exprs) {
-                    return $konts->Scope( $env, $terms->Nil )->wrap(
-                        (reverse map {
-                            $konts->Discard($env, $terms->Nil),
-                            $konts->EvalExpr($env, $_, $terms->Nil)
-                        } @exprs),
-                    )
+                    return $generator->EvalStatementsInScope( $env, \@exprs )
                 }
             },
             'if'    => +{
@@ -140,9 +130,8 @@ class MXCL::Runtime::Primitives {
                     { name => 'if-false' },
                 ],
                 impl => sub ($env, $cond, $if_true, $if_false) {
-                    return $konts->Scope( $env, $terms->Nil )->wrap(
-                        $konts->IfElse( $env, $cond, $if_true, $if_false, $terms->Nil ),
-                        $konts->EvalExpr( $env, $cond, $terms->Nil ),
+                    return $generator->InScope( $env,
+                        $generator->Conditional( $env, $cond, $if_true, $if_false )
                     )
                 }
             },
@@ -153,9 +142,8 @@ class MXCL::Runtime::Primitives {
                     { name => 'body' },
                 ],
                 impl => sub ($env, $cond, $body) {
-                    return $konts->Scope( $env, $terms->Nil )->wrap(
-                        $konts->DoWhile( $env, $cond, $body, $terms->Nil ),
-                        $konts->EvalExpr( $env, $cond, $terms->Nil ),
+                    return $generator->InScope( $env,
+                        $generator->LoopWhile( $env, $cond, $body ),
                     )
                 }
             },
@@ -167,10 +155,7 @@ class MXCL::Runtime::Primitives {
                     { name => 'value' },
                 ],
                 impl => sub ($env, $name, $value) {
-                    return (
-                        $konts->Define( $env, $name, $terms->Nil ),
-                        $konts->EvalExpr( $env, $value, $terms->Nil )
-                    );
+                    $generator->DeclareVariable($env, $name, $value);
                 }
             },
             'define' => +{
@@ -181,11 +166,7 @@ class MXCL::Runtime::Primitives {
                     { name => 'body'   },
                 ],
                 impl => sub ($env, $name, $params, $body) {
-                    return $konts->Define(
-                        $env,
-                        $name,
-                        $terms->List( $terms->Lambda( $params, $body, $env, $name ) )
-                    );
+                    $generator->DefineFunction($env, $name, $params, $body);
                 }
             },
             'require' => +{
@@ -218,20 +199,8 @@ class MXCL::Runtime::Primitives {
             'role'   => +{
                 kind      => 'operative',
                 signature => [{ name => '@' }],
-                impl => sub ($env, @args) {
-                    my ($name, $with, @exprs) = @args;
-                    #say "WITH: ".$with->pprint;
-                    return (
-                        $konts->Define( $env, $name, $terms->Nil ),
-                        $konts->Scope( $env, $terms->Nil )->wrap(
-                            ($with isa MXCL::Term::Nil ? () : $konts->ApplyStack( $env, $with )),
-                            $konts->Capture( $env, $terms->Nil ),
-                            (reverse map {
-                                $konts->Discard($env, $terms->Nil),
-                                $konts->EvalExpr($env, $_, $terms->Nil)
-                            } @exprs),
-                        )
-                    )
+                impl => sub ($env, $name, $with, @exprs) {
+                    $generator->DefineRole( $env, $name, $with, \@exprs ),
                 }
             },
             # CONSTRUCT
@@ -339,13 +308,10 @@ class MXCL::Runtime::Primitives {
                 kind      => 'operative',
                 signature => [{ name => '@' }],
                 impl => sub ($env, @exprs) {
-                    return $konts->Scope( $env, $terms->Nil )->wrap(
-                        $konts->Capture( $env, $terms->Nil ),
-                        (reverse map {
-                            $konts->Discard($env, $terms->Nil),
-                            $konts->EvalExpr($env, $_, $terms->Nil)
-                        } @exprs),
-                    )
+                    # HMMM:
+                    # think about allowing the first arg
+                    # to optionally by a with list?
+                    $generator->ConstructRole( $env, $terms->Nil, \@exprs )
                 }
             },
             'make-array'  => +{
@@ -368,9 +334,10 @@ class MXCL::Runtime::Primitives {
     }
 
     method initialize_types ($context) {
-        my $terms = $context->terms;
-        my $roles = $context->roles;
-        my $konts = $context->kontinues;
+        my $terms     = $context->terms;
+        my $roles     = $context->roles;
+        my $konts     = $context->kontinues;
+        my $generator = $context->generator;
 
         $types //= +{
             'Bool' => +{

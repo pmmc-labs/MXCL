@@ -18,6 +18,8 @@ use MXCL::Allocator::Kontinues;
 use MXCL::Tape;
 use MXCL::Tape::Spliced;
 
+use MXCL::Context::CodeGenerator;
+
 use MXCL::Debugger;
 
 class MXCL::Context {
@@ -32,6 +34,7 @@ class MXCL::Context {
     field $machine   :reader;
     field $runtime   :reader;
     field $tape      :reader;
+    field $generator :reader;
 
     field @scopes;
     field %channels;
@@ -50,6 +53,7 @@ class MXCL::Context {
         $runtime   = MXCL::Runtime->new;
         $machine   = MXCL::Machine->new;
         $tape      = MXCL::Tape::Spliced->new;
+        $generator = MXCL::Context::CodeGenerator->new( context => $self );
     }
 
     method initialize (%options) {
@@ -67,16 +71,10 @@ class MXCL::Context {
         ## Run the Prelude
         ## ------------------------------------------------
 
-        my $prelude = $runtime->prelude->artifact;
-
-        # Splice in the prelude ...
         $tape->splice(
-            MXCL::Tape->new( exprs => $prelude )->enqueue(
-                $kontinues->Host($scopes[-1], 'HALT', +{}, $terms->Nil),
-                reverse map {
-                    $kontinues->Discard($scopes[-1], $terms->Nil),
-                    $kontinues->EvalExpr($scopes[-1], $_, $terms->Nil)
-                } @$prelude
+            $generator->create_tape(
+                $scopes[-1],
+                $runtime->prelude->artifact
             )
         );
 
@@ -126,19 +124,10 @@ class MXCL::Context {
         ## ------------------------------------------------
 
         my $IO = MXCL::Runtime::Core::IO->new->initialize($self);
-        my $IO_module = $IO->artifact;
-
-        ## Load the IO module ...
 
         # Splice in the IO module ...
         $tape->splice(
-            MXCL::Tape->new( exprs => $IO_module )->enqueue(
-                $kontinues->Host($scopes[-1], 'HALT', +{}, $terms->Nil),
-                reverse map {
-                    $kontinues->Discard($scopes[-1], $terms->Nil),
-                    $kontinues->EvalExpr($scopes[-1], $_, $terms->Nil)
-                } @$IO_module
-            )
+            $generator->create_tape( $scopes[-1], $IO->artifact )
         );
 
         push @scopes => $machine->run( $self )->env;
@@ -147,17 +136,10 @@ class MXCL::Context {
         ## Load the Test module ...
 
         my $Test = MXCL::Runtime::Core::Test->new->initialize($self);
-        my $Test_module = $Test->artifact;
 
         # Splice in the Test module ...
         $tape->splice(
-            MXCL::Tape->new( exprs => $Test_module )->enqueue(
-                $kontinues->Host($scopes[-1], 'HALT', +{}, $terms->Nil),
-                reverse map {
-                    $kontinues->Discard($scopes[-1], $terms->Nil),
-                    $kontinues->EvalExpr($scopes[-1], $_, $terms->Nil)
-                } @$Test_module
-            )
+            $generator->create_tape( $scopes[-1], $Test->artifact )
         );
 
         push @scopes => $machine->run( $self )->env;
@@ -181,19 +163,7 @@ class MXCL::Context {
     }
 
     method evaluate ($env, $exprs, %opts) {
-        # Splice in the program ...
-        $tape->splice(
-            MXCL::Tape->new( exprs => $exprs )->enqueue(
-                $kontinues->Host($env, 'HALT', +{}, $terms->Nil),
-                reverse map {
-                    $kontinues->Discard($env, $terms->Nil),
-                    $kontinues->EvalExpr($env, $_, $terms->Nil)
-                } @$exprs
-            )
-        );
-
-        my $result = $machine->run( $self );
-
-        return $result;
+        $tape->splice( $generator->create_tape( $env, $exprs ) );
+        return $machine->run( $self );
     }
 }
