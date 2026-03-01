@@ -193,7 +193,7 @@ contexts:
           if | do | while | and | or | not | quote | eval | cons |
           nil\?   | bool\?  | num\?   | str\?    | sym\?  |
           lambda\?| array\? | ref\?   | opaque\? | role\? |
-          eq\?    | head | tail | join | split |
+          eq\?    | head | tail | join | split | list |
           make-opaque | make-ref | make-role | make-array | make-hash | make-channel
         ){{token_end}}
       scope: support.function.builtin.mxcl

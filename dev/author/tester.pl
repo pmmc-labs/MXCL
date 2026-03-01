@@ -17,14 +17,7 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
-(+[
-   +[ 1 2 3 ]
-   +[ 4 5 6 ]
-   +[ 7 8 9 ]
-] .map
-    (-> (a)
-        (a .map (-> (x) (x * 2)))))
-
+(join ", " ())
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );

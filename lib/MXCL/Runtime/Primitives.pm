@@ -261,7 +261,7 @@ class MXCL::Runtime::Primitives {
                 returns => 'Str',
                 impl    => sub ($sep, $list) {
                     if ($list isa MXCL::Term::Nil) {
-                        return $terms->Str('');
+                        return "";
                     }
                     elsif ($list isa MXCL::Term::Cons) {
                         return join $sep, map $_->stringify, $list->uncons;
@@ -271,7 +271,6 @@ class MXCL::Runtime::Primitives {
                     }
                     # XXX - should we handle Hash??
                     else {
-                        say "HI!";
                         return $list->stringify;
                     }
                 }
@@ -315,6 +314,11 @@ class MXCL::Runtime::Primitives {
                         $terms->List( $terms->Lambda( $params, $body, $env ) )
                     );
                 }
+            },
+            'list'  => +{
+                kind      => 'applicative',
+                signature => [ { name => '@' } ],
+                impl      => sub (@elements) { $terms->List(@elements) }
             },
             'make-opaque' => +{
                 kind      => 'applicative',

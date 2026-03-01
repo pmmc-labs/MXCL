@@ -36,6 +36,7 @@
 (bind require (name) "require")
 (bind with    (role) "with")
 
+(bind list    (@)    "list")
 (bind cons    (h t)  "cons")
 (bind head    (list) "head")
 (bind tail    (list) "tail")
