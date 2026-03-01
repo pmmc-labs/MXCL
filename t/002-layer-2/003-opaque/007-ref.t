@@ -3,47 +3,45 @@
 use v5.42;
 
 use Test::More;
-use Test::MXCL qw[ test_mxcl ];
+use MXCL::Context;
 
 # Ref: mutable cell created with make-ref, accessed with .get and mutated with .set!
 
-# --- .get on initial value ---
-
-test_mxcl(q[
+my $source = q[
+    (diag ".get on initial value")
     (let r (make-ref 42))
     (is (r .get) 42 "... ref.get returns initial value")
-]);
 
-test_mxcl(q[
-    (let r (make-ref "hello"))
-    (is (r .get) "hello" "... ref.get works for strings")
-]);
+    (let r2 (make-ref "hello"))
+    (is (r2 .get) "hello" "... ref.get works for strings")
 
-# --- .set! then .get ---
+    (diag ".set! then .get")
+    (let r3 (make-ref 0))
+    (r3 .set! 99)
+    (is (r3 .get) 99 "... ref.get returns updated value after set!")
 
-test_mxcl(q[
-    (let r (make-ref 0))
-    (r .set! 99)
-    (is (r .get) 99 "... ref.get returns updated value after set!")
-]);
+    (diag "multiple mutations")
+    (let r4 (make-ref 1))
+    (r4 .set! 2)
+    (r4 .set! 3)
+    (is (r4 .get) 3 "... ref.get returns last value after multiple set!")
 
-# --- multiple mutations ---
-
-test_mxcl(q[
-    (let r (make-ref 1))
-    (r .set! 2)
-    (r .set! 3)
-    (is (r .get) 3 "... ref.get returns last value after multiple set!")
-]);
-
-# --- ref used as counter (as in the Test::Builder role) ---
-
-test_mxcl(q[
+    (diag "ref used as counter")
     (let count (make-ref 0))
     (count .set! ((count .get) + 1))
     (count .set! ((count .get) + 1))
     (count .set! ((count .get) + 1))
     (is (count .get) 3 "... ref used as counter reaches 3")
-]);
 
-done_testing;
+    (done-testing)
+];
+
+my $context = MXCL::Context->new->initialize;
+try {
+    my $result = $context->evaluate(
+        $context->base_scope,
+        $context->compile_source($source)
+    );
+} catch ($e) {
+    BAIL_OUT($e);
+}

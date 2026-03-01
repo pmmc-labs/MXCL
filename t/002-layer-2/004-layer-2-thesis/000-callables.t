@@ -3,16 +3,12 @@
 use v5.42;
 
 use Test::More;
-use Test::MXCL qw[ ctx test_mxcl ];
+use Test::MXCL qw[ ctx ];
 
 # Layer 2 thesis: every callable is either an Applicative (args evaluated before
 # the call) or an Operative (args are raw unevaluated AST).  There is no third
-# kind.  This file demonstrates the duality both structurally (via Perl-level
-# type inspection) and behaviourally (via observable MXCL execution).
-
-# =============================================================================
-# Structural: inspect the base scope
-# =============================================================================
+# kind.  This file demonstrates the duality structurally (via Perl-level
+# type inspection).
 
 my $ctx   = ctx;
 my $scope = $ctx->base_scope;

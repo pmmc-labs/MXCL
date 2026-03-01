@@ -4,7 +4,8 @@ use v5.42;
 
 use Test::More;
 use Scalar::Util qw[ refaddr ];
-use Test::MXCL qw[ ctx test_mxcl ];
+use MXCL::Context;
+use Test::MXCL qw[ ctx ];
 
 # Layer 2 thesis: environments are immutable, content-addressed Roles.
 # Scope derivation is Role union; name lookup is slot lookup.
@@ -80,5 +81,37 @@ isa_ok $ctx->base_scope, 'MXCL::Term::Role',
         'base_scope itself is unchanged (it is immutable)';
 }
 
-#
+# =============================================================================
+# Structural: top-level let extends the threading env
+# A let at the top level (not inside a do) propagates up to the returned env.
+# =============================================================================
+
+{
+    my $ctx2 = MXCL::Context->new->initialize;
+
+    my $result = $ctx2->evaluate(
+        $ctx2->base_scope,
+        $ctx2->compile_source('(let __top 1)')
+    );
+
+    isnt $result->env->hash, $ctx2->base_scope->hash,
+        'top-level let: returned env is extended beyond base_scope';
+}
+
+# =============================================================================
+# Structural: let inside a do block does not escape the scope boundary
+# =============================================================================
+
+{
+    my $ctx3 = MXCL::Context->new->initialize;
+
+    my $result = $ctx3->evaluate(
+        $ctx3->base_scope,
+        $ctx3->compile_source('(do (let __inner 1))')
+    );
+
+    ok not(defined $result->env->lookup('__inner')),
+        'let inside do: __inner does not escape the scope boundary';
+}
+
 done_testing;
