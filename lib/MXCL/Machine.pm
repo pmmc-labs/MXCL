@@ -100,7 +100,7 @@ class MXCL::Machine {
             # ------------------------------------------------------------------
             when ('MXCL::Term::Kontinue::IfElse') {
                 my $condition = $k->stack->head;
-                if ($condition->value) {
+                if (not($condition isa MXCL::Term::Nil) && $condition->value) {
                     return # AND short/circuit
                         refaddr $k->condition == refaddr $k->if_true
                             ? $Konts->Return( $k->env, $Terms->List( $condition ) )
