@@ -155,7 +155,7 @@ class MXCL::Runtime::Primitives {
                     { name => 'value' },
                 ],
                 impl => sub ($env, $name, $value) {
-                    $generator->DeclareVariable($env, $name, $value);
+                    $generator->DeclareVariable( $env, $name, $value );
                 }
             },
             'define' => +{
@@ -173,27 +173,14 @@ class MXCL::Runtime::Primitives {
                 kind      => 'operative',
                 signature => [{ name => 'name' }],
                 impl => sub ($env, $name) {
-                    #say "REQUIRE: ",$name->pprint;
-                    return $konts->Define(
-                        $env,
-                        $name,
-                        $terms->List($roles->Required( $name ))
-                    );
+                    $generator->DeclareRequirement( $env, $name )
                 }
             },
             'with' => +{ # TODO - this should be an applicative
                 kind      => 'operative',
                 signature => [{ name => '@' }],
                 impl => sub ($env, $lhs, $rhs) {
-                    ($lhs, $rhs) = map {
-                        $_ isa MXCL::Term::Sym
-                            ? $env->lookup( $_->value )->value
-                            : $_
-                    } ($lhs, $rhs);
-                    return $konts->Return(
-                        $env,
-                        $terms->List( $roles->Union( $lhs, $rhs ) )
-                    );
+                    $generator->ComposeRoles ($env, $lhs, $rhs);
                 }
             },
             'role'   => +{
@@ -268,7 +255,7 @@ class MXCL::Runtime::Primitives {
                 kind      => 'operative',
                 signature => [ { name => 'value' } ],
                 impl      => sub ($env, $value) {
-                    $konts->Return( $env, $terms->List( $value ) )
+                    $generator->ReturnValues( $env, $value );
                 }
             },
             'lambda'      => +{
@@ -278,10 +265,10 @@ class MXCL::Runtime::Primitives {
                     { name => 'body'   },
                 ],
                 impl => sub ($env, $params, $body) {
-                    return $konts->Return(
+                    $generator->ReturnValues(
                         $env,
-                        $terms->List( $terms->Lambda( $params, $body, $env ) )
-                    );
+                        $terms->Lambda( $params, $body, $env )
+                    )
                 }
             },
             'list'  => +{

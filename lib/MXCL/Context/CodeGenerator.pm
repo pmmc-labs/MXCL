@@ -39,6 +39,13 @@ class MXCL::Context::CodeGenerator {
         )
     }
 
+    method ReturnValues ($env, @values) {
+        $kontinues->Return(
+            $env,
+            (@values ? $terms->List( @values ) : $terms->Nil)
+        )
+    }
+
     method ConstructRole ($env, $with, $exprs) {
         $self->InScope( $env,
             ($with isa MXCL::Term::Nil
@@ -49,6 +56,28 @@ class MXCL::Context::CodeGenerator {
     }
 
     # --------------------------------------------------------------------------
+
+    method ComposeRoles ($env, $lhs, $rhs) {
+        ($lhs, $rhs) = map {
+            $_ isa MXCL::Term::Sym
+                ? $env->lookup( $_->value )->value
+                : $_
+        } ($lhs, $rhs);
+        return $kontinues->Return(
+            $env,
+            $terms->List( $roles->Union( $lhs, $rhs ) )
+        );
+    }
+
+    # --------------------------------------------------------------------------
+
+    method DeclareRequirement ($env, $name) {
+        $kontinues->Define(
+            $env,
+            $name,
+            $terms->List( $roles->Required( $name ) )
+        );
+    }
 
     method DeclareVariable ($env, $name, $value) {
         return (
