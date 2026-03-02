@@ -17,21 +17,7 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
-(require x)
 
-(let scope1 ((^CTX .current-scope) .difference (^CTX .base-scope)))
-
-(let x 10)
-(let scope2 ((^CTX .current-scope) .difference (^CTX .base-scope)))
-
-(let x 20)
-(let scope3 ((^CTX .current-scope) .difference (^CTX .base-scope)))
-
-(say "------------------------------")
-(say scope1)
-(say scope2)
-(say scope3)
-(say "------------------------------")
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );
@@ -61,6 +47,33 @@ TIMING:
 
 
 __END__
+
+;; -----------------------------------------------------------------------------
+;; Broken-ish REPL
+;; -----------------------------------------------------------------------------
+
+(define repl ()
+    (do
+    (let running (make-ref true))
+    (while (running .get)
+        (do
+            (let code (readline))
+            (if (code == "q")
+                (running .set! false)
+                (say (eval (^CTX .compile code))))
+        ))))
+
+;; -----------------------------------------------------------------------------
+;; Role introspection
+;; -----------------------------------------------------------------------------
+
+(define dump-role-slots (name r)
+    (do
+        (say ("name: " ~ name))
+        (say ("hash: " ~ (hash-of r)))
+        (reduce ()
+            (-> (s acc) (say (" - slot: " ~ (s .ident))))
+                (r .get-all-slots))))
 
 ;; -----------------------------------------------------------------------------
 ;; Scope introspection

@@ -583,6 +583,22 @@ class MXCL::Runtime::Primitives {
                         return $terms->Nil;
                     }
                 },
+                'get-all-slots' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'role' } ],
+                    impl      => sub ($role) {
+                        my @slots = $role->slots->@*;
+                        return $terms->Nil unless @slots;
+                        return $terms->List( @slots );
+                    }
+                },
+            },
+            'Slot' => +{
+                'get-ident' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'slot' } ],
+                    impl      => sub ($slot) { $slot->ident }
+                },
             },
             'ContextRef' => +{
                 'compile' => +{

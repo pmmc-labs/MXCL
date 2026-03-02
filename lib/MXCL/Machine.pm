@@ -211,7 +211,7 @@ class MXCL::Machine {
                     my $name = $args->head; # should be Sym
                     my $slot = $role->lookup( $name->value );
 
-                    die "Bad Slot! ".($slot ? $slot->pprint : 'Absent')." for ".(join '/' => $call->type, $name->value)
+                    die "Bad Slot! ".($slot ? $slot->pprint : 'Absent')." for ".(join '/' => $call->type, $name->value)." in ".$role->pprint
                         unless $slot isa MXCL::Term::Role::Slot::Defined;
 
                     my $method = $slot->value;
