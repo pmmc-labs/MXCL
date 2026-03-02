@@ -170,12 +170,10 @@ class MXCL::Context {
     }
 
     method enter_scope ($scope) {
-        #say "+ ENTER SCOPE: ", $scope->hash;
         push @scopes => $scope;
     }
 
     method leave_scope {
-        #say "+ LEAVING SCOPE: ", $scopes[-1]->hash;
         pop @scopes;
     }
 

@@ -132,7 +132,7 @@ class MXCL::Runtime::Primitives {
                     { name => 'if-false' },
                 ],
                 impl => sub ($env, $cond, $if_true, $if_false) {
-                    return $generator->InScope( $env,
+                    return $generator->InScope( $env, $env,
                         $generator->Conditional( $env, $cond, $if_true, $if_false )
                     )
                 }
@@ -144,7 +144,7 @@ class MXCL::Runtime::Primitives {
                     { name => 'body' },
                 ],
                 impl => sub ($env, $cond, $body) {
-                    return $generator->InScope( $env,
+                    return $generator->InScope( $env, $env,
                         $generator->LoopWhile( $env, $cond, $body ),
                     )
                 }

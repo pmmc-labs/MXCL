@@ -89,12 +89,12 @@ class MXCL::Allocator::Kontinues {
 
     ## -------------------------------------------------------------------------
 
-    method Scope ($env, $stack) {
+    method Scope ($enter, $leave, $stack) {
         $arena->allocate(MXCL::Term::Kontinue::Scope::Enter::,
-            env   => $env,
+            env   => $enter,
             stack => $stack,
             leave => $arena->allocate(MXCL::Term::Kontinue::Scope::Leave::,
-                env   => $env,
+                env   => $leave,
                 stack => $stack,
             )
         );

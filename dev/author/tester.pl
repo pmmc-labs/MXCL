@@ -17,26 +17,37 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
-(say (hash-of (^CTX .prelude-scope)))
-(say (hash-of (^CTX .io-scope)))
-(say (hash-of (^CTX .test-scope)))
-(say (hash-of (^CTX .base-scope)))
+(define testing ()
+    (do
+        (say "=============================")
+        (say (hash-of (^CTX .current-scope)))
+        (say "=============================")
+    ))
+
 (say (hash-of (^CTX .current-scope)))
 (say "---------------------------")
+
+(testing)
 
 (let a 1)
 (say (hash-of (^CTX .current-scope)))
 (say "---------------------------")
 
+(testing)
+
 (do
+    (say (hash-of (^CTX .current-scope)))
     (let x 10)
     (say (hash-of (^CTX .current-scope)))
     (let y 20)
     (say (hash-of (^CTX .current-scope)))
+    (testing)
 )
 
 (say "---------------------------")
 (say (hash-of (^CTX .current-scope)))
+
+(testing)
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );

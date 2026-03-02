@@ -28,8 +28,8 @@ class MXCL::Context::CodeGenerator {
 
     # --------------------------------------------------------------------------
 
-    method InScope ($env, @kontinues) {
-        $kontinues->Scope( $env, $terms->Nil )->wrap( @kontinues )
+    method InScope ($enter, $leave, @kontinues) {
+        $kontinues->Scope( $enter, $leave, $terms->Nil )->wrap( @kontinues )
     }
 
     method CaptureScope ($env, $exprs) {
@@ -47,7 +47,7 @@ class MXCL::Context::CodeGenerator {
     }
 
     method ConstructRole ($env, $with, $exprs) {
-        $self->InScope( $env,
+        $self->InScope( $env, $env,
             ($with isa MXCL::Term::Nil
                 ? ()
                 : $kontinues->ApplyStack( $env, $with )),
@@ -105,7 +105,7 @@ class MXCL::Context::CodeGenerator {
     method DefineRole ($env, $name, $with, $exprs) {
         return (
             $kontinues->Define( $env, $name, $terms->Nil ),
-            $self->InScope( $env,
+            $self->InScope( $env, $env,
                 ($with isa MXCL::Term::Nil
                     ? ()
                     : $kontinues->ApplyStack( $env, $with )),
@@ -128,7 +128,7 @@ class MXCL::Context::CodeGenerator {
     }
 
     method EvalStatementsInScope ($env, $stmts) {
-        $self->InScope( $env, $self->EvalStatements( $env, $stmts ) )
+        $self->InScope( $env, $env, $self->EvalStatements( $env, $stmts ) )
     }
 
     # --------------------------------------------------------------------------

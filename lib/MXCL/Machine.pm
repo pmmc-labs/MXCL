@@ -88,7 +88,6 @@ class MXCL::Machine {
                 $context->enter_scope( $k->env );
                 # TODO
                 # - set up the `defer` function in the Env
-                # - set up a local `return` function in the Env
                 return ();
             }
             when ('MXCL::Term::Kontinue::Scope::Leave') {
@@ -198,7 +197,7 @@ class MXCL::Machine {
 
                     # FIXME: this is gross!!!!
                     unless (defined $autobox) {
-                        $autobox = $context->prelude_scope->lookup($call->type);
+                        $autobox = $context->base_scope->lookup($call->type);
                     }
 
                     unless ($autobox isa MXCL::Term::Role::Slot::Defined) {
@@ -241,10 +240,11 @@ class MXCL::Machine {
                             map {
                                 $Roles->Defined($_, shift @args)
                             } @params,
+                            # TODO: set up a local `return` function
                         )
                     );
 
-                    return $Konts->Scope( $k->env, $Nil )->wrap(
+                    return $Konts->Scope( $local, $k->env, $Nil )->wrap(
                         $Konts->EvalExpr(
                             $local,
                             $call->body,
@@ -278,10 +278,11 @@ class MXCL::Machine {
                             map {
                                 $Roles->Defined($_, shift @args)
                             } @params,
+                            # TODO: set up a local `return` function
                         )
                     );
 
-                    return $Konts->Scope( $k->env, $Nil )->wrap(
+                    return $Konts->Scope( $local, $k->env, $Nil )->wrap(
                         $Konts->EvalExpr(
                             $local,
                             $call->body,
