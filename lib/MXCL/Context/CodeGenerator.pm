@@ -94,6 +94,14 @@ class MXCL::Context::CodeGenerator {
         );
     }
 
+    method DefineFExpr ($env, $name, $params, $body) {
+        return $kontinues->Define(
+            $env,
+            $name,
+            $terms->List( $terms->FExpr( $params, $body, $env, $name ) )
+        );
+    }
+
     method DefineRole ($env, $name, $with, $exprs) {
         return (
             $kontinues->Define( $env, $name, $terms->Nil ),

@@ -89,6 +89,7 @@ class MXCL::Runtime::Primitives {
             'str?'    => type_predicate('MXCL::Term::Str'),
             'sym?'    => type_predicate('MXCL::Term::Sym'),
             'lambda?' => type_predicate('MXCL::Term::Lambda'),
+            'fexpr?'  => type_predicate('MXCL::Term::FExpr'),
             'array?'  => type_predicate('MXCL::Term::Array'),
             'ref?'    => type_predicate('MXCL::Term::Ref'),
             'opaque?' => type_predicate('MXCL::Term::Opaque'),
@@ -167,6 +168,43 @@ class MXCL::Runtime::Primitives {
                 ],
                 impl => sub ($env, $name, $params, $body) {
                     $generator->DefineFunction($env, $name, $params, $body);
+                }
+            },
+            'lambda'      => +{
+                kind      => 'operative',
+                signature => [
+                    { name => 'params' },
+                    { name => 'body'   },
+                ],
+                impl => sub ($env, $params, $body) {
+                    $generator->ReturnValues(
+                        $env,
+                        $terms->Lambda( $params, $body, $env )
+                    )
+                }
+            },
+            'defexpr' => +{
+                kind      => 'operative',
+                signature => [
+                    { name => 'name' },
+                    { name => 'params' },
+                    { name => 'body'   },
+                ],
+                impl => sub ($env, $name, $params, $body) {
+                    $generator->DefineFExpr($env, $name, $params, $body);
+                }
+            },
+            'fexpr' => +{
+                kind      => 'operative',
+                signature => [
+                    { name => 'params' },
+                    { name => 'body'   },
+                ],
+                impl => sub ($env, $params, $body) {
+                    $generator->ReturnValues(
+                        $env,
+                        $terms->FExpr( $params, $body, $env )
+                    )
                 }
             },
             'require' => +{
@@ -256,19 +294,6 @@ class MXCL::Runtime::Primitives {
                 signature => [ { name => 'value' } ],
                 impl      => sub ($env, $value) {
                     $generator->ReturnValues( $env, $value );
-                }
-            },
-            'lambda'      => +{
-                kind      => 'operative',
-                signature => [
-                    { name => 'params' },
-                    { name => 'body'   },
-                ],
-                impl => sub ($env, $params, $body) {
-                    $generator->ReturnValues(
-                        $env,
-                        $terms->Lambda( $params, $body, $env )
-                    )
                 }
             },
             'list'  => +{

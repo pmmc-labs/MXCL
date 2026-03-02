@@ -17,7 +17,11 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
-(join ", " ())
+(defexpr unless (cond if-true)
+    (if (not (eval cond)) (eval if-true) ()))
+
+(unless (10 != 10)
+    (print ("Hello" ~ "\n")))
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );

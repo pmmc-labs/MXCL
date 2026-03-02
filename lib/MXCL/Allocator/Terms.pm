@@ -21,6 +21,7 @@ use MXCL::Term::Array;
 use MXCL::Term::Hash;
 
 use MXCL::Term::Lambda;
+use MXCL::Term::FExpr;
 
 use MXCL::Term::Opaque;
 use MXCL::Term::Ref;
@@ -62,7 +63,22 @@ class MXCL::Allocator::Terms {
 
     method Lambda ($params, $body, $env, $name=undef) {
         $name //= $self->Sym('__SUB__');
-        $arena->allocate(MXCL::Term::Lambda::, name => $name, params => $params, body => $body, env => $env )
+        $arena->allocate(MXCL::Term::Lambda::,
+            name   => $name,
+            params => $params,
+            body   => $body,
+            env    => $env,
+        )
+    }
+
+    method FExpr ($params, $body, $env, $name=undef) {
+        $name //= $self->Sym('__SUB__');
+        $arena->allocate(MXCL::Term::FExpr::,
+            name   => $name,
+            params => $params,
+            body   => $body,
+            env    => $env
+        )
     }
 
     method Array (@elements) {

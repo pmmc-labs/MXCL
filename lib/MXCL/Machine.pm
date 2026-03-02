@@ -182,7 +182,9 @@ class MXCL::Machine {
                             : $Konts->EvalRest( $env, $args, $Nil ))
                     );
                 }
-                elsif ($call isa MXCL::Term::Native::Operative || $call isa MXCL::Term::Opaque) {
+                elsif ($call isa MXCL::Term::Native::Operative
+                    || $call isa MXCL::Term::FExpr
+                    || $call isa MXCL::Term::Opaque) {
                     return $Konts->ApplyOperative( $env, $call, $args );
                 }
                 else {
@@ -253,6 +255,33 @@ class MXCL::Machine {
                 my $args = $k->stack;
                 if ($call isa MXCL::Term::Native::Operative) {
                     return $call->body->( $k->env, $Terms->Uncons( $args ) );
+                }
+                elsif ($call isa MXCL::Term::FExpr) {
+                    my @params = $Terms->Uncons($call->params);
+                    my @args   = $Terms->Uncons($args);
+
+                    die "Arity mismatch in ",$call->name->stringify
+                        if scalar @params != scalar @args;
+
+                    my $local = $Roles->Union(
+                        $call->env,
+                        $Roles->Role(
+                            # Define a recursive self call ...
+                            $Roles->Defined($call->name, $call),
+                            # include the params ...
+                            map {
+                                $Roles->Defined($_, shift @args)
+                            } @params,
+                        )
+                    );
+
+                    return $Konts->Scope( $k->env, $Nil )->wrap(
+                        $Konts->EvalExpr(
+                            $local,
+                            $call->body,
+                            $Nil
+                        )
+                    );
                 }
                 elsif ($call isa MXCL::Term::Opaque) {
                     my $name = $args->head; # should be Sym

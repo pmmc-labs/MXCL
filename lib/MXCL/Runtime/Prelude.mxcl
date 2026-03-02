@@ -14,6 +14,7 @@
 (bind str?    (t) "str?")
 (bind sym?    (t) "sym?")
 (bind lambda? (t) "lambda?")
+(bind fexpr?  (t) "fexpr?")
 (bind array?  (t) "array?")
 (bind ref?    (t) "ref?")
 (bind opaque? (t) "opaque?")
@@ -31,6 +32,9 @@
 (bind define  (name params body) "define")
 (bind lambda  (params body)      "lambda")
 (bind ->      (params body)      "lambda")
+(bind defexpr (name params body) "defexpr")
+(bind fexpr   (params body)      "fexpr")
+(bind ~>      (params body)      "fexpr")
 
 (bind role    (@)    "role")
 (bind require (name) "require")
