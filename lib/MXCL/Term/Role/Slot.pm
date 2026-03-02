@@ -9,6 +9,11 @@ class MXCL::Term::Role::Slot :isa(MXCL::Term) {
     method stringify { $self->type }
     method pprint { $self->type }
 
+    method kind {
+        #my ($kind) = ($self->type =~ /^Slot\:\:(.)/);
+        return lc substr($self->type, 6, 1);
+    }
+
     method DECOMPOSE { () }
 
     sub COMPOSE ($class, %args) {

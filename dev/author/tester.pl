@@ -17,37 +17,21 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
-(define testing ()
-    (do
-        (say "=============================")
-        (say (hash-of (^CTX .current-scope)))
-        (say "=============================")
-    ))
+(require x)
 
-(say (hash-of (^CTX .current-scope)))
-(say "---------------------------")
+(let scope1 ((^CTX .current-scope) .difference (^CTX .base-scope)))
 
-(testing)
+(let x 10)
+(let scope2 ((^CTX .current-scope) .difference (^CTX .base-scope)))
 
-(let a 1)
-(say (hash-of (^CTX .current-scope)))
-(say "---------------------------")
+(let x 20)
+(let scope3 ((^CTX .current-scope) .difference (^CTX .base-scope)))
 
-(testing)
-
-(do
-    (say (hash-of (^CTX .current-scope)))
-    (let x 10)
-    (say (hash-of (^CTX .current-scope)))
-    (let y 20)
-    (say (hash-of (^CTX .current-scope)))
-    (testing)
-)
-
-(say "---------------------------")
-(say (hash-of (^CTX .current-scope)))
-
-(testing)
+(say "------------------------------")
+(say scope1)
+(say scope2)
+(say scope3)
+(say "------------------------------")
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );
@@ -77,6 +61,31 @@ TIMING:
 
 
 __END__
+
+;; -----------------------------------------------------------------------------
+;; Scope introspection
+;; -----------------------------------------------------------------------------
+
+(require x)
+
+(let scope1 ((^CTX .current-scope) .difference (^CTX .base-scope)))
+
+(let x 10)
+(let scope2 ((^CTX .current-scope) .difference (^CTX .base-scope)))
+
+(let x 20)
+(let scope3 ((^CTX .current-scope) .difference (^CTX .base-scope)))
+
+(say "------------------------------")
+(say scope1)
+(say scope2)
+(say scope3)
+(say "------------------------------")
+
+;; -----------------------------------------------------------------------------
+;; some fexpr examples
+;; -----------------------------------------------------------------------------
+
 
 (let unless (~> (cond if-true) (if (not (cond .eval)) (if-true .eval) ())))
 

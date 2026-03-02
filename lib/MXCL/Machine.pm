@@ -91,6 +91,9 @@ class MXCL::Machine {
                 return ();
             }
             when ('MXCL::Term::Kontinue::Scope::Leave') {
+                # XXX:
+                # this should work, but could have issues
+                # so be on the lookout for them :)
                 until ($context->current_scope->hash eq $k->env->hash) {
                     $context->leave_scope;
                 }
