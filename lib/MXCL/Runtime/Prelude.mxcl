@@ -147,42 +147,6 @@
     (define .split (n p) (split p n))
     (bind .join    (n p) "join"))
 
-(role Role (with <EQ>)
-    ;; operators
-    (define == (r1 r2) (eq? r1 r2))
-    ;; native-operators
-    (bind ++ (r1 r2) "Role::union")
-    ;; native-methods
-    (bind .union                 (r1 r2) "Role::union")
-    (bind .difference            (r1 r2) "Role::difference")
-    (bind .intersection          (r1 r2) "Role::intersection")
-    (bind .symmetric-difference  (r1 r2) "Role::symmetric-difference")
-    (bind .asymmetric-difference (r1 r2) "Role::asymmetric-difference")
-
-    (bind .lookup    (r sym) "Role::lookup")
-    (bind .get-all-slots (r) "Role::get-all-slots"))
-
-(role Slot::Defined (with <EQ>)
-    (bind .ident (r) "Slot::get-ident")
-    (define == (r1 r2) (eq? r1 r2))
-    (define .defined?  (r) true)
-    (define .required? (r) false)
-    (define .conflict? (r) false))
-
-(role Slot::Required (with <EQ>)
-    (bind .ident (r) "Slot::get-ident")
-    (define == (r1 r2) (eq? r1 r2))
-    (define .defined?  (r) false)
-    (define .required? (r) true)
-    (define .conflict? (r) false))
-
-(role Slot::Conflict (with <EQ>)
-    (bind .ident (r) "Slot::get-ident")
-    (define == (r1 r2) (eq? r1 r2))
-    (define .defined?  (r) false)
-    (define .required? (r) false)
-    (define .conflict? (r) true))
-
 (role Ref (with <EQ>)
     ;; operators
     (define == (r1 r2) (eq? r1 r2))
@@ -223,9 +187,57 @@
     (bind .read  (ch)      "Channel::read")
     (bind .write (ch data) "Channel::write"))
 
+;; ----------------------------------------------------------
+;; Things I should probably remove ...
+;; ----------------------------------------------------------
+
 (role Cons ()
     ;; methods
     (define .eval (expr) (eval expr)))
+
+;; ----------------------------------------------------------
+;; Roles
+;; ----------------------------------------------------------
+
+(role Role (with <EQ>)
+    ;; operators
+    (define == (r1 r2) (eq? r1 r2))
+    ;; native-operators
+    (bind ++ (r1 r2) "Role::union")
+    ;; native-methods
+    (bind .union                 (r1 r2) "Role::union")
+    (bind .difference            (r1 r2) "Role::difference")
+    (bind .intersection          (r1 r2) "Role::intersection")
+    (bind .symmetric-difference  (r1 r2) "Role::symmetric-difference")
+    (bind .asymmetric-difference (r1 r2) "Role::asymmetric-difference")
+
+    (bind .lookup    (r sym) "Role::lookup")
+    (bind .get-all-slots (r) "Role::get-all-slots"))
+
+(role Slot::Defined (with <EQ>)
+    (bind .ident (r) "Slot::get-ident")
+    (define == (r1 r2) (eq? r1 r2))
+    (define .defined?  (r) true)
+    (define .required? (r) false)
+    (define .conflict? (r) false))
+
+(role Slot::Required (with <EQ>)
+    (bind .ident (r) "Slot::get-ident")
+    (define == (r1 r2) (eq? r1 r2))
+    (define .defined?  (r) false)
+    (define .required? (r) true)
+    (define .conflict? (r) false))
+
+(role Slot::Conflict (with <EQ>)
+    (bind .ident (r) "Slot::get-ident")
+    (define == (r1 r2) (eq? r1 r2))
+    (define .defined?  (r) false)
+    (define .required? (r) false)
+    (define .conflict? (r) true))
+
+;; ----------------------------------------------------------
+;; Runtime System Refs
+;; ----------------------------------------------------------
 
 (role TapeRef (with <EQ>)
     ;; operators
@@ -251,6 +263,10 @@
     (bind .base-scope    (ctx) "ContextRef::base-scope")
     ;; ...
     (bind .compile (ctx source) "ContextRef::compile"))
+
+;; ----------------------------------------------------------
+;; Kontinuations
+;; ----------------------------------------------------------
 
 (role Kontinue (with <EQ>)
     ;; operators

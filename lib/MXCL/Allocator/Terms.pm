@@ -93,12 +93,12 @@ class MXCL::Allocator::Terms {
     }
 
     ## -------------------------------------------------------------------------
-    ## ContextRef (hashed by identity)
+    ## (Context/Tape)Ref (native reference based identity)
     ## -------------------------------------------------------------------------
 
     method ContextRef ($context) {
         state $nonce = 0;
-        my $uid = sprintf 'ctx:%d' => ++$nonce; # unique object identity
+        my $uid = sprintf 'ctx:%d' => refaddr $context;
         $arena->allocate(MXCL::Term::ContextRef::,
             uid       => $uid,
             __context => $context,
@@ -107,7 +107,7 @@ class MXCL::Allocator::Terms {
 
     method TapeRef ($tape) {
         state $nonce = 0;
-        my $uid = sprintf 'tape:%d' => ++$nonce; # unique object identity
+        my $uid = sprintf 'tape:%d' => refaddr $tape;
         $arena->allocate(MXCL::Term::TapeRef::,
             uid    => $uid,
             __tape => $tape,
