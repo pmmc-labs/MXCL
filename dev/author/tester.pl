@@ -17,11 +17,7 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
-(defexpr unless (cond if-true)
-    (if (not (eval cond)) (eval if-true) ()))
-
-(unless (10 != 10)
-    (print ("Hello" ~ "\n")))
+((^CTX .current-scope) .lookup 'map)
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );
@@ -51,6 +47,14 @@ TIMING:
 
 
 __END__
+
+(let unless (~> (cond if-true) (if (not (cond .eval)) (if-true .eval) ())))
+
+(fexpr unless (cond if-true)
+    (if (not (cond .eval)) (if-true .eval) ()))
+
+(fexpr unless (cond if-true)
+    (if (not (eval cond)) (eval if-true) ()))
 
 ;; -----------------------------------------------------------------------------
 ;; multi-dimensional  array map

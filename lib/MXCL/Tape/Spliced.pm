@@ -30,6 +30,10 @@ class MXCL::Tape::Spliced {
         $tapes->[$idx]->next;
     }
 
+    method peek {
+        $tapes->[$idx]->peek;
+    }
+
     method enqueue (@kontinues) {
         $tapes->[$idx]->enqueue( @kontinues );
         $self;

@@ -146,12 +146,28 @@ class MXCL::Context {
         $modules{'Test'} = $Test;
 
         ## ------------------------------------------------
+        ## Insert the context ref into the env
+        ## ------------------------------------------------
+
+        push @scopes => $roles->Union(
+            $roles->Role(
+                $roles->Defined(
+                    $terms->Sym('^CTX'),
+                    $terms->ContextRef($self)
+                ),
+            ),
+            $scopes[-1]
+        );
+
+        ## ------------------------------------------------
         ## All initialized!
         ## ------------------------------------------------
 
         $initialized = true;
         return $self;
     }
+
+    method current_scope { $tape->peek->env }
 
     method prelude_scope { $scopes[1] }
 

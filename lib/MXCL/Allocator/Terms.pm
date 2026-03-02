@@ -30,6 +30,8 @@ use MXCL::Term::Channel;
 use MXCL::Term::Native::Applicative;
 use MXCL::Term::Native::Operative;
 
+use MXCL::Term::ContextRef;
+
 class MXCL::Allocator::Terms {
     field $arena :param :reader;
 
@@ -87,6 +89,19 @@ class MXCL::Allocator::Terms {
 
     method Hash (%elements) {
         $arena->allocate(MXCL::Term::Hash::, elements => \%elements )
+    }
+
+    ## -------------------------------------------------------------------------
+    ## ContextRef (hashed by identity)
+    ## -------------------------------------------------------------------------
+
+    method ContextRef ($context) {
+        state $nonce = 0;
+        my $uid = sprintf 'ctx:%d' => ++$nonce; # unique object identity
+        $arena->allocate(MXCL::Term::ContextRef::,
+            uid       => $uid,
+            __context => $context,
+        );
     }
 
     ## -------------------------------------------------------------------------

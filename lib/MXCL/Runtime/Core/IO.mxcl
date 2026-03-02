@@ -3,9 +3,13 @@
 ;;
 ;; -----------------------------------------------------------------------------
 
+(define newline () "\n")
+
 (define print (msg) (^STDOUT .write msg))
 (define warn  (msg) (^STDERR .write msg))
 (define readline () (^STDIN .read))
+
+(define say (msg) (^STDOUT .write msg "\n"))
 
 ;; -----------------------------------------------------------------------------
 ;;

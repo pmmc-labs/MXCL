@@ -415,9 +415,9 @@ class MXCL::Runtime::Primitives {
                 },
                 'write' => +{
                     kind      => 'applicative',
-                    signature => [ { name => 'ch' }, { name => 'data' } ],
-                    impl      => sub ($ch, $data) {
-                        $ch->write( $data );
+                    signature => [ { name => '@' } ],
+                    impl      => sub ($ch, @data) {
+                        $ch->write( @data );
                         return $terms->Nil;
                     }
                 },
@@ -549,6 +549,33 @@ class MXCL::Runtime::Primitives {
                     kind      => 'applicative',
                     signature => [ { name => 'r1' }, { name => 'r2' } ],
                     impl      => sub ($r1, $r2) { $roles->Union( $r1, $r2 ) }
+                },
+                'lookup' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'role' }, { name => 'symbol' } ],
+                    impl      => sub ($role, $sym) {
+                        my $slot = $role->lookup( $sym->value );
+                        if ($slot isa MXCL::Term::Role::Slot::Defined) {
+                            return $slot->value;
+                        }
+                        return $terms->Nil;
+                    }
+                },
+            },
+            'ContextRef' => +{
+                'compile' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'ctx' }, { name => 'source' } ],
+                    impl      => sub ($ctx, $source) {
+                        $terms->List( $ctx->context->compile_source( $source->value )->@* );
+                    }
+                },
+                'current-scope' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'ctx' } ],
+                    impl      => sub ($ctx) {
+                        $ctx->context->current_scope
+                    }
                 },
             },
         };

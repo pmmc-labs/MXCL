@@ -148,8 +148,11 @@
 (role Role (with <EQ>)
     ;; operators
     (define == (r1 r2) (eq? r1 r2))
+    ;; native-operators
+    (bind ++     (r1 r2) "Role::compose")
     ;; native-methods
-    (bind ++ (r1 r2) "Role::compose"))
+    (bind .compose (r1 r2) "Role::compose")
+    (bind .lookup  (r sym) "Role::lookup"))
 
 (role Ref (with <EQ>)
     ;; operators
@@ -195,6 +198,12 @@
     ;; methods
     (define .eval (expr) (eval expr)))
 
+(role ContextRef (with <EQ>)
+    ;; operators
+    (define ==   (h1 h2) (eq? h1 h2))
+    ;; methods
+    (bind .current-scope (ctx)        "ContextRef::current-scope")
+    (bind .compile       (ctx source) "ContextRef::compile"))
 
 ;; ----------------------------------------------------------
 ;; Meta Information

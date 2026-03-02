@@ -11,6 +11,7 @@ class MXCL::Tape {
 
     method has_next { scalar @$queue > 0 }
     method next     { pop @$queue }
+    method peek     { $queue->[-1] }
 
     method enqueue (@kontinues) {
         push @$queue => @kontinues;

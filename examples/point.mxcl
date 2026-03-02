@@ -1,4 +1,5 @@
 
+
 (role <Point> (with <ORD>)
     (require .x)
     (require .y)
@@ -21,6 +22,7 @@
             ((p .y) > (o .))))
 
 )
+
 
 (define Point (x y)
     (make-opaque (
