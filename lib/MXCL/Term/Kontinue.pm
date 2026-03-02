@@ -13,14 +13,18 @@ class MXCL::Term::Kontinue :isa(MXCL::Term) {
     method stringify {
         sprintf 'Kontinue[%s] %s => %s <%s>' =>
             $self->type,
-            $stack->stringify,
-            $self->env->hash;
-    }
-
-    method pprint {
-        sprintf 'Kontinue[%s] %s => %s <%s>' =>
-            $self->type,
             (
+                ($self->isa('MXCL::Term::Kontinue::IfElse') ?
+                    (sprintf '(if %s %s %s)' =>
+                        $self->cond->pprint,
+                        $self->if_true->pprint,
+                        $self->if_false->pprint,
+                    ) :
+                ($self->isa('MXCL::Term::Kontinue::DoWhile') ?
+                    (sprintf '(while %s %s)' =>
+                        $self->cond->pprint,
+                        $self->body->pprint,
+                    ) :
                 ($self->isa('MXCL::Term::Kontinue::Eval::Expr') ?
                     ($self->expr->pprint) :
                 ($self->isa('MXCL::Term::Kontinue::Eval::Head') ?
@@ -34,11 +38,13 @@ class MXCL::Term::Kontinue :isa(MXCL::Term) {
                     ($self->call->pprint) :
                 $self->isa('MXCL::Term::Kontinue::Define') ?
                     ($self->name->pprint) :
-                '#')))))
+                '#')))))))
             ),
             $stack->pprint,
             substr($self->env->hash, 0, 8);
     }
+
+    method pprint { $self->stringify }
 
     method DECOMPOSE { (env => $env, stack => $stack) }
 

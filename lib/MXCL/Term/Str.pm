@@ -11,7 +11,11 @@ class MXCL::Term::Str :isa(MXCL::Term) {
 
     method boolify { $value ne '' }
 
-    method pprint { sprintf '"%s"' => $value }
+    method pprint {
+        my $str = $value;
+        $str = "\\n" if $str eq "\n";
+        sprintf '"%s"' => $str;
+    }
 
     method DECOMPOSE { (value => $value) }
 

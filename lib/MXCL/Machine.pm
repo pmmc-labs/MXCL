@@ -196,22 +196,27 @@ class MXCL::Machine {
                     return $Konts->ApplyOperative( $env, $call, $args );
                 }
                 else {
-                    my $autobox = $env->lookup($call->type);
+                    # FIXME: this is gross!!!
+                    my $inv_type = $call isa MXCL::Term::Kontinue
+                                        ? 'Kontinue'
+                                        : $call->type;
+
+                    my $autobox  = $env->lookup($inv_type);
 
                     # FIXME: this is gross!!!!
                     unless (defined $autobox) {
-                        $autobox = $context->base_scope->lookup($call->type);
+                        $autobox = $context->base_scope->lookup($inv_type);
                     }
 
                     unless ($autobox isa MXCL::Term::Role::Slot::Defined) {
-                        die "Could not find role to autobox ".$call->type;
+                        die "Could not find role to autobox ${inv_type}";
                     }
 
                     my $role = $autobox->value;
                     my $name = $args->head; # should be Sym
                     my $slot = $role->lookup( $name->value );
 
-                    die "Bad Slot! ".($slot ? $slot->pprint : 'Absent')." for ".(join '/' => $call->type, $name->value)." in ".$role->pprint
+                    die "Bad Slot! ".($slot ? $slot->pprint : 'Absent')." for ".(join '/' => $inv_type, $name->value)." in ".$role->pprint
                         unless $slot isa MXCL::Term::Role::Slot::Defined;
 
                     my $method = $slot->value;

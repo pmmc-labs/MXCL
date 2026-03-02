@@ -177,13 +177,17 @@ class MXCL::Context {
         pop @scopes;
     }
 
-    method current_scope { $scopes[-1] }
+    method current_tape { $tape->tapes->[-1] }
+    method prelude_tape { $tape->tapes->[0] }
+    method io_tape      { $tape->tapes->[1] }
+    method test_tape    { $tape->tapes->[2] }
+    method base_tape    { $tape->tapes->[3] }
 
+    method current_scope { $scopes[-1] }
     method prelude_scope { $scopes[1] }
     method io_scope      { $scopes[3] }
     method test_scope    { $scopes[4] }
-
-    method base_scope { $scopes[$base_scope_idx] }
+    method base_scope    { $scopes[$base_scope_idx] }
 
     method compile_source ($source) {
         my $exprs = $compiler->compile( $source );

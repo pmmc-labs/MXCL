@@ -227,17 +227,38 @@
     ;; methods
     (define .eval (expr) (eval expr)))
 
+(role TapeRef (with <EQ>)
+    ;; operators
+    (define ==   (t1 t2) (eq? t1 t2))
+    ;; methods
+    (bind .steps (ctx) "TapeRef::steps")
+    (bind .trace (ctx) "TapeRef::trace"))
+
 (role ContextRef (with <EQ>)
     ;; operators
-    (define ==   (h1 h2) (eq? h1 h2))
+    (define ==   (c1 c2) (eq? c1 c2))
     ;; methods
+    (bind .current-tape  (ctx) "ContextRef::current-tape")
+    (bind .prelude-tape  (ctx) "ContextRef::prelude-tape")
+    (bind .io-tape       (ctx) "ContextRef::io-tape")
+    (bind .test-tape     (ctx) "ContextRef::test-tape")
+    (bind .base-tape     (ctx) "ContextRef::base-tape")
+    ;; ...
     (bind .current-scope (ctx) "ContextRef::current-scope")
     (bind .prelude-scope (ctx) "ContextRef::prelude-scope")
     (bind .io-scope      (ctx) "ContextRef::io-scope")
     (bind .test-scope    (ctx) "ContextRef::test-scope")
     (bind .base-scope    (ctx) "ContextRef::base-scope")
-
+    ;; ...
     (bind .compile (ctx source) "ContextRef::compile"))
+
+(role Kontinue (with <EQ>)
+    ;; operators
+    (define ==   (k1 k2) (eq? k1 k2))
+    ;; methods
+    (bind .type  (k) "Kontinue::type")
+    (bind .env   (k) "Kontinue::env")
+    (bind .stack (k) "Kontinue::stack"))
 
 ;; ----------------------------------------------------------
 ;; Meta Information

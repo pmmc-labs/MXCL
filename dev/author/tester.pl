@@ -17,7 +17,9 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
-
+(reduce ()
+    (-> (k acc) (say (" - " ~ k)))
+    ((^CTX .io-tape) .trace))
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );
@@ -47,6 +49,14 @@ TIMING:
 
 
 __END__
+
+;; -----------------------------------------------------------------------------
+;; Dumping the trace for the IO tape
+;; -----------------------------------------------------------------------------
+
+(reduce ()
+    (-> (k acc) (say (" - " ~ k)))
+    ((^CTX .io-tape) .trace))
 
 ;; -----------------------------------------------------------------------------
 ;; Broken-ish REPL

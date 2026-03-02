@@ -31,6 +31,7 @@ use MXCL::Term::Native::Applicative;
 use MXCL::Term::Native::Operative;
 
 use MXCL::Term::ContextRef;
+use MXCL::Term::TapeRef;
 
 class MXCL::Allocator::Terms {
     field $arena :param :reader;
@@ -101,6 +102,15 @@ class MXCL::Allocator::Terms {
         $arena->allocate(MXCL::Term::ContextRef::,
             uid       => $uid,
             __context => $context,
+        );
+    }
+
+    method TapeRef ($tape) {
+        state $nonce = 0;
+        my $uid = sprintf 'tape:%d' => ++$nonce; # unique object identity
+        $arena->allocate(MXCL::Term::TapeRef::,
+            uid    => $uid,
+            __tape => $tape,
         );
     }
 

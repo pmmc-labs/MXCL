@@ -586,11 +586,7 @@ class MXCL::Runtime::Primitives {
                 'get-all-slots' => +{
                     kind      => 'applicative',
                     signature => [ { name => 'role' } ],
-                    impl      => sub ($role) {
-                        my @slots = $role->slots->@*;
-                        return $terms->Nil unless @slots;
-                        return $terms->List( @slots );
-                    }
+                    impl      => sub ($role) { $terms->List( $role->slots->@* ) }
                 },
             },
             'Slot' => +{
@@ -600,7 +596,37 @@ class MXCL::Runtime::Primitives {
                     impl      => sub ($slot) { $slot->ident }
                 },
             },
+            'Kontinue' => +{
+                'type' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'k' } ],
+                    impl      => sub ($k) { $terms->Str( $k->type ) }
+                },
+                'env' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'k' } ],
+                    impl      => sub ($k) { $k->env }
+                },
+                'stack' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'k' } ],
+                    impl      => sub ($k) { $k->stack }
+                },
+            },
+            'TapeRef' => +{
+                'steps' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'tape' } ],
+                    impl      => sub ($tape) { $terms->Num( $tape->tape->steps ) }
+                },
+                'trace' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'tape' } ],
+                    impl      => sub ($tape) { $terms->List( $tape->tape->trace->@* ) }
+                },
+            },
             'ContextRef' => +{
+                ## -------------------------------------------------------------
                 'compile' => +{
                     kind      => 'applicative',
                     signature => [ { name => 'ctx' }, { name => 'source' } ],
@@ -608,6 +634,33 @@ class MXCL::Runtime::Primitives {
                         $terms->List( $ctx->context->compile_source( $source->value )->@* );
                     }
                 },
+                ## -------------------------------------------------------------
+                'current-tape' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'ctx' } ],
+                    impl      => sub ($ctx) { $terms->TapeRef( $ctx->context->current_tape ) }
+                },
+                'prelude-tape' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'ctx' } ],
+                    impl      => sub ($ctx) { $terms->TapeRef( $ctx->context->prelude_tape ) }
+                },
+                'io-tape' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'ctx' } ],
+                    impl      => sub ($ctx) { $terms->TapeRef( $ctx->context->io_tape ) }
+                },
+                'test-tape' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'ctx' } ],
+                    impl      => sub ($ctx) { $terms->TapeRef( $ctx->context->test_tape ) }
+                },
+                'base-tape' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'ctx' } ],
+                    impl      => sub ($ctx) { $terms->TapeRef( $ctx->context->base_tape ) }
+                },
+                ## -------------------------------------------------------------
                 'current-scope' => +{
                     kind      => 'applicative',
                     signature => [ { name => 'ctx' } ],

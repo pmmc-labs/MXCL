@@ -4,11 +4,9 @@ use experimental qw[ class ];
 
 use MXCL::Internals;
 
-use Carp ();
-
-class MXCL::Term::ContextRef :isa(MXCL::Term) {
-    field $uid       :param :reader;
-    field $__context :param :reader(context);
+class MXCL::Term::TapeRef :isa(MXCL::Term) {
+    field $uid    :param :reader;
+    field $__tape :param :reader(tape);
 
     method stringify {
         sprintf '<%s>' => $uid;
