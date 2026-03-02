@@ -72,6 +72,8 @@ class MXCL::Machine {
 
                 my $local = $Roles->Union( $k->env, $Roles->Role( $slot ) );
 
+                $context->enter_scope($local);
+
                 # TODO
                 # - need to check if we have any conflicts
                 #   here, and decide what to do with them
@@ -83,12 +85,16 @@ class MXCL::Machine {
             # Enter/Leave Scopes
             # ------------------------------------------------------------------
             when ('MXCL::Term::Kontinue::Scope::Enter') {
+                $context->enter_scope( $k->env );
                 # TODO
                 # - set up the `defer` function in the Env
                 # - set up a local `return` function in the Env
                 return ();
             }
             when ('MXCL::Term::Kontinue::Scope::Leave') {
+                until ($context->current_scope->hash eq $k->env->hash) {
+                    $context->leave_scope;
+                }
                 # NOTE:
                 # this will restore the env, but in a kinda
                 # janky way inside the Update function of the

@@ -38,6 +38,7 @@ class MXCL::Context {
 
     field @scopes;
     field %channels;
+    field $base_scope_idx;
     field $initialized = false;
 
     field %modules;
@@ -164,14 +165,27 @@ class MXCL::Context {
         ## ------------------------------------------------
 
         $initialized = true;
+        $base_scope_idx = $#scopes;
         return $self;
     }
 
-    method current_scope { $tape->peek->env }
+    method enter_scope ($scope) {
+        #say "+ ENTER SCOPE: ", $scope->hash;
+        push @scopes => $scope;
+    }
+
+    method leave_scope {
+        #say "+ LEAVING SCOPE: ", $scopes[-1]->hash;
+        pop @scopes;
+    }
+
+    method current_scope { $scopes[-1] }
 
     method prelude_scope { $scopes[1] }
+    method io_scope      { $scopes[3] }
+    method test_scope    { $scopes[4] }
 
-    method base_scope { $scopes[-1] }
+    method base_scope { $scopes[$base_scope_idx] }
 
     method compile_source ($source) {
         my $exprs = $compiler->compile( $source );

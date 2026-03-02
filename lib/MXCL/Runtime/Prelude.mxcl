@@ -20,6 +20,8 @@
 (bind opaque? (t) "opaque?")
 (bind role?   (t) "role?")
 
+(bind hash-of (t) "hash-of")
+
 (bind not (n m) "not")
 (bind and (n m) "and")
 (bind or  (n m) "or")
@@ -149,9 +151,14 @@
     ;; operators
     (define == (r1 r2) (eq? r1 r2))
     ;; native-operators
-    (bind ++     (r1 r2) "Role::compose")
+    (bind ++ (r1 r2) "Role::union")
     ;; native-methods
-    (bind .compose (r1 r2) "Role::compose")
+    (bind .union                 (r1 r2) "Role::union")
+    (bind .difference            (r1 r2) "Role::difference")
+    (bind .intersection          (r1 r2) "Role::intersection")
+    (bind .symmetric-difference  (r1 r2) "Role::symmetric-difference")
+    (bind .asymmetric-difference (r1 r2) "Role::asymmetric-difference")
+
     (bind .lookup  (r sym) "Role::lookup"))
 
 (role Ref (with <EQ>)
@@ -202,8 +209,13 @@
     ;; operators
     (define ==   (h1 h2) (eq? h1 h2))
     ;; methods
-    (bind .current-scope (ctx)        "ContextRef::current-scope")
-    (bind .compile       (ctx source) "ContextRef::compile"))
+    (bind .current-scope (ctx) "ContextRef::current-scope")
+    (bind .prelude-scope (ctx) "ContextRef::prelude-scope")
+    (bind .io-scope      (ctx) "ContextRef::io-scope")
+    (bind .test-scope    (ctx) "ContextRef::test-scope")
+    (bind .base-scope    (ctx) "ContextRef::base-scope")
+
+    (bind .compile (ctx source) "ContextRef::compile"))
 
 ;; ----------------------------------------------------------
 ;; Meta Information

@@ -94,6 +94,7 @@ class MXCL::Runtime::Primitives {
             'ref?'    => type_predicate('MXCL::Term::Ref'),
             'opaque?' => type_predicate('MXCL::Term::Opaque'),
             'role?'   => type_predicate('MXCL::Term::Role'),
+            'hash-of' => unary_op('*', 'Str', sub ($n) { $n->hash }),
             'not'     => unary_op('boolify', 'Bool', sub ($n) { !$n }),
             'and'     => +{
                 kind      => 'operative',
@@ -545,11 +546,32 @@ class MXCL::Runtime::Primitives {
                 },
             },
             'Role' => +{
-                'compose' => +{
+                'union' => +{
                     kind      => 'applicative',
                     signature => [ { name => 'r1' }, { name => 'r2' } ],
                     impl      => sub ($r1, $r2) { $roles->Union( $r1, $r2 ) }
                 },
+                'difference' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'r1' }, { name => 'r2' } ],
+                    impl      => sub ($r1, $r2) { $roles->Difference( $r1, $r2 ) }
+                },
+                'intersection' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'r1' }, { name => 'r2' } ],
+                    impl      => sub ($r1, $r2) { $roles->Intersection( $r1, $r2 ) }
+                },
+                'symmetric-difference' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'r1' }, { name => 'r2' } ],
+                    impl      => sub ($r1, $r2) { $roles->SymmetricDifference( $r1, $r2 ) }
+                },
+                'asymmetric-difference' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'r1' }, { name => 'r2' } ],
+                    impl      => sub ($r1, $r2) { $roles->AsymmetricDifference( $r1, $r2 ) }
+                },
+                # ...
                 'lookup' => +{
                     kind      => 'applicative',
                     signature => [ { name => 'role' }, { name => 'symbol' } ],
@@ -573,10 +595,28 @@ class MXCL::Runtime::Primitives {
                 'current-scope' => +{
                     kind      => 'applicative',
                     signature => [ { name => 'ctx' } ],
-                    impl      => sub ($ctx) {
-                        $ctx->context->current_scope
-                    }
+                    impl      => sub ($ctx) { $ctx->context->current_scope }
                 },
+                'prelude-scope' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'ctx' } ],
+                    impl      => sub ($ctx) { $ctx->context->prelude_scope }
+                },
+                'io-scope'      => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'ctx' } ],
+                    impl      => sub ($ctx) { $ctx->context->io_scope }
+                },
+                'test-scope'    => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'ctx' } ],
+                    impl      => sub ($ctx) { $ctx->context->test_scope }
+                },
+                'base-scope'    => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'ctx' } ],
+                    impl      => sub ($ctx) { $ctx->context->base_scope }
+                }
             },
         };
     }
