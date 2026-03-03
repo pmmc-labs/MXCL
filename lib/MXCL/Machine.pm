@@ -272,7 +272,7 @@ class MXCL::Machine {
                 }
                 elsif ($call isa MXCL::Term::FExpr) {
                     my @params = $Terms->Uncons($call->params);
-                    my @args   = $Terms->Uncons($args);
+                    my @args   = ($k->env, $Terms->Uncons($args));
 
                     die "Arity mismatch in ",$call->name->stringify
                         if scalar @params != scalar @args;
@@ -323,6 +323,7 @@ class MXCL::Machine {
     method evaluate_term ($context, $env, $expr) {
         state $Terms = $context->terms;
         state $Konts = $context->kontinues;
+        state $Roles = $context->roles;
         state $Nil   = $Terms->Nil;
 
         given (blessed $expr) {
@@ -336,7 +337,7 @@ class MXCL::Machine {
                     $value = $value->rhs;
                 }
 
-                die "Could not find ".$expr->value." in Env"
+                die "Could not find ".$expr->value." in Env ".$env->hash." ... ".$Roles->Difference($env, $context->base_scope)->stringify
                     unless $value isa MXCL::Term::Role::Slot::Defined;
 
                 return $Konts->Return( $env, $Terms->List( $value->value ) );

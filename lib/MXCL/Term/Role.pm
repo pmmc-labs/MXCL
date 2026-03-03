@@ -41,11 +41,12 @@ class MXCL::Term::Role :isa(MXCL::Term) {
     # --------------------------------------------------------------------------
 
     method stringify {
-        sprintf "(role %s)" => join ' ' => map { sprintf '%s[%s]' => $_->ident->pprint, $_->kind } @$slots
+        sprintf "(role<%s> %s)" => substr($self->hash, 0, 8), join ' ' => map { sprintf '%s[%s]' => $_->ident->pprint, $_->kind } @$slots
     }
 
     method pprint {
-        sprintf "(role %s)" => join ' ' => map $_->pprint, @$slots
+        return $self->stringify;
+        #sprintf "(role\n  -%s)" => join "\n  -" => map $_->pprint, @$slots
     }
 
     method DECOMPOSE { (slots => $slots) }

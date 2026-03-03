@@ -212,7 +212,9 @@
     (bind .asymmetric-difference (r1 r2) "Role::asymmetric-difference")
 
     (bind .lookup    (r sym) "Role::lookup")
-    (bind .get-all-slots (r) "Role::get-all-slots"))
+    (bind .get-all-slots (r) "Role::get-all-slots")
+
+    (bind .eval-in-scope (r expr) "Role::eval-in-scope"))
 
 (role Slot::Defined (with <EQ>)
     (bind .ident (r) "Slot::get-ident")

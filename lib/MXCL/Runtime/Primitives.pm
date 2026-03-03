@@ -588,6 +588,19 @@ class MXCL::Runtime::Primitives {
                     signature => [ { name => 'role' } ],
                     impl      => sub ($role) { $terms->List( $role->slots->@* ) }
                 },
+                # ...
+                'eval-in-scope' => +{
+                    kind      => 'operative',
+                    signature => [ { name => 'scope' }, { name => 'expr' } ],
+                    impl      => sub ($env, $scope, $expr) {
+                        return $generator->InScope( $scope, $env,
+                            $konts->EvalTOS( $scope, $terms->Nil ),
+                            $generator->InScope( $env, $scope,
+                                $konts->EvalExpr( $env, $expr, $terms->Nil )
+                            )
+                        )
+                    }
+                },
             },
             'Slot' => +{
                 'get-ident' => +{

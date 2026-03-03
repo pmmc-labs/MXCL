@@ -16,13 +16,13 @@ class MXCL::Term::Kontinue :isa(MXCL::Term) {
             (
                 ($self->isa('MXCL::Term::Kontinue::IfElse') ?
                     (sprintf '(if %s %s %s)' =>
-                        $self->cond->pprint,
+                        $self->condition->pprint,
                         $self->if_true->pprint,
                         $self->if_false->pprint,
                     ) :
                 ($self->isa('MXCL::Term::Kontinue::DoWhile') ?
                     (sprintf '(while %s %s)' =>
-                        $self->cond->pprint,
+                        $self->condition->pprint,
                         $self->body->pprint,
                     ) :
                 ($self->isa('MXCL::Term::Kontinue::Eval::Expr') ?

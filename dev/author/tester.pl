@@ -18,14 +18,18 @@ my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
 
-(defexpr unless (cond if-false)
-    (if (not ((^CTX .current-scope) .eval-in-scope cond))
-        ((^CTX .current-scope) .eval-in-scope if-false)
+(defexpr unless ($env cond if-false)
+    (if (not ($env .eval-in-scope cond))
+        ($env .eval-in-scope if-false)
         ()))
 
 (let x 10)
-(let y 20)
-(unless (x != 10) (say "Hello World"))
+(unless (x == 10) (say "Hello World"))
+
+(let $local (^CTX .current-scope))
+
+(do
+    ($local .eval-in-scope (x + 20)))
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );
