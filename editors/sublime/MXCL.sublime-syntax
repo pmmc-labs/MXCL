@@ -26,6 +26,9 @@ contexts:
     - include: number
     - include: boolean
     - include: nil
+    - include: const
+    - include: field
+    - include: method
     - include: tag
     - include: variable
     - include: global-variable
@@ -127,6 +130,18 @@ contexts:
     - match: 'nil{{token_end}}'
       scope: constant.language.null.mxcl
 
+  const:
+    - match: '\^[^\s\(\)''\{\}\[\]]+'
+      scope: entity.name.function.mxcl
+
+  field:
+    - match: '\$[^\s\(\)''\{\}\[\]]+'
+      scope: constant.other.symbol.mxcl
+
+  method:
+    - match: '\.[^\s\(\)''\{\}\[\]]+'
+      scope: entity.name.function.mxcl
+
   # :keyword — tag literals (used like Scheme symbols / keyword args)
   tag:
     - match: ':[^\s\(\)''\{\}\[\]]+'
@@ -175,7 +190,7 @@ contexts:
 
   # Operatives: receive unevaluated AST (i.e. special forms / control flow)
   keyword-control:
-    - match: '(?:role|define|lambda|require|with|let){{token_end}}'
+    - match: '(?:role|define|lambda|require|with|let|fexpr|defexpr|->|~>){{token_end}}'
       scope: keyword.control.mxcl
 
   # Binding / declaration operatives
@@ -190,10 +205,11 @@ contexts:
     - match: |-
         (?x)
         (?:
-          if | do | while | and | or | not | quote | eval | cons |
-          nil\?   | bool\?  | num\?   | str\?    | sym\?  |
-          lambda\?| array\? | ref\?   | opaque\? | role\? |
-          eq\?    | head | tail | join | split | list |
+          if | do | while | and | or | not | unless | when |
+          nil\?   | bool\?  | num\?   | str\?    | sym\?  | fexpr\? |
+          lambda\?| array\? | ref\?   | opaque\? | role\? | eq\? |
+          head | tail | join | split | list |
+          quote | eval | cons | hash-of |
           make-opaque | make-ref | make-role | make-array | make-hash | make-channel
         ){{token_end}}
       scope: support.function.builtin.mxcl

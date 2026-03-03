@@ -40,20 +40,20 @@
 
 (bind role    (@)    "role")
 (bind require (name) "require")
-(bind with    (role) "with")
+(bind with    (r) "with")
 
 (bind list    (@)    "list")
 (bind cons    (h t)  "cons")
-(bind head    (list) "head")
-(bind tail    (list) "tail")
+(bind head    (l) "head")
+(bind tail    (l) "tail")
 
 (bind quote   (value) "quote")
 (bind eval    (expr)  "eval")
 
-(bind join    (sep list) "join")
+(bind join    (sep l) "join")
 (bind split   (sep str)  "split")
 
-(bind make-opaque  (role)  "make-opaque")
+(bind make-opaque  (r)  "make-opaque")
 (bind make-ref     (value) "make-ref")
 (bind make-role    (@)     "make-role")
 (bind make-array   (@)     "make-array")
@@ -61,25 +61,39 @@
 (bind make-channel ()      "make-channel")
 
 ;; ----------------------------------------------------------
+;; Built-in Fexprs
+;; ----------------------------------------------------------
+
+(defexpr unless ($env cond if-false)
+    (if (not ($env .eval-in-scope cond))
+        ($env .eval-in-scope if-false)
+        ()))
+
+(defexpr when ($env cond if-true)
+    (if ($env .eval-in-scope cond)
+        ($env .eval-in-scope if-true)
+        ()))
+
+;; ----------------------------------------------------------
 ;; Built-in Functions
 ;; ----------------------------------------------------------
 
-(define map (f list)
-    (if (nil? list)
+(define map (f lst)
+    (if (nil? lst)
         ()
-        (cons (f (head list)) (map f (tail list)))))
+        (cons (f (head lst)) (map f (tail lst)))))
 
-(define grep (f list)
-    (if (nil? list)
+(define grep (f lst)
+    (if (nil? lst)
         ()
-        (if (f (head list))
-            (cons (head list) (grep f (tail list)))
-            (grep f (tail list)))))
+        (if (f (head lst))
+            (cons (head lst) (grep f (tail lst)))
+            (grep f (tail lst)))))
 
-(define reduce (acc f list)
-    (if (nil? list)
+(define reduce (acc f lst)
+    (if (nil? lst)
         acc
-        (reduce (f (head list) acc) f (tail list))))
+        (reduce (f (head lst) acc) f (tail lst))))
 
 ;; ----------------------------------------------------------
 ;; Abstact Roles
