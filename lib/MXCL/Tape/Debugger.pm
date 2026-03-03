@@ -104,7 +104,16 @@ class MXCL::Tape::Debugger {
 
     ## -------------------------------------------------------------------------
 
+    field $options :reader :param = +{
+        filter_kontinue_types  => undef,
+        expand_kontinue_fields => true,
+    };
+
     method monitor_tape_advance ($ctx, $tape, $k, $next) {
+        if (my $filter = $options->{filter_kontinue_types}) {
+            return unless $k->type =~ $filter;
+        }
+
         my $remaining = $MAX_WIDTH - 60;
 
         say sprintf((join '' =>
@@ -119,68 +128,35 @@ class MXCL::Tape::Debugger {
             ($k->stack isa MXCL::Term::Nil ? ' ' : trim($k->stack->pprint, $remaining)),
         );
 
-        my %kont   = $k->DECOMPOSE;
-        my $env    = delete $kont{env};
-        my $stack  = delete $kont{stack};
-        my @fields = grep {
-            blessed($_->[1])
-        } map {
-            [ $_, $kont{$_} ]
-        } sort {
-            $a cmp $b
-        } keys %kont;
+        if ($options->{expand_kontinue_fields}) {
+            my %kont   = $k->DECOMPOSE;
+            my $env    = delete $kont{env};
+            my $stack  = delete $kont{stack};
+            my @fields = grep {
+                blessed($_->[1])
+            } map {
+                [ $_, $kont{$_} ]
+            } sort {
+                $a cmp $b
+            } keys %kont;
 
-        if (@fields) {
-            my $sep = bg_color(greyscale(6), (' ' x 6));
-            say $sep, join "\n${sep}" =>
-                map {
-                    sprintf(
-                        (join '' =>
-                            color([greyscale(12), greyscale(4)], " %28s:"),
-                            color([greyscale(21), greyscale(6)], " %-${remaining}s"),
-                            #color([greyscale(16), greyscale(8)], " %10s"),
-                        ),
-                        $_->[0],
-                        trim($_->[1]->pprint, $remaining),
-                        #' '
-                    )
-                } @fields;
+            if (@fields) {
+                my $sep = bg_color(greyscale(6), (' ' x 6));
+                say $sep, join "\n${sep}" =>
+                    map {
+                        sprintf(
+                            (join '' =>
+                                color([greyscale(12), greyscale(4)], " %28s:"),
+                                color([greyscale(21), greyscale(6)], " %-${remaining}s"),
+                                #color([greyscale(16), greyscale(8)], " %10s"),
+                            ),
+                            $_->[0],
+                            trim($_->[1]->pprint, $remaining),
+                            #' '
+                        )
+                    } @fields;
+            }
         }
     }
-    ## -------------------------------------------------------------------------
 
-    method stack ($top, $bottom) {
-        my $max_width = max( map length, (@$top, @$bottom) );
-        return [
-            map { pad($_, $max_width, true) } (@$top, @$bottom)
-        ]
-    }
-
-    method shelve ($left, $right, $divider=' ') {
-        my $max_height = max( scalar $left->@*, scalar $right->@* );
-
-        my $l_width = max( map length($_), @$left  );
-        my $r_width = max( map length($_), @$right );
-
-        my @lines;
-        foreach my $i (0 .. ($max_height - 1)) {
-            my $line = '';
-            if ($i < scalar @$left) {
-                $line .= pad($left->[$i], $l_width, true);
-            } else {
-                $line .= ' ' x $l_width;
-            }
-
-            $line .= $divider;
-
-            if ($i < scalar @$right) {
-                $line .= $right->[$i];
-            } else {
-                $line .= ' ' x $r_width;
-            }
-
-            push @lines => $line;
-        }
-        return \@lines;
-    }
 }

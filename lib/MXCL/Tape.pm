@@ -2,11 +2,9 @@
 use v5.42;
 use experimental qw[ class switch ];
 
-use MXCL::Tape::Debugger;
+use MXCL::Debugger;
 
 class MXCL::Tape {
-    use constant DEBUG => !!$ENV{DEBUG};
-
     field $name  :param :reader;
     field $exprs :param :reader;
 
@@ -24,7 +22,8 @@ class MXCL::Tape {
     }
 
     method advance ($ctx, $k, @next) {
-        DEBUG && MXCL::Tape::Debugger->new->monitor_tape_advance( $ctx, $self, $k, \@next );
+        MXCL::Debugger->DEBUG
+            && MXCL::Debugger->monitor_tape_advance( $ctx, $self, $k, \@next );
         push    @$queue => @next;
         unshift @$trace => $k;
         $steps++;

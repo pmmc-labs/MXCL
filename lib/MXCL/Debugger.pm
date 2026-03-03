@@ -4,8 +4,28 @@ use utf8;
 use open ':std', ':encoding(UTF-8)';
 use experimental qw[ class ];
 
+use MXCL::Tape::Debugger;
 
 class MXCL::Debugger {
+    use constant DEBUG => !!$ENV{DEBUG};
+
+    our $TAPE_DEBUGGER;
+    BEGIN {
+        $TAPE_DEBUGGER = MXCL::Tape::Debugger->new(
+            options => +{
+                filter_kontinue_types  => exists $ENV{DEBUG_FILTER} ? qr/$ENV{DEBUG_FILTER}/ : undef,
+                expand_kontinue_fields => exists $ENV{DEBUG_EXPAND} ? !!$ENV{DEBUG_EXPAND}   : true,
+            }
+        );
+    }
+
+    sub monitor_tape_advance ($, $ctx, $tape, $k, $next) {
+        return unless DEBUG;
+        $TAPE_DEBUGGER->monitor_tape_advance($ctx, $tape, $k, $next)
+    }
+}
+
+__END__
     use Time::HiRes   qw[ sleep ];
     use Term::ReadKey qw[ GetTerminalSize ];
     use List::Util    qw[ min max ];

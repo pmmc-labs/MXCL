@@ -22,7 +22,7 @@ my $exprs = $context->compile_source(q[
         1
         (n * (fact (n - 1)))))
 
-(fact 10)
+(fact 2)
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );
