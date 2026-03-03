@@ -20,8 +20,6 @@ use MXCL::Tape::Spliced;
 
 use MXCL::Context::CodeGenerator;
 
-use MXCL::Debugger;
-
 class MXCL::Context {
     field $arena     :reader;
 
@@ -38,7 +36,7 @@ class MXCL::Context {
 
     field @scopes;
     field %channels;
-    field $base_scope_idx;
+    field $base_scope_idx = 0;
     field $initialized = false;
 
     field %modules;
@@ -74,6 +72,7 @@ class MXCL::Context {
 
         $tape->splice(
             $generator->create_tape(
+                'Prelude',
                 $scopes[-1],
                 $runtime->prelude->artifact
             )
@@ -128,7 +127,7 @@ class MXCL::Context {
 
         # Splice in the IO module ...
         $tape->splice(
-            $generator->create_tape( $scopes[-1], $IO->artifact )
+            $generator->create_tape( 'IO', $scopes[-1], $IO->artifact )
         );
 
         push @scopes => $machine->run( $self )->env;
@@ -140,7 +139,7 @@ class MXCL::Context {
 
         # Splice in the Test module ...
         $tape->splice(
-            $generator->create_tape( $scopes[-1], $Test->artifact )
+            $generator->create_tape( 'Test', $scopes[-1], $Test->artifact )
         );
 
         push @scopes => $machine->run( $self )->env;
@@ -195,7 +194,7 @@ class MXCL::Context {
     }
 
     method evaluate ($env, $exprs, %opts) {
-        $tape->splice( $generator->create_tape( $env, $exprs ) );
+        $tape->splice( $generator->create_tape( 'Program', $env, $exprs ) );
         return $machine->run( $self );
     }
 }

@@ -19,8 +19,8 @@ class MXCL::Context::CodeGenerator {
 
     # --------------------------------------------------------------------------
 
-    method create_tape ($env, $exprs) {
-        return MXCL::Tape->new( exprs => $exprs )->enqueue(
+    method create_tape ($name, $env, $exprs) {
+        return MXCL::Tape->new( name => $name, exprs => $exprs )->enqueue(
             $self->Halt( $env ),
             $self->EvalStatements( $env, $exprs )
         )

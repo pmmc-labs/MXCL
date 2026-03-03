@@ -39,7 +39,7 @@ class MXCL::Tape::Spliced {
         $self;
     }
 
-    method advance ($k, @next) {
-        $tapes->[$idx]->advance( $k, @next );
+    method advance ($ctx, $k, @next) {
+        $tapes->[$idx]->advance( $ctx, $k, @next );
     }
 }

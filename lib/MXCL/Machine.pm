@@ -13,7 +13,7 @@ class MXCL::Machine {
         while ($context->tape->has_next) {
             $k = $context->tape->next;
             last if $k isa MXCL::Term::Kontinue::Host;
-            $context->tape->advance( $k, $self->step( $context, $k ) );
+            $context->tape->advance( $context, $k, $self->step( $context, $k ) );
         }
         return $k;
     }
@@ -23,8 +23,6 @@ class MXCL::Machine {
         state $Konts = $context->kontinues;
         state $Roles = $context->roles;
         state $Nil   = $Terms->Nil;
-
-        $ENV{DEBUG} && say "STEP[", $context->tape->steps, "] ",$k->pprint;
 
         given (blessed $k) {
             # ------------------------------------------------------------------

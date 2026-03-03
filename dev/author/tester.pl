@@ -17,19 +17,12 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
+(define fact (n)
+    (if (n == 0)
+        1
+        (n * (fact (n - 1)))))
 
-(defexpr unless ($env cond if-false)
-    (if (not ($env .eval-in-scope cond))
-        ($env .eval-in-scope if-false)
-        ()))
-
-(let x 10)
-(unless (x == 10) (say "Hello World"))
-
-(let $local (^CTX .current-scope))
-
-(do
-    ($local .eval-in-scope (x + 20)))
+(fact 10)
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );
@@ -128,13 +121,18 @@ __END__
 ;; -----------------------------------------------------------------------------
 
 
-(let unless (~> (cond if-true) (if (not (cond .eval)) (if-true .eval) ())))
+(defexpr unless ($env cond if-false)
+    (if (not ($env .eval-in-scope cond))
+        ($env .eval-in-scope if-false)
+        ()))
 
-(fexpr unless (cond if-true)
-    (if (not (cond .eval)) (if-true .eval) ()))
+(let x 10)
+(unless (x == 10) (say "Hello World"))
 
-(fexpr unless (cond if-true)
-    (if (not (eval cond)) (eval if-true) ()))
+(let $local (^CTX .current-scope))
+
+(do
+    ($local .eval-in-scope (x + 20)))
 
 ;; -----------------------------------------------------------------------------
 ;; multi-dimensional  array map
