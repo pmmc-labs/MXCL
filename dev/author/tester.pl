@@ -17,7 +17,15 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
-((^CTX .current-tape) == (^CTX .base-tape))
+
+(defexpr unless (cond if-false)
+    (if (not ((^CTX .current-scope) .eval-in-scope cond))
+        ((^CTX .current-scope) .eval-in-scope if-false)
+        ()))
+
+(let x 10)
+(let y 20)
+(unless (x != 10) (say "Hello World"))
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );
@@ -55,6 +63,14 @@ __END__
 (reduce ()
     (-> (k acc) (say (" - " ~ k)))
     ((^CTX .io-tape) .trace))
+
+
+;; filtering too
+(reduce ()
+    (-> (k acc) (say k))
+    (grep
+        (-> (k) ((k .type) == "Define"))
+        ((^CTX .prelude-tape) .trace)))
 
 ;; -----------------------------------------------------------------------------
 ;; Broken-ish REPL

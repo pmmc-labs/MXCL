@@ -46,7 +46,7 @@ Layer 0.
 
 - Communitivity & Associativity
     - [x] role composition is order independent
-    * [x] roles hash predictably 
+    - [x] roles hash predictably 
 - Role Operations
     - [x] Union: composing two roles together
     - [x] Conflicts: detecting conflicts during composition
@@ -72,23 +72,23 @@ as role operations.
     - [x] deriving scopes
     - [x] name resolution
     - [x] fixed-point for recursion
-    * [x] Scopes are Roles
-        * [x] Conflicts handled on lookup
+    - [x] Scopes are Roles
+        - [x] Conflicts handled on lookup
 
 - Operatives
     - [x] arguments are unevaluated
     - [x] returns a list of continuation objects
-    - [ ] can be user defined
+    - [x] can be user defined
 - Applicatives
     - [x] arguments are evaluated
     - [x] returns a term  
     - [x] can be user defined
 
 - Roles  
-    * [x] environment capture
-    * [x] compositon operations
+    - [x] environment capture
+    - [x] compositon operations
 - Opaque
-    * [x] an Operative wrapped around a Role
+    - [x] an Operative wrapped around a Role
     - [x] dispatches based on first argument
 
 - Foundational Roles
@@ -109,9 +109,9 @@ as role operations.
         - [x] Lambda: user defined applicative function
         - [x] Native: native applicative function
     - Operative 
-        - [ ] FExpr: user defined operative function
+        - [x] FExpr: user defined operative function
         - [x] Native: native operative function
-        * [x] Opaque: instance as operative
+        - [x] Opaque: instance as operative
  
 <!----------------------------------------------------------------------------->
 ## Layer 3: Machines, Tapes & Contexts
@@ -123,26 +123,52 @@ provides access to the runtime.
 - Continuation Queue Machine
     - [x] incrementally compiles expressions to continations
     - [x] passes temporary values through local stack in continuation 
+    
 - Kontinue Terms
-    - [ ] first-class, exposed in the language
     - [x] content addressed 
+    * [ ] first-class, exposed in the language
+    
 - Step until Host & Errors
-    - [x] runs until a `Host` continuation is reaches, then returns
+    - [x] runs until a `Host` continuation is reached, then returns
     - [ ] Errors captured and passed to host to handle
+    
 - Builtin mechanisms
     - [x] `if`, `while` to control execution
     - [x] `define`, `let` to handle naming things
-    * [ ] `defer` to handle resource cleanup on scope exit
+    - [ ] `defer` to handle resource cleanup on scope exit
     - [ ] `return` for non-local returns
-    * [ ] `try/catch` and `throw` for exceptions
+    - [ ] `try/catch` and `throw` for exceptions
+    
 - Queue as Turing-Tape analogy enforces
     * [x] linearity
     * [x] atomicity of steps
     * [x] correct continuation chaining
+    
+- Context
+    - [x] centralized access to all the things
+    * [x] manages tapes and scopes
+    
 - Tapes
     - [x] basic sequential tape
     - [x] Spliced tape - chains tapes together
-    - [ ] Mix tape - pre-emptive quota-based pseudo-parallelism 
+    - [ ] Mix tape - pre-emptive quota-based pseudo-parallelism?
+ 
+ - Runtime Refs
+    * [x] addressed by Perl refaddr 
+    - ContextRef 
+        * [x] can compile code
+        * [x] provide access to scopes
+        * [x] provide access to tapes
+        - [ ] access to allocators?
+        - [ ] access to code-generator?
+        - [ ] access to machine?
+        - [ ] access to runtime?
+        - [ ] splicing in new tape?  
+        - [ ] tape playback? single step?
+    - TapeRef 
+        * [x] provide access to trace
+        * [x] provide access to step count
+        - [ ] provide access to current queue?
  
 <!----------------------------------------------------------------------------->
 ## Layer 4: Object System & MOP

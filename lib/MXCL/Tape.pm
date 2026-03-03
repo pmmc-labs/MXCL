@@ -19,8 +19,8 @@ class MXCL::Tape {
     }
 
     method advance ($k, @next) {
-        push @$queue => @next;
-        push @$trace => $k;
+        push    @$queue => @next;
+        unshift @$trace => $k;
         $steps++;
     }
 }
