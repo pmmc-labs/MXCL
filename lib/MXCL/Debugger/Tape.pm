@@ -4,20 +4,11 @@ use utf8;
 use open ':std', ':encoding(UTF-8)';
 use experimental qw[ class switch ];
 
-class MXCL::Tape::Debugger {
+class MXCL::Debugger::Tape {
     use Time::HiRes   qw[ sleep ];
     use Term::ReadKey qw[ GetTerminalSize ];
     use List::Util    qw[ min max ];
     use Data::Dumper  qw[ Dumper ];
-
-    use constant BLACK   => { normal => [ 30, 40 ], bright => [ 90, 100 ] };
-    use constant RED     => { normal => [ 31, 41 ], bright => [ 91, 101 ] };
-    use constant GREEN   => { normal => [ 32, 42 ], bright => [ 92, 102 ] };
-    use constant YELLOW  => { normal => [ 33, 43 ], bright => [ 93, 103 ] };
-    use constant BLUE    => { normal => [ 34, 44 ], bright => [ 94, 104 ] };
-    use constant MAGENTA => { normal => [ 35, 45 ], bright => [ 95, 105 ] };
-    use constant CYAN    => { normal => [ 36, 46 ], bright => [ 96, 106 ] };
-    use constant WHITE   => { normal => [ 37, 47 ], bright => [ 97, 107 ] };
 
     my sub clamp ($min, $max, $value) { max( $min, min( $max, int($value) )) }
 
@@ -104,9 +95,20 @@ class MXCL::Tape::Debugger {
 
     ## -------------------------------------------------------------------------
 
+
+    my sub colorize_kontinue ($k) {
+        my $type  = (split /\:\:/ => $k->type)[0];
+        my $color = $MXCL::Debugger::KONTINUE_COLORS{ $type };
+        my ($fg, $bg) = @$color;
+        return "\e[38;5;${fg};48;5;${bg}m %-18s \e[0m";
+    }
+
+    ## -------------------------------------------------------------------------
+
     field $options :reader :param = +{
         filter_kontinue_types  => undef,
         expand_kontinue_fields => true,
+        show_arena_stats       => true,
     };
 
     method monitor_tape_advance ($ctx, $tape, $k, $next) {
@@ -114,18 +116,23 @@ class MXCL::Tape::Debugger {
             return unless $k->type =~ $filter;
         }
 
-        my $remaining = $MAX_WIDTH - 60;
+        my $remaining = $MAX_WIDTH - 38;
 
         say sprintf((join '' =>
                 color([greyscale(20), greyscale(6)], '%05d '),
-                colorize($k->type, ' %-18s ', true),
+                colorize_kontinue($k),
                 colorize(shorten_hash($k->hash), " %8s "),
-                color([greyscale(21), greyscale(2)], " %-${remaining}s"),
+                color([144, greyscale(4)], " %-${remaining}s "),
             ) =>
             $tape->steps,
             $k->type,
             shorten_hash($k->hash),
-            ($k->stack isa MXCL::Term::Nil ? ' ' : trim($k->stack->pprint, $remaining)),
+            trim(
+                (join ' │ ' =>
+                    (@$next ? (join ', ' => map $_->type, reverse @$next) : ()),
+                    (join ', ' => map $_->type, reverse $tape->queue->@*)),
+                $remaining
+            )
         );
 
         if ($options->{expand_kontinue_fields}) {
@@ -146,13 +153,61 @@ class MXCL::Tape::Debugger {
                     map {
                         sprintf(
                             (join '' =>
-                                color([greyscale(12), greyscale(4)], " %28s:"),
-                                color([greyscale(21), greyscale(6)], " %-${remaining}s"),
-                                #color([greyscale(16), greyscale(8)], " %10s"),
+                                color([greyscale(4), greyscale(12)], " %28s:"),
+                                color([greyscale(6), greyscale(21)], " %-${remaining}s "),
                             ),
                             $_->[0],
                             trim($_->[1]->pprint, $remaining),
-                            #' '
+                        )
+                    } @fields;
+            }
+
+
+            my @stack;
+            if ($stack isa MXCL::Term::Cons) {
+                my @list = $stack->uncons;
+                push @stack =>
+                    [ 'stack:', shift @list ],
+                    map { [ ' ', $_ ] } @list;
+            } else {
+                push @stack => [ 'stack:', $stack ];
+            }
+
+            my $sep = bg_color(greyscale(6), (' ' x 6));
+            say $sep, join "\n${sep}" =>
+            map {
+                sprintf(
+                    (join '' =>
+                        color([greyscale(12), greyscale(4)], "  %28s"),
+                        color([greyscale(21), greyscale(6)], " %-${remaining}s "),
+                    ),
+                    $_->[0],
+                    trim($_->[1]->pprint, $remaining),
+                )
+            } @stack;
+        }
+
+        if ($options->{show_arena_stats}) {
+            my @fields = (
+                [ arena => sprintf "\e[1mallocated:\e[22m %05d \e[1mcached:\e[22m %05d \e[1mactive:\e[22m %05d " =>
+                    $ctx->arena->statz->{active},
+                    $ctx->arena->statz->{cached},
+                    $ctx->arena->statz->{allocated} ],
+            );
+
+            if (@fields) {
+                my $rest = $remaining - 47;
+                my $sep = bg_color(greyscale(6), (' ' x 6));
+                say $sep, join "\n${sep}" =>
+                    map {
+                        sprintf(
+                            (join '' =>
+                                bg_color(greyscale(6), "%30s"),
+                                color([[130,190,130],[65,90,65]], " %${rest}s:"),
+                                color([[62,89,62],[132,191,132]], " %46s "),
+                            ),
+                            ' ',
+                            @$_,
                         )
                     } @fields;
             }
