@@ -22,13 +22,15 @@ my $exprs = $context->compile_source(q[
         1
         (n * (fact (n - 1)))))
 
-(fact 5)
-
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );
 
 say "PROGRAM:";
 say $_->pprint foreach @$exprs;
+
+say "DEBUGGIN!";
+MXCL::Debugger->visualize_term($context, $exprs->[0]);
+
 
 my $start_run = [Time::HiRes::gettimeofday];
 my $result = $context->evaluate( $context->base_scope, $exprs );

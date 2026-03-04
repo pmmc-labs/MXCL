@@ -5,12 +5,13 @@ use open ':std', ':encoding(UTF-8)';
 use experimental qw[ class ];
 
 use MXCL::Debugger::Tape;
+use MXCL::Debugger::Term;
 
 class MXCL::Debugger {
     use constant DEBUG => !!$ENV{DEBUG};
 
     our %KONTINUE_COLORS;
-    our $TAPE_DEBUGGER;
+    our ($TAPE_DEBUGGER, $TERM_DEBUGGER);
     BEGIN {
         %KONTINUE_COLORS = (
             Host    => [   1, 2 ],    # ??
@@ -34,11 +35,16 @@ class MXCL::Debugger {
 
             }
         );
+
+        $TERM_DEBUGGER = MXCL::Debugger::Term->new;
     }
 
     sub monitor_tape_advance ($, $ctx, $tape, $k, $next) {
-        return unless DEBUG;
         $TAPE_DEBUGGER->monitor_tape_advance($ctx, $tape, $k, $next)
+    }
+
+    sub visualize_term ($, $ctx, $term, %options) {
+        $TERM_DEBUGGER->visualize_term($ctx, $term, %options)
     }
 }
 
