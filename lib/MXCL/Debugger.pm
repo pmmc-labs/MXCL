@@ -28,8 +28,10 @@ class MXCL::Debugger {
         $TAPE_DEBUGGER = MXCL::Debugger::Tape->new(
             options => +{
                 filter_kontinue_types  => exists $ENV{DEBUG_FILTER} ? qr/$ENV{DEBUG_FILTER}/ : undef,
-                expand_kontinue_fields => exists $ENV{DEBUG_EXPAND} ? !!$ENV{DEBUG_EXPAND}   : true,
-                show_arena_stats       => exists $ENV{DEBUG_ARENA}  ? !!$ENV{DEBUG_ARENA}   : true,
+                expand_kontinue_fields => exists $ENV{DEBUG_FIELDS} ? !!$ENV{DEBUG_FIELDS}   : true,
+                expand_kontinue_stack  => exists $ENV{DEBUG_STACK}  ? !!$ENV{DEBUG_STACK}    : true,
+                show_arena_stats       => exists $ENV{DEBUG_ARENA}  ? !!$ENV{DEBUG_ARENA}    : true,
+
             }
         );
     }

@@ -108,6 +108,7 @@ class MXCL::Debugger::Tape {
     field $options :reader :param = +{
         filter_kontinue_types  => undef,
         expand_kontinue_fields => true,
+        expand_kontinue_stack  => true,
         show_arena_stats       => true,
     };
 
@@ -153,16 +154,18 @@ class MXCL::Debugger::Tape {
                     map {
                         sprintf(
                             (join '' =>
-                                color([greyscale(4), greyscale(12)], " %28s:"),
-                                color([greyscale(6), greyscale(21)], " %-${remaining}s "),
+                                color([greyscale(4), greyscale(10)], " %28s:"),
+                                color([greyscale(4), greyscale(12)], " %-${remaining}s "),
                             ),
                             $_->[0],
                             trim($_->[1]->pprint, $remaining),
                         )
                     } @fields;
             }
+        }
 
-
+        if ($options->{expand_kontinue_stack}) {
+            my $stack = $k->stack;
             my @stack;
             if ($stack isa MXCL::Term::Cons) {
                 my @list = $stack->uncons;
