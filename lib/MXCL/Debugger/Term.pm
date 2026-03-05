@@ -95,15 +95,80 @@ class MXCL::Debugger::Term {
 
     ## -------------------------------------------------------------------------
 
-    sub traverse_term ($root, $f, $depth=0) {
+    sub traverse_term ($ctx, $root, $f, $depth=0) {
         given ($root->type) {
             when ('Nil') {
                 return;
             }
+            when ('Ref') {
+                $f->( $root, $depth, true );
+                traverse_term( $ctx, $ctx->terms->Deref($root), $f, $depth + 1 );
+                $f->( $root, $depth, false );
+            }
             when ('Cons') {
                 $f->( $root, $depth, true );
                 foreach my $child ( $root->uncons ) {
-                    traverse_term( $child, $f, $depth + 1 );
+                    traverse_term( $ctx, $child, $f, $depth + 1 );
+                }
+                $f->( $root, $depth, false );
+            }
+            when ('Array') {
+                $f->( $root, $depth, true );
+                foreach my $child ( $root->elements->@* ) {
+                    traverse_term( $ctx, $child, $f, $depth + 1 );
+                }
+                $f->( $root, $depth, false );
+            }
+            when ('Hash') {
+                $f->( $root, $depth, true );
+                foreach my ($key, $child) ( $root->elements->%* ) {
+                    traverse_term( $ctx, $ctx->terms->Sym($key), $f, $depth + 1 );
+                    traverse_term( $ctx, $child, $f, $depth + 2 );
+                }
+                $f->( $root, $depth, false );
+            }
+            when ('Lambda') {
+                $f->( $root, $depth, true );
+                traverse_term( $ctx, $root->params, $f, $depth + 1 );
+                traverse_term( $ctx, $root->body, $f, $depth + 1 );
+                $f->( $root, $depth, false );
+            }
+            when ('FExpr') {
+                $f->( $root, $depth, true );
+                traverse_term( $ctx, $root->params, $f, $depth + 1 );
+                traverse_term( $ctx, $root->body, $f, $depth + 1 );
+                $f->( $root, $depth, false );
+            }
+            when ('Native::Applicative') {
+                $f->( $root, $depth, true );
+                traverse_term( $ctx, $root->params, $f, $depth + 1 );
+                $f->( $root, $depth, false );
+            }
+            when ('Native::Operative') {
+                $f->( $root, $depth, true );
+                traverse_term( $ctx, $root->params, $f, $depth + 1 );
+                $f->( $root, $depth, false );
+            }
+            when ('Slot::Defined') {
+                $f->( $root, $depth, true );
+                traverse_term( $ctx, $root->ident, $f, $depth + 1 );
+                traverse_term( $ctx, $root->value, $f, $depth + 1 );
+                $f->( $root, $depth, false );
+            }
+            when ('Slot::Required') {
+                $f->( $root, $depth, true );
+                traverse_term( $ctx, $root->ident, $f, $depth + 1 );
+                $f->( $root, $depth, false );
+            }
+            when ('Slot::Conflict') {
+                $f->( $root, $depth, true );
+                traverse_term( $ctx, $root->ident, $f, $depth + 1 );
+                $f->( $root, $depth, false );
+            }
+            when ('Role') {
+                $f->( $root, $depth, true );
+                foreach my $child ( $root->slots->@* ) {
+                    traverse_term( $ctx, $child, $f, $depth + 1 );
                 }
                 $f->( $root, $depth, false );
             }
@@ -115,19 +180,22 @@ class MXCL::Debugger::Term {
 
     method visualize_term ($ctx, $term, %options) {
         my @lines;
-        traverse_term( $term, sub ($t, $d, $is_cons=undef) {
+        traverse_term( $ctx, $term, sub ($t, $d, $is_cons=undef) {
             my $indent = '';
                $indent = '│ ' x $d if $d > 0;
             my $fmt = colorize(shorten_hash($t->hash), " %8s ")." │ %s";
             if (not defined $is_cons) {
                 push @lines => sprintf $fmt =>
                     shorten_hash($t->hash),
-                    (sprintf "\e[2m%s\e[0m%s\e[2m : %s\e[0m" => $indent, $t->value, $t->type);
+                    (sprintf "\e[2m%s\e[0m%s\e[2m : %s\e[0m" =>
+                        $indent,
+                        $t->pprint,
+                        $t->type);
             }
             elsif ($is_cons == true) {
                 push @lines => sprintf $fmt =>
                     shorten_hash($t->hash),
-                    (sprintf "\e[2m%s╭─\e[0m" => $indent);
+                    (sprintf "\e[2m%s╭─\e[0m %s" => $indent, $t->type);
             }
             elsif ($is_cons == false) {
                 push @lines => sprintf $fmt =>

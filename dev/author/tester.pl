@@ -17,12 +17,11 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
-(define fact (n)
-    (if (n == 0)
-        1
-        (n * (fact (n - 1)))))
-
-(fact 10)
++[
+   +[ 1 2 3 ]
+   +[ 4 5 6 ]
+   +{ :foo 10 :bar +[ 20 30 ] }
+]
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );
@@ -57,7 +56,7 @@ TIMING:
     (map { $_ * 1000 } @timings{qw[ compile execute ]}),
 ;
 
-
+MXCL::Debugger->visualize_term( $context, $result->stack );
 
 __END__
 
