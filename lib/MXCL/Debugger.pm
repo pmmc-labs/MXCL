@@ -6,12 +6,20 @@ use experimental qw[ class ];
 
 use MXCL::Debugger::Tape;
 use MXCL::Debugger::Term;
+use MXCL::Debugger::Scope;
+use MXCL::Debugger::Arena;
 
 class MXCL::Debugger {
-    use constant DEBUG => !!$ENV{DEBUG};
+    use constant DEBUG       => !!$ENV{DEBUG};
+    use constant DEBUG_SCOPE => !!$ENV{DEBUG_SCOPE};
 
     our %KONTINUE_COLORS;
-    our ($TAPE_DEBUGGER, $TERM_DEBUGGER);
+    our (
+        $TAPE_DEBUGGER,
+        $TERM_DEBUGGER,
+        $SCOPE_DEBUGGER,
+        $ARENA_DEBUGGER,
+    );
     BEGIN {
         %KONTINUE_COLORS = (
             Host    => [   1, 2 ],    # ??
@@ -36,7 +44,9 @@ class MXCL::Debugger {
             }
         );
 
-        $TERM_DEBUGGER = MXCL::Debugger::Term->new;
+        $TERM_DEBUGGER  = MXCL::Debugger::Term->new;
+        $SCOPE_DEBUGGER = MXCL::Debugger::Scope->new;
+        $ARENA_DEBUGGER = MXCL::Debugger::Arena->new;
     }
 
     sub monitor_tape_advance ($, $ctx, $tape, $k, $next) {
@@ -45,6 +55,14 @@ class MXCL::Debugger {
 
     sub visualize_term ($, $ctx, $term, %options) {
         $TERM_DEBUGGER->visualize_term($ctx, $term, %options)
+    }
+
+    sub visualize_scope ($, $ctx, %options) {
+        $SCOPE_DEBUGGER->visualize_scope($ctx, %options)
+    }
+
+    sub visualize_arena ($, $ctx, %options) {
+        $ARENA_DEBUGGER->visualize_arena($ctx, %options)
     }
 }
 

@@ -168,12 +168,33 @@ class MXCL::Context {
         return $self;
     }
 
-    method enter_scope ($scope) {
+    method rewind_scope_until ($scope) {
+        my $depth = 0;
+        until ($scopes[-1]->hash eq $scope->hash) {
+            pop @scopes;
+            $depth++;
+        }
+
+        #$initialized &&
+            MXCL::Debugger->DEBUG_SCOPE
+                && MXCL::Debugger->visualize_scope($self, rewind => $depth);
+    }
+
+    method enter_scope ($scope, $define=false) {
         push @scopes => $scope;
+        #$initialized &&
+            MXCL::Debugger->DEBUG_SCOPE
+                && MXCL::Debugger->visualize_scope($self,
+                    enter  => true,
+                    define => $define,
+                );
     }
 
     method leave_scope {
         pop @scopes;
+        #$initialized &&
+            MXCL::Debugger->DEBUG_SCOPE
+                && MXCL::Debugger->visualize_scope($self, leave => true);
     }
 
     method current_tape { $tape->tapes->[-1] }
@@ -182,6 +203,7 @@ class MXCL::Context {
     method test_tape    { $tape->tapes->[2] }
     method base_tape    { $tape->tapes->[3] }
 
+    method scope_stack   { @scopes }
     method current_scope { $scopes[-1] }
     method prelude_scope { $scopes[1] }
     method io_scope      { $scopes[3] }

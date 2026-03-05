@@ -70,7 +70,7 @@ class MXCL::Machine {
 
                 my $local = $Roles->Union( $k->env, $Roles->Role( $slot ) );
 
-                $context->enter_scope($local);
+                $context->enter_scope($local, true);
 
                 # TODO
                 # - need to check if we have any conflicts
@@ -92,9 +92,7 @@ class MXCL::Machine {
                 # XXX:
                 # this should work, but could have issues
                 # so be on the lookout for them :)
-                until ($context->current_scope->hash eq $k->env->hash) {
-                    $context->leave_scope;
-                }
+                $context->rewind_scope_until( $k->env );
                 # NOTE:
                 # this will restore the env, but in a kinda
                 # janky way inside the Update function of the
