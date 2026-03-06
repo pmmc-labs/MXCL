@@ -461,6 +461,16 @@ class MXCL::Runtime::Primitives {
                     signature => [ { name => 'array' } ],
                     impl      => sub ($array) { $terms->ArrayReverse( $array ) },
                 },
+                'pop' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'array' } ],
+                    impl      => sub ($array) { $terms->ArrayPop( $array ) },
+                },
+                'shift'  => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'array' } ],
+                    impl      => sub ($array) { $terms->ArrayShift( $array ) },
+                },
                 'push' => +{
                     kind      => 'applicative',
                     signature => [ { name => 'array' }, { name => 'item' } ],

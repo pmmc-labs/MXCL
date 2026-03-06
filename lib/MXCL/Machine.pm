@@ -298,7 +298,7 @@ class MXCL::Machine {
                     my $name = $args->head; # should be Sym
                     my $slot = $call->role->lookup( $name->value );
 
-                    die "Bad Slot! ".$slot->stringify
+                    die "Bad Slot! ".(defined $slot ? $slot->stringify : ($name->value.' is UNDEF'))." in ".$call->role->stringify
                         unless $slot isa MXCL::Term::Role::Slot::Defined;
 
                     my $method = $slot->value;

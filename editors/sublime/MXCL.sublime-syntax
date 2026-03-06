@@ -139,7 +139,7 @@ contexts:
       scope: entity.name.function.mxcl
 
   method:
-    - match: '\.[^\s\(\)''\{\}\[\]]+'
+    - match: '(\.|\-\>)[^\s\(\)''\{\}\[\]]+'
       scope: variable.parameter.mxcl
 
   # :keyword — tag literals (used like Scheme symbols / keyword args)

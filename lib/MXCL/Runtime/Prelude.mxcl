@@ -98,7 +98,7 @@
             (grep f (tail lst)))))
 
 (define reduce (acc f lst)
-    (if (nil? (tail lst))
+    (if (nil? lst)
         acc
         (reduce (f (head lst) acc) f (tail lst))))
 
@@ -201,6 +201,8 @@
     (bind .length  (a)     "Array::length")
     (bind .at      (a i)   "Array::at")
     (bind .reverse (a)     "Array::reverse")
+    (bind .pop     (a)     "Array::pop")
+    (bind .shift   (a)     "Array::shift")
     (bind .push    (a i)   "Array::push")
     (bind .unshift (a i)   "Array::unshift")
     (bind .splice  (a o l) "Array::splice")
@@ -208,9 +210,7 @@
     (bind .map     (a f)   "Array::map")
     ;; methods
     (define .join  (a sep) (join sep a))
-    (bind ->list (arr) "array->list")
-
-    )
+    (bind ->list (arr) "array->list"))
 
 (role Hash (with <EQ>)
     ;; operators

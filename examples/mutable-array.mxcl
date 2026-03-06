@@ -1,0 +1,99 @@
+
+(role <Indexable> ()
+    (require .at)
+    (require .length))
+
+;; (class Mutable::Array (:does <Indexable>)
+;;     (field $array)
+;;
+;;     (BUILD (@init)
+;;         ($array .! @init))
+;;
+;;     (method .at ($idx) (($array .$) .at $idx))
+;;
+;;     (method .push ($item)
+;;         ($array .! (($array .$) .push $item)))
+;;
+;;     (method .unshift ($item)
+;;         ($array .! (($array .$) .unshfit $item)))
+;;
+;;     (method .pop ()
+;;         (let $item (($array .$) .at -1))
+;;         ($array .! (($array .$) .pop))
+;;         (^ $item))
+;;
+;;     (method .shift ()
+;;         (let $item (($array .$) .at 0))
+;;         ($array .! (($array .$) .shift))
+;;         (^ $item))
+;;
+;;     (coerce ->array () ($array .$))
+;; )
+
+
+(let Mutable::Array (make-opaque
+        (make-role
+            (define .new ($class @init)
+                (make-opaque
+                    (<Indexable> .union (make-role
+                        (let $array (make-ref @init))
+
+                        (define .at ($self $idx)
+                            (($array .get) .at $idx))
+
+                        (define .length ($self)
+                            (($array .get) .length))
+
+                        (define .push ($self $item)
+                            (do
+                                ($array .set! (($array .get) .push $item))
+                                $self
+                            )
+                        )
+
+                        (define .pop ($self)
+                            (do
+                                (let $item (($array .get) .at -1))
+                                ($array .set! (($array .get) .pop))
+                                $item
+                            )
+                        )
+
+                        (define .shift ($self)
+                            (do
+                                (let $item (($array .get) .at 0))
+                                ($array .set! (($array .get) .shift))
+                                $item
+                            )
+                        )
+
+                        (define .unshift ($self $item)
+                            (do
+                                ($array .set! (($array .get) .unshift $item))
+                                $self
+                            )
+                        )
+
+                        (define ->array ($self) ($array .get))
+                    )
+                ))
+            )
+        )
+    )
+)
+
+(let $array (Mutable::Array .new +[ 1 2 3 ]))
+(say ($array ->array))
+
+($array .push 4)
+(($array .push 5) .push 6)
+(say ($array ->array))
+
+($array .unshift 0)
+(say ($array ->array))
+
+(say ($array .pop))
+(say ($array ->array))
+
+(say ($array .shift))
+(say ($array ->array))
