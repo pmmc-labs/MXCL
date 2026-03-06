@@ -1,0 +1,51 @@
+
+(let @input    (list 0 1 2 3  4   5   6    7     8      9      10       11))
+(let @expected (list 1 1 2 6 24 120 720 5040 40320 362880 3628800 39916800))
+
+;; basic recursive version
+(define fact (n)
+    (if (n == 0)
+        1
+        (n * (fact (n - 1)))))
+
+;; anon-recursive version
+(let $fact (-> (n)
+            (if (n == 0)
+                1
+                (n * (__SUB__ (n - 1)))))
+)
+
+;; fixed point version
+(define fact2 (n)
+    (do
+        (define fixed-fact (n f)
+            (if (n == 0) 1
+                (n * (f (n - 1) f))))
+        (fixed-fact n fixed-fact))
+)
+
+(+[
+    fact
+    $fact
+    fact2
+    ] .foreach (-> ($f)
+        (do
+            (say ("EXPECTED: " ~ (join " " @expected)))
+            (print  "     GOT:")
+            (map
+                (-> ($x)
+                    (do
+                        ;;(say ("Fib:" ~ $x))
+                        (let $result ($f $x))
+                        ;;(say ("Got => " ~ $result))
+                        (print (" " ~ $result))
+                        $result
+                    )
+                )
+                @input
+            )
+            (print  "\n")
+        )
+    )
+)
+
