@@ -1,0 +1,18 @@
+
+
+
+;; array to list
+(say (join " " (+[ 0 1 2 3 4 ] ->list)))
+
+;; list to array
+(say (join " " (list->array (list 0 1 2 3 4))))
+
+;; pushing list on array
+(say (join " " (+[] .push '(0 1 2 3 4))))
+
+;; unshifting
+(say (join " " (+[] .unshift '(0 1 2 3 4))))
+
+;; list and ' are the same here ...
+(say (join " " (list 0 1 2 3 4)))
+(say (join " " '(0 1 2 3 4)))

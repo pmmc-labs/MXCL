@@ -1,0 +1,54 @@
+
+;; ----------------------------------------------
+;; NEEDS A LOT OF WORK
+;; ----------------------------------------------
+;; just a really simple start for now
+;; ----------------------------------------------
+
+(let @weekdays +[
+    "Monday"
+    "Tuesday"
+    "Wednesday"
+    "Thursday"
+    "Friday"
+    "Saturday"
+    "Sunday"
+])
+
+(let @months +[
+    "January"
+    "Februrary"
+    "March"
+    "April"
+    "May"
+    "June"
+    "July"
+    "August"
+    "September"
+    "October"
+    "November"
+    "December"
+])
+
+(let @days-per-month +[
+    30 ;; January
+    29 ;; Februrary
+    31 ;; March
+    30 ;; April
+    31 ;; May
+    30 ;; June
+    31 ;; July
+    31 ;; August
+    30 ;; September
+    31 ;; October
+    30 ;; November
+    31 ;; December
+])
+
+(define format-date (day month year)
+    (((((@months .at (month - 1)) ~ " ") ~ day) ~ ", ") ~ year))
+
+
+(format-date 12 8 1973)
+
+

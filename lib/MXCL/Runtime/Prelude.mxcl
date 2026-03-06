@@ -60,6 +60,8 @@
 (bind make-hash    (@)     "make-hash")
 (bind make-channel ()      "make-channel")
 
+(bind list->array (lst) "list->array")
+
 ;; ----------------------------------------------------------
 ;; Built-in Fexprs
 ;; ----------------------------------------------------------
@@ -179,7 +181,11 @@
     (bind .rindex  (n m) "Str::rindex")
     (define .split (n p) (split p n))
     (bind .join    (n p) "join")
-    (bind .repeat  (n r) "Str::repeat"))
+    (bind .repeat  (n r) "Str::repeat")
+    ;; TODO
+    ;; - .upper?
+    ;; - .lower?
+)
 
 (role Ref (with <EQ>)
     ;; operators
@@ -201,7 +207,10 @@
     (bind .foreach (a f)   "Array::foreach")
     (bind .map     (a f)   "Array::map")
     ;; methods
-    (define .join  (a sep) (join sep a)))
+    (define .join  (a sep) (join sep a))
+    (bind ->list (arr) "array->list")
+
+    )
 
 (role Hash (with <EQ>)
     ;; operators
