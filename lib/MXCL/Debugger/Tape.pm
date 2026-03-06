@@ -85,6 +85,7 @@ class MXCL::Debugger::Tape {
     }
 
     my sub trim ($string, $length) {
+        $string =~ s/\n/\\n/g;
         return $string if length $string <= $length;
         return substr($string, 0, ($length - 4)).'...';
     }
@@ -109,10 +110,13 @@ class MXCL::Debugger::Tape {
         filter_kontinue_types  => undef,
         expand_kontinue_fields => true,
         expand_kontinue_stack  => true,
+        expand_kontinue_env    => true,
         show_arena_stats       => true,
     };
 
     method monitor_tape_advance ($ctx, $tape, $k, $next) {
+        return unless $ctx->initialized;
+
         if (my $filter = $options->{filter_kontinue_types}) {
             return unless $k->type =~ $filter;
         }
@@ -188,6 +192,30 @@ class MXCL::Debugger::Tape {
                     trim($_->[1]->pprint, $remaining),
                 )
             } @stack;
+        }
+
+        if ($options->{expand_kontinue_env}) {
+            my $env = $ctx->roles->Difference(
+                $ctx->roles->AsymmetricDifference( $ctx->base_scope, $k->env ),
+                $ctx->base_scope,
+            );
+            my @env;
+            foreach my $slot ($env->slots->@*) {
+                push @env, [ $slot->ident->value, $slot ];
+            }
+
+            my $sep = bg_color(greyscale(6), (' ' x 6));
+            say $sep, join "\n${sep}" =>
+            map {
+                sprintf(
+                    (join '' =>
+                        color([[30,50,120],[0,120,200]], " %28s:"),
+                        color([[60,60,180],[60,180,240]], " %-${remaining}s "),
+                    ),
+                    $_->[0],
+                    trim($_->[1]->pprint, $remaining),
+                )
+            } @env;
         }
 
         if ($options->{show_arena_stats}) {

@@ -78,6 +78,11 @@
 ;; Built-in Functions
 ;; ----------------------------------------------------------
 
+(define length (lst)
+    (if (nil? lst)
+        0
+        ((length (tail lst)) + 1)))
+
 (define map (f lst)
     (if (nil? lst)
         ()
@@ -91,9 +96,21 @@
             (grep f (tail lst)))))
 
 (define reduce (acc f lst)
-    (if (nil? lst)
+    (if (nil? (tail lst))
         acc
         (reduce (f (head lst) acc) f (tail lst))))
+
+(define sum (lst)
+    (reduce 0 (-> (n acc) (acc + n)) lst))
+
+(define product (lst)
+    (reduce 0 (-> (n acc) (acc * n)) lst))
+
+(define max (lst)
+    (reduce 0 (-> (n acc) (acc .max n)) lst))
+
+(define min (lst)
+    (reduce 0 (-> (n acc) (acc .min n)) lst))
 
 ;; ----------------------------------------------------------
 ;; Abstact Roles
@@ -139,7 +156,9 @@
     (bind .int  (n) "Num::int")
     (bind .sqrt (n) "Num::sqrt")
     (bind .rand (n) "Num::rand")
-    (bind .chr  (n) "Num::chr"))
+    (bind .chr  (n) "Num::chr")
+    (bind .max  (n m) "Num::max")
+    (bind .min  (n m) "Num::min"))
 
 (role Str (with <ORD>)
     ;; native-operators
@@ -159,7 +178,8 @@
     (bind .index   (n m) "Str::index")
     (bind .rindex  (n m) "Str::rindex")
     (define .split (n p) (split p n))
-    (bind .join    (n p) "join"))
+    (bind .join    (n p) "join")
+    (bind .repeat  (n r) "Str::repeat"))
 
 (role Ref (with <EQ>)
     ;; operators

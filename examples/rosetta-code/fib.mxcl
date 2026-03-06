@@ -1,0 +1,53 @@
+
+(let @input    (list 0 1 2 3 4 5 6  7  8  9 10 11))
+(let @expected (list 0 1 1 2 3 5 8 13 21 34 55 89))
+
+;; basic recursive version
+(define fib (n)
+    (if (n < 2)
+        n
+        ((fib (n - 2)) + (fib (n - 1)))
+    )
+)
+
+;; anon-recursive version
+(let $fib (-> (n)
+            (if (n < 2)
+                n
+                ((__SUB__ (n - 2)) + (__SUB__ (n - 1)))))
+)
+
+;; fixed point version
+(define fib2 (n)
+    (do
+        (define fixed-fib (n f)
+            (if (n < 2) n
+                ((f (n - 2) f) + (f (n - 1) f))))
+        (fixed-fib n fixed-fib))
+)
+
+(+[
+    fib
+    $fib
+    fib2
+    ] .foreach (-> ($f)
+        (do
+            (say ("EXPECTED: " ~ (join " " @expected)))
+            (print  "     GOT:")
+            (map
+                (-> ($x)
+                    (do
+                        ;;(say ("Fib:" ~ $x))
+                        (let $result ($f $x))
+                        ;;(say ("Got => " ~ $result))
+                        (print (" " ~ $result))
+                        $result
+                    )
+                )
+                @input
+            )
+            (print  "\n")
+        )
+    )
+)
+

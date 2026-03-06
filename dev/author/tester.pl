@@ -17,11 +17,30 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
-+[
-   +[ 1 2 3 ]
-   +[ 4 5 6 ]
-   +{ :foo 10 :bar +[ 20 30 ] }
-]
+(define fib (n)
+    (if (n < 2)
+        n
+        ((fib (n - 2)) + (fib (n - 1)))
+    )
+)
+
+(define fib2 (n)
+    (do
+        (define fixed-fib (n f)
+            (if (n < 2) n
+                ((f (n - 2) f) + (f (n - 1) f))))
+        (fixed-fib n fixed-fib))
+)
+
+(let $fib (-> (n)
+            (if (n < 2)
+                n
+                ((__SUB__ (n - 2)) + (__SUB__ (n - 1)))))
+)
+
+;; (fib 10)
+(fib2 10)
+;;($fib 10)
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );

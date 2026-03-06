@@ -10,8 +10,14 @@ use MXCL::Debugger::Scope;
 use MXCL::Debugger::Arena;
 
 class MXCL::Debugger {
+    use Term::ReadKey qw[ GetTerminalSize ];
+
     use constant DEBUG       => !!$ENV{DEBUG};
     use constant DEBUG_SCOPE => !!$ENV{DEBUG_SCOPE};
+
+    use constant TERMINAL_SIZE   => +[ GetTerminalSize() ];
+    use constant TERMINAL_WIDTH  => TERMINAL_SIZE->[0];
+    use constant TERMINAL_HEIGHT => TERMINAL_SIZE->[1];
 
     our %KONTINUE_COLORS;
     our (
@@ -39,6 +45,7 @@ class MXCL::Debugger {
                 filter_kontinue_types  => exists $ENV{DEBUG_FILTER} ? qr/$ENV{DEBUG_FILTER}/ : undef,
                 expand_kontinue_fields => exists $ENV{DEBUG_FIELDS} ? !!$ENV{DEBUG_FIELDS}   : true,
                 expand_kontinue_stack  => exists $ENV{DEBUG_STACK}  ? !!$ENV{DEBUG_STACK}    : true,
+                expand_kontinue_env    => exists $ENV{DEBUG_ENV}    ? !!$ENV{DEBUG_ENV}      : true,
                 show_arena_stats       => exists $ENV{DEBUG_ARENA}  ? !!$ENV{DEBUG_ARENA}    : true,
 
             }

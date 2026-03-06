@@ -277,7 +277,7 @@ class MXCL::Runtime::Primitives {
                     { name => 'string', coerce => 'stringify' },
                 ],
                 impl => sub ($pattern, $string) {
-                    $terms->List( map $terms->Str($_), split $pattern, $string )
+                    $terms->List( map $terms->Str($_), split quotemeta($pattern), $string )
                 }
             },
             'eval' => +{
@@ -343,6 +343,17 @@ class MXCL::Runtime::Primitives {
                     return $terms->Hash(%elements);
                 }
             },
+            # corecions
+            'list->array'  => +{
+                kind      => 'applicative',
+                signature => [ { name => 'list' } ],
+                impl      => sub ($list) { $terms->Array($list->uncons) }
+            },
+            'array->list'  => +{
+                kind      => 'applicative',
+                signature => [ { name => 'array' } ],
+                impl      => sub ($array) { $terms->List($array->elements->@*) }
+            },
         };
     }
 
@@ -374,6 +385,9 @@ class MXCL::Runtime::Primitives {
                 'rand' => unary_op('numify', 'Num', sub ($n) { rand($n) }),
 
                 'chr' => unary_op('numify', 'Str', sub ($n) { chr($n) }),
+
+                'max' => binary_op('numify', 'Num',  sub ($n, $m) { $n >= $m ? $n : $m }),
+                'min' => binary_op('numify', 'Num',  sub ($n, $m) { $n <= $m ? $n : $m }),
             },
             'Str' => +{
                 '==' => binary_op('stringify', 'Bool', sub ($n, $m) { $n eq $m }),
@@ -395,6 +409,14 @@ class MXCL::Runtime::Primitives {
 
                 'index'  => binary_op('stringify', 'Num',  sub ($n, $m) { index($n, $m)  }),
                 'rindex' => binary_op('stringify', 'Num',  sub ($n, $m) { rindex($n, $m) }),
+
+                'repeat' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'str' }, { name => 'count' } ],
+                    impl      => sub ($str, $count) {
+                        $terms->Str( $str->value x $count->value )
+                    }
+                },
             },
             'Ref' => +{
                 'get' => +{

@@ -37,7 +37,7 @@ class MXCL::Context {
     field @scopes;
     field %channels;
     field $base_scope_idx = 0;
-    field $initialized = false;
+    field $initialized :reader = false;
 
     field %modules;
 
@@ -175,14 +175,14 @@ class MXCL::Context {
             $depth++;
         }
 
-        #$initialized &&
+        $initialized &&
             MXCL::Debugger->DEBUG_SCOPE
                 && MXCL::Debugger->visualize_scope($self, rewind => $depth);
     }
 
     method enter_scope ($scope, $define=false) {
         push @scopes => $scope;
-        #$initialized &&
+        $initialized &&
             MXCL::Debugger->DEBUG_SCOPE
                 && MXCL::Debugger->visualize_scope($self,
                     enter  => true,
@@ -192,7 +192,7 @@ class MXCL::Context {
 
     method leave_scope {
         pop @scopes;
-        #$initialized &&
+        $initialized &&
             MXCL::Debugger->DEBUG_SCOPE
                 && MXCL::Debugger->visualize_scope($self, leave => true);
     }

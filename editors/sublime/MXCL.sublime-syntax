@@ -135,12 +135,12 @@ contexts:
       scope: entity.name.function.mxcl
 
   field:
-    - match: '\$[^\s\(\)''\{\}\[\]]+'
-      scope: constant.other.symbol.mxcl
+    - match: '[\$\@\%\&\*][^\s\(\)''\{\}\[\]]+'
+      scope: entity.name.function.mxcl
 
   method:
     - match: '\.[^\s\(\)''\{\}\[\]]+'
-      scope: entity.name.function.mxcl
+      scope: variable.parameter.mxcl
 
   # :keyword — tag literals (used like Scheme symbols / keyword args)
   tag:
