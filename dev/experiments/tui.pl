@@ -5,12 +5,14 @@ use experimental qw[ class switch ];
 
 use List::Util    qw[ sum min max reduce ];
 use Term::ReadKey qw[ GetTerminalSize ];
+use Data::Dumper  qw[ Dumper ];
 
 sub hex2rgb ($hex) { +[ map int(($_ / 255) * 255), unpack 'C*', pack 'H*', $hex ] }
 
 our %PANTONE = (
     BLACK               => hex2rgb('000000'),
     WHITE               => hex2rgb('FFFFFF'),
+    GREY                => hex2rgb('CCCCCC'),
     RED                 => hex2rgb('FF0000'),
     GREEN               => hex2rgb('00FF00'),
     BLUE                => hex2rgb('0000FF'),
@@ -114,10 +116,14 @@ our %PANTONE = (
 
 my ($MAX_WIDTH, $MAX_HEIGHT) = GetTerminalSize();
 
-class StyledString {
+class Cell {
     use constant LEFT   => -1;
     use constant CENTER =>  0;
     use constant RIGHT  =>  1;
+
+    use constant TOP    => -1;
+    use constant MIDDLE =>  0;
+    use constant BOTTOM =>  1;
 
     use constant BOLD      => 1;
     use constant FAINT     => 2;
@@ -127,24 +133,24 @@ class StyledString {
     use constant HIDE      => 8;
     use constant STRIKE    => 9;
 
-    field $source   :param :reader;
+    field $content  :param :reader;
     field $align    :param :reader = LEFT;
+    field $valign   :param :reader = TOP;
     field $width    :param :reader = undef;
+    field $height   :param :reader = undef;
     field $fg_color :param :reader = undef;
     field $bg_color :param :reader = undef;
     field $padding  :param :reader = ' ';
     field $styles   :param :reader = +[];
 
-    ADJUST {
-        $width //= length $source;
-    }
-
-    method clone ($src, %options) {
+    method clone (%options) {
         __CLASS__->new(
-            source   => $src,
-            # ... copy the rest
+            # ... copy everything
+            content  => $content,
             align    => $align,
+            valign   => $valign,
             width    => $width,
+            height   => $height,
             fg_color => $fg_color,
             bg_color => $bg_color,
             padding  => $padding,
@@ -154,16 +160,17 @@ class StyledString {
         )
     }
 
-    method render {
+    method render  {
+        my $w = $width // length $content;
         my $output;
-        if ($width < length $source) {
-            $output = substr $source, 0, $width;
+        if ($w < length $content) {
+            $output = substr $content, 0, $w;
         }
         else {
-            my $remaining = $width - length $source;
+            my $remaining = $w - length $content;
             given ($align) {
                 when (LEFT) {
-                    $output = $source . ($padding x $remaining);
+                    $output = $content . ($padding x $remaining);
                 }
                 when (CENTER) {
                     my ($lhs, $rhs) = (0, 0);
@@ -174,10 +181,10 @@ class StyledString {
                         my $split = $remaining / 2;
                         ($lhs, $rhs) = (ceil($split), floor($split))
                     }
-                    $output = ($padding x $lhs) . $source . ($padding x $rhs);
+                    $output = ($padding x $lhs) . $content . ($padding x $rhs);
                 }
                 when (RIGHT) {
-                    $output = ($padding x $remaining) . $source;
+                    $output = ($padding x $remaining) . $content;
                 }
             }
         }
@@ -192,7 +199,63 @@ class StyledString {
             $postfix = "\e[0m";
         }
 
-        return join '' => ($prefix, $output, $postfix);
+        my @lines;
+        if (defined $height && $height > 1) {
+            my $blank_line = $padding x $w;
+            my $remaining  = $height - 1;
+            given ($valign) {
+                when (TOP) {
+                    push @lines => $output, (($blank_line) x $remaining);
+                }
+                when (MIDDLE) {
+                    if (($remaining % 2) == 0) {
+                        my $split = int($remaining/2);
+                        push @lines => (($blank_line) x $split), $output, (($blank_line) x $split);
+                    } else {
+                        my $split = $remaining / 2;
+                        my ($above, $below) = (floor($split), ceil($split));
+                        say "HEIGHT: ${height} REMAINING: ${remaining} SPLIT: ${split} ABOVE: ",$above," BELOW: ",$below;
+                        push @lines => (($blank_line) x $above), $output, (($blank_line) x $below)
+                    }
+                }
+                when (BOTTOM) {
+                    push @lines => (($blank_line) x $remaining), $output;
+                }
+            }
+        } else {
+            push @lines => $output;
+        }
+
+        my @output;
+        foreach my $line (@lines) {
+            push @output => join '' => ($prefix, $line, $postfix)
+        }
+
+        return \@output;
+    }
+}
+
+class Row {
+    field $cells  :param :reader;
+    field $height :reader;
+
+    ADJUST {
+        $height = List::Util::max( map { $_->height // 0 } @$cells );
+        @$cells = map { $_->clone(height => $_->height) } @$cells;
+    }
+
+    method render {
+        my @outputs = map $_->render, @$cells;
+
+        return +[ join '' => map $_->[0], @outputs ]
+            if !$height || $height == 1;
+
+        my @output;
+        for (my $i = 0; $i < $height; $i++) {
+            push @output => join '' => map { $_->[$i] } @outputs;
+        }
+
+        return \@output;
     }
 }
 
@@ -200,52 +263,27 @@ class StyledString {
 my @colors = sort { $a cmp $b } keys %PANTONE;
 my $max_length = max map length($_), @colors;
 
-my @styled = map {
-    StyledString->new(
-        source   => $_,
-        align    => StyledString->CENTER,
-        width    => $max_length,
-        fg_color => $PANTONE{$_},
-        #bg_color => $PANTONE{$_},
-        padding  => '_',
-    )
-} @colors;
+my @rows;
+foreach my ($c1, $c2, $c3, $c4, $c5, $c6, $c7, $c8) (@colors) {
+    my @row;
+    foreach (grep defined, $c1, $c2, $c3, $c4, $c5, $c6, $c7, $c8) {
+        push @row => Cell->new(
+            content  => $_,
+            align    => Cell->CENTER,
+            valign   => Cell->MIDDLE,
+            width    => $max_length,
+            height   => 3,
+            bg_color => $PANTONE{$_},
+            fg_color => $PANTONE{BLACK},
+            padding  => ' ',
+        )
+    }
+    push @rows => Row->new( cells => \@row );
+}
 
-
-say $_->render foreach @styled;
+say foreach map $_->render->@*, @rows;
 
 __END__
-
-my $str1 = StyledString->new(
-    source   => 'Hello World',
-    align    => StyledString->LEFT,
-    width    => 32,
-    fg_color => $PANTONE{babyBlue},
-    bg_color => $PANTONE{BLACK},
-    padding  => '.',
-    styles   => [ StyledString->BOLD ],
-);
-
-my $str2 = StyledString->new(
-    source   => 'Good Afternoon',
-    align    => StyledString->CENTER,
-    width    => 32,
-    fg_color => $PANTONE{sunglowYellow},
-    bg_color => $PANTONE{BLACK},
-    padding  => '.',
-    styles   => [ StyledString->FAINT ],
-);
-
-my $str3 = StyledString->new(
-    source   => 'Goodbye',
-    align    => StyledString->RIGHT,
-    width    => 32,
-    fg_color => $PANTONE{quinacridoneMagenta},
-    bg_color => $PANTONE{BLACK},
-    padding  => '.'
-);
-
-say $_->render foreach ($str1, $str2, $str3);
 
 
 
