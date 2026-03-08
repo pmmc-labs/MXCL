@@ -34,6 +34,7 @@ class MXCL::Compiler {
             my $str = substr($src, 1, length($src) - 2);
             $str = "\n" if $str eq "\\n";
             $str = "\t" if $str eq "\\t";
+            $str = "\e" if $str eq "\\e";
             return $alloc->Str( $str );
         }
         return $alloc->Num( 0+$src ) if Scalar::Util::looks_like_number($src);

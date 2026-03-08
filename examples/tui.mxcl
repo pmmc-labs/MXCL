@@ -1,0 +1,31 @@
+
+(let ^ESC ("\e" ~ (91 .chr)))
+
+(let ^BLACK  30)
+(let ^RED    31)
+(let ^GREEN  32)
+(let ^YELLOW 33)
+(let ^BLUE   34)
+(let ^PURPLE 35)
+(let ^CYAN   36)
+(let ^WHITE  37)
+
+(let ^LEFT  0)
+(let ^RIGHT 1)
+
+(define color-string ($str $color)
+    (join "" (list ^ESC $color "m" $str ^ESC "0m")))
+
+(define pad-string ($str $align $width $char)
+    (if (($str .length) == $width)
+        $str
+    (if (($str .length) > $width)
+        ($str .substr 0 $width)
+        (if ($align == ^LEFT)
+            ($str ~ ($char .repeat ($width - ($str .length))))
+            (($char .repeat ($width - ($str .length))) ~ $str)))))
+
+
+(say (color-string (pad-string "Hello World" ^LEFT  32 ".") ^RED))
+(say (color-string (pad-string "Goodbye!"    ^RIGHT 32 ".") ^GREEN))
+

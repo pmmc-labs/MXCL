@@ -412,9 +412,23 @@ class MXCL::Runtime::Primitives {
 
                 'repeat' => +{
                     kind      => 'applicative',
-                    signature => [ { name => 'str' }, { name => 'count' } ],
+                    signature => [
+                        { name => 'str', coerce => 'stringify' },
+                        { name => 'count', coerce => 'numify' },
+                    ],
                     impl      => sub ($str, $count) {
-                        $terms->Str( $str->value x $count->value )
+                        $terms->Str( $str x $count )
+                    }
+                },
+                'substr' => +{
+                    kind      => 'applicative',
+                    signature => [
+                        { name => 'str', coerce => 'stringify' },
+                        { name => 'offset', coerce => 'numify' },
+                        { name => 'length', coerce => 'numify' },
+                    ],
+                    impl => sub ($str, $offset, $length) {
+                        $terms->Str( substr $str, $offset, $length )
                     }
                 },
             },
