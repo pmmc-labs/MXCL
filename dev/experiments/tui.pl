@@ -8,6 +8,9 @@ use Term::ReadKey qw[ GetTerminalSize ];
 use Data::Dumper  qw[ Dumper ];
 
 sub hex2rgb ($hex) { +[ map int(($_ / 255) * 255), unpack 'C*', pack 'H*', $hex ] }
+sub rgb2hex ($rgb) { sprintf '%02lx%02lx%02lx' => @$rgb }
+
+my ($MAX_WIDTH, $MAX_HEIGHT) = GetTerminalSize();
 
 our %PANTONE = (
     BLACK               => hex2rgb('000000'),
@@ -113,8 +116,6 @@ our %PANTONE = (
     begonia             => hex2rgb('FA6E79'),
     beige               => hex2rgb('F5F5DC'),
 );
-
-my ($MAX_WIDTH, $MAX_HEIGHT) = GetTerminalSize();
 
 class Cell {
     use constant LEFT   => -1;
@@ -236,26 +237,63 @@ class Cell {
 }
 
 class Row {
+    field $width  :param :reader = $MAX_WIDTH;
+    field $spacer :param :reader = '';
     field $cells  :param :reader;
     field $height :reader;
 
     ADJUST {
         $height = List::Util::max( map { $_->height // 0 } @$cells );
-        @$cells = map { $_->clone(height => $_->height) } @$cells;
+
+        my $total_spacer = 0;
+        if (length $spacer > 0) {
+            $total_spacer = (scalar(@$cells) - 1) * (length $spacer)
+        }
+
+        my @variable;
+        my $remaining = $width - $total_spacer;
+        foreach my ($i, $cell) (indexed @$cells) {
+            if (defined $cell->width) {
+                $remaining -= $cell->width;
+            } else {
+                push @variable => [ $i, $cell ];
+            }
+        }
+
+        if (@variable) {
+            my $split = int($remaining / scalar @variable);
+            @$cells = map {
+                $_->clone(
+                    height => $height,
+                    width  => ($_->width // $split),
+                )
+            } @$cells;
+        } else {
+            $width  = $total_spacer + List::Util::sum( map { $_->width } @$cells );
+            @$cells = map { $_->clone( height => $height ) } @$cells;
+        }
     }
 
     method render {
         my @outputs = map $_->render, @$cells;
 
-        return +[ join '' => map $_->[0], @outputs ]
+        return +[ join $spacer, map $_->[0], @outputs ]
             if !$height || $height == 1;
 
         my @output;
         for (my $i = 0; $i < $height; $i++) {
-            push @output => join '' => map { $_->[$i] } @outputs;
+            push @output => join $spacer, map { $_->[$i] } @outputs;
         }
 
         return \@output;
+    }
+}
+
+class Table {
+    field $rows :param :reader = +[];
+
+    method render {
+        +[ map { $_->render->@* } @$rows ]
     }
 }
 
@@ -263,28 +301,77 @@ class Row {
 my @colors = sort { $a cmp $b } keys %PANTONE;
 my $max_length = max map length($_), @colors;
 
-my @rows;
-foreach my ($c1, $c2, $c3, $c4, $c5, $c6, $c7, $c8) (@colors) {
-    my @row;
-    foreach (grep defined, $c1, $c2, $c3, $c4, $c5, $c6, $c7, $c8) {
-        push @row => Cell->new(
-            content  => $_,
-            align    => Cell->CENTER,
-            valign   => Cell->MIDDLE,
-            width    => $max_length,
-            height   => 3,
-            bg_color => $PANTONE{$_},
-            fg_color => $PANTONE{BLACK},
+my $header = Row->new(
+    spacer => ' ',
+    cells  => [
+        Cell->new(
+            content  => "color name",
+            align    => Cell->LEFT,
+            width    => 40,
+            bg_color => $PANTONE{BLACK},
+            fg_color => $PANTONE{WHITE},
             padding  => ' ',
-        )
-    }
-    push @rows => Row->new( cells => \@row );
+        ),
+        Cell->new(
+            content  => "hex",
+            align    => Cell->CENTER,
+            width    => 9,
+            bg_color => $PANTONE{BLACK},
+            fg_color => $PANTONE{WHITE},
+            padding  => ' ',
+        ),
+        Cell->new(
+            content  => "r",
+            align    => Cell->RIGHT,
+            width    => 3,
+            bg_color => $PANTONE{BLACK},
+            fg_color => $PANTONE{WHITE},
+        ),
+        Cell->new(
+            content  => "g",
+            align    => Cell->RIGHT,
+            width    => 3,
+            bg_color => $PANTONE{BLACK},
+            fg_color => $PANTONE{WHITE},
+        ),
+        Cell->new(
+            content  => "b",
+            align    => Cell->RIGHT,
+            width    => 3,
+            bg_color => $PANTONE{BLACK},
+            fg_color => $PANTONE{WHITE},
+        ),
+    ]
+);
+
+
+my @rows = (
+    $header,
+    Row->new( cells => [ Cell->new( content => '', padding => '-', width => $header->width ) ] ),
+);
+
+foreach my $color (@colors) {
+    push @rows => Row->new(
+        spacer => ' ',
+        cells => [
+            $header->cells->[0]->clone(
+                content  => $color,
+                fg_color => $PANTONE{$color}
+            ),
+            $header->cells->[1]->clone( content => '#'.rgb2hex($PANTONE{$color}), fg_color => $PANTONE{$color} ),
+            $header->cells->[2]->clone( content => $PANTONE{$color}->[0], bg_color => +[ $PANTONE{$color}->[0], 0, 0 ] ),
+            $header->cells->[3]->clone( content => $PANTONE{$color}->[1], bg_color => +[ 0, $PANTONE{$color}->[1], 0 ] ),
+            $header->cells->[4]->clone( content => $PANTONE{$color}->[2], bg_color => +[ 0, 0, $PANTONE{$color}->[2] ] ),
+        ]
+    )
 }
 
-say foreach map $_->render->@*, @rows;
+
+my $table = Table->new( rows => \@rows );
+
+say foreach $table->render->@*;
 
 __END__
-
 
 
 
