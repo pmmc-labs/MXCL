@@ -10,10 +10,10 @@ class MXCL::Machine {
 
     method run_until_host ($context) {
         my $k;
-        while ($context->tape->has_next) {
-            $k = $context->tape->next;
+        while ($context->mixer->has_next) {
+            $k = $context->mixer->next;
             last if $k isa MXCL::Term::Kontinue::Host;
-            $context->tape->advance( $context, $k, $self->step( $context, $k ) );
+            $context->mixer->advance( $context, $k, $self->step( $context, $k ) );
         }
         return $k;
     }
@@ -30,9 +30,9 @@ class MXCL::Machine {
             # ------------------------------------------------------------------
             when ('MXCL::Term::Kontinue::Return') {
                 die "EXPECTED KONTINUE IN QUEUE for Return!"
-                    unless $context->tape->has_next;
+                    unless $context->mixer->has_next;
 
-                my $prev = $context->tape->next;
+                my $prev = $context->mixer->next;
                 return $Konts->Update(
                     $prev,
                     $k->env,
@@ -41,16 +41,16 @@ class MXCL::Machine {
             }
             when ('MXCL::Term::Kontinue::Discard') {
                 die "EXPECTED KONTINUE IN QUEUE for Discard!"
-                    unless $context->tape->has_next;
+                    unless $context->mixer->has_next;
 
-                my $prev = $context->tape->next;
+                my $prev = $context->mixer->next;
                 return $Konts->Update( $prev, $k->env, $prev->stack );
             }
             when ('MXCL::Term::Kontinue::Capture') {
                 die "EXPECTED KONTINUE IN QUEUE for Capture!"
-                    unless $context->tape->has_next;
+                    unless $context->mixer->has_next;
 
-                my $prev = $context->tape->next;
+                my $prev = $context->mixer->next;
                 return $Konts->Update(
                     $prev,
                     $k->env,

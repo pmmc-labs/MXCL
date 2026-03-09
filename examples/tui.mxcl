@@ -130,11 +130,10 @@
 (let ^HIDE      8)
 (let ^STRIKE    9)
 
-(define Style (fg-color bg-color styles)
+(define Style (fg-color bg-color $styles)
     (make-opaque (make-role
         (let $fg-color (fg-color .unshift (list 38 2)))
         (let $bg-color (bg-color .unshift (list 48 2)))
-        (let $styles   styles)
 
         (define .render (_ cell) (do
             (join "" (list ^ESC
@@ -152,13 +151,8 @@
 (let ^CENTER  0)
 (let ^RIGHT   1)
 
-(define Cell (content width align padding)
+(define Cell ($content $width $align $padding)
     (make-opaque (make-role
-        (let $content  content)
-        (let $width    width)
-        (let $align    align)
-        (let $padding  padding)
-
         (define .render (_) (do
             (let len ($content .length))
             (if ($width == len)

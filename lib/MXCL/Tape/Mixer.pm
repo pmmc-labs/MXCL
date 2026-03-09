@@ -1,11 +1,6 @@
-#!perl
 
 use v5.42;
-use experimental qw[ class ];
-
-use Test::More;
-
-use MXCL::Tape;
+use experimental qw[ class switch ];
 
 class MXCL::Tape::Mixer {
     field $main :param :reader;
@@ -43,7 +38,3 @@ class MXCL::Tape::Mixer {
         $active->advance( $ctx, $k, @next );
     }
 }
-
-pass('...shhh');
-
-done_testing;

@@ -17,6 +17,7 @@ use MXCL::Allocator::Kontinues;
 
 use MXCL::Tape;
 use MXCL::Tape::Spliced;
+use MXCL::Tape::Mixer;
 
 use MXCL::Context::CodeGenerator;
 
@@ -32,6 +33,7 @@ class MXCL::Context {
     field $machine   :reader;
     field $runtime   :reader;
     field $tape      :reader;
+    field $mixer     :reader;
     field $generator :reader;
 
     field @scopes;
@@ -52,6 +54,7 @@ class MXCL::Context {
         $runtime   = MXCL::Runtime->new;
         $machine   = MXCL::Machine->new;
         $tape      = MXCL::Tape::Spliced->new;
+        $mixer     = MXCL::Tape::Mixer->new( main => $tape );
         $generator = MXCL::Context::CodeGenerator->new( context => $self );
     }
 
@@ -213,6 +216,11 @@ class MXCL::Context {
     method compile_source ($source) {
         my $exprs = $compiler->compile( $source );
         return $exprs;
+    }
+
+    method load_tape ($env, $expr) {
+        state $nonce = 0;
+        $generator->create_tape( ++$nonce, $env, [ $expr ] );
     }
 
     method evaluate ($env, $exprs, %opts) {

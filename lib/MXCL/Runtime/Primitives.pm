@@ -682,6 +682,11 @@ class MXCL::Runtime::Primitives {
                     signature => [ { name => 'tape' } ],
                     impl      => sub ($tape) { $terms->Num( $tape->tape->steps ) }
                 },
+                'queue' => +{
+                    kind      => 'applicative',
+                    signature => [ { name => 'tape' } ],
+                    impl      => sub ($tape) { $terms->List( $tape->tape->queue->@* ) }
+                },
                 'trace' => +{
                     kind      => 'applicative',
                     signature => [ { name => 'tape' } ],
@@ -695,6 +700,18 @@ class MXCL::Runtime::Primitives {
                     signature => [ { name => 'ctx' }, { name => 'source' } ],
                     impl      => sub ($ctx, $source) {
                         $terms->List( $ctx->context->compile_source( $source->value )->@* );
+                    }
+                },
+                'create-tape' => +{
+                    kind      => 'operative',
+                    signature => [ { name => 'ctx' }, { name => 'expr' } ],
+                    impl      => sub ($env, $ctx, $expr) {
+                        return $generator->ReturnValues(
+                            $env,
+                            $terms->TapeRef(
+                                $ctx->context->load_tape( $env, $expr )
+                            )
+                        );
                     }
                 },
                 ## -------------------------------------------------------------

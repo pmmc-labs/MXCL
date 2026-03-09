@@ -102,7 +102,7 @@ class MXCL::Debugger::Arena {
 
         my @sorted = $arena->staged;
 
-       if ($options{filter_by_type}) {
+        if ($options{filter_by_type}) {
             my $type = $options{filter_by_type};
             @sorted = grep { blessed($_) =~ $type } @sorted;
         }
@@ -111,6 +111,32 @@ class MXCL::Debugger::Arena {
             @sorted = sort {
                 $hashz{$b->hash}->{active} <=> $hashz{$a->hash}->{active}
             } @sorted;
+        }
+
+        if ($options{histogram}) {
+            my @marks = (' ', qw[ ▏ ▎ ▍ ▍ ▋ ▊ ▉ █ ]);
+            #my @marks = (' ', qw[ ▁ ▂ ▃ ▄ ▅ ▆ ▇ █ ]);
+
+            my @lines;
+            foreach my $term (@sorted) {
+                my $active = $hashz{ $term->hash }->{active};
+                next if $active <= 1;
+
+                my $nines  = int($active / 9);
+                my @ticks  = (8) x $nines;
+                push @ticks => (($active - ($nines * 9)) - 1);
+
+                #say join ' : ' => ($nines * 9), ($active - ($nines * 9));
+                #say "active: ${active} nines: ${nines} ticks: ",join ', ' => @ticks;
+
+                push @lines => join ' ' => (
+                    shorten_hash($term->hash),
+                    (join ' ' => @marks[ @ticks ])
+                )
+            }
+
+            say join "\n" => @lines;
+            return;
         }
 
         my $order = 0;

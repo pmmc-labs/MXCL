@@ -17,30 +17,7 @@ my %timings;
 my $start_compile = [Time::HiRes::gettimeofday];
 my $exprs = $context->compile_source(q[
 
-(define fib (n)
-    (if (n < 2)
-        n
-        ((fib (n - 2)) + (fib (n - 1)))
-    )
-)
-
-(define fib2 (n)
-    (do
-        (define fixed-fib (n f)
-            (if (n < 2) n
-                ((f (n - 2) f) + (f (n - 1) f))))
-        (fixed-fib n fixed-fib))
-)
-
-(let $fib (-> (n)
-            (if (n < 2)
-                n
-                ((__SUB__ (n - 2)) + (__SUB__ (n - 1)))))
-)
-
-;; (fib 10)
-(fib2 10)
-;;($fib 10)
+(^CTX .create-tape '(10 + 20))
 
 ]);
 $timings{compile} += Time::HiRes::tv_interval( $start_compile );
@@ -48,12 +25,12 @@ $timings{compile} += Time::HiRes::tv_interval( $start_compile );
 say "PROGRAM:";
 say $_->pprint foreach @$exprs;
 
-say "DEBUGGIN!";
+#say "DEBUGGIN!";
 #MXCL::Debugger->visualize_term($context, $exprs->[0]);
 #MXCL::Debugger->visualize_arena(
 #    $context,
-    #sort_by_active => true,
-    #filter_by_type => qr/MXCL\:\:Term\:\:[^Cons]/,
+#    histogram      => true,
+#    sort_by_active => true,
 #);
 
 my $start_run = [Time::HiRes::gettimeofday];

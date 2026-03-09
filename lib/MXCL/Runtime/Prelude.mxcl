@@ -293,7 +293,8 @@
     (define ==   (t1 t2) (eq? t1 t2))
     ;; methods
     (bind .steps (ctx) "TapeRef::steps")
-    (bind .trace (ctx) "TapeRef::trace"))
+    (bind .trace (ctx) "TapeRef::trace")
+    (bind .queue (ctx) "TapeRef::queue"))
 
 (role ContextRef (with <EQ>)
     ;; operators
@@ -311,7 +312,8 @@
     (bind .test-scope    (ctx) "ContextRef::test-scope")
     (bind .base-scope    (ctx) "ContextRef::base-scope")
     ;; ...
-    (bind .compile (ctx source) "ContextRef::compile"))
+    (bind .compile     (ctx source) "ContextRef::compile")
+    (bind .create-tape (ctx expr)   "ContextRef::create-tape"))
 
 ;; ----------------------------------------------------------
 ;; Kontinuations

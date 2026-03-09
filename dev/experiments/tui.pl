@@ -371,6 +371,7 @@ my $table = Table->new( rows => \@rows );
 
 say foreach $table->render->@*;
 
+
 __END__
 
 
