@@ -385,9 +385,13 @@ class MXCL::Runtime::Primitives {
                 'rand' => unary_op('numify', 'Num', sub ($n) { rand($n) }),
 
                 'chr' => unary_op('numify', 'Str', sub ($n) { chr($n) }),
+                'hex' => unary_op('numify', 'Str', sub ($n) { sprintf('%02lx', $n) }),
 
                 'max' => binary_op('numify', 'Num',  sub ($n, $m) { $n >= $m ? $n : $m }),
                 'min' => binary_op('numify', 'Num',  sub ($n, $m) { $n <= $m ? $n : $m }),
+
+                'ceil'  => unary_op('numify', 'Num', sub ($n) { ceil($n) }),
+                'floor' => unary_op('numify', 'Num', sub ($n) { floor($n) }),
             },
             'Str' => +{
                 '==' => binary_op('stringify', 'Bool', sub ($n, $m) { $n eq $m }),
@@ -551,15 +555,15 @@ class MXCL::Runtime::Primitives {
                 },
                 'at' => +{
                     kind      => 'applicative',
-                    signature => [ { name => 'hash' }, { name => 'key', coerce => 'stringify' } ],
-                    impl      => sub ($hash, $key) { $hash->get( $key ) },
+                    signature => [ { name => 'hash' }, { name => 'key' } ],
+                    impl      => sub ($hash, $key) { $hash->get( $key->value ) },
                 },
                 'delete' => +{
                     kind      => 'applicative',
-                    signature => [ { name => 'hash' }, { name => 'key', coerce => 'stringify' } ],
+                    signature => [ { name => 'hash' }, { name => 'key' } ],
                     impl      => sub ($hash, $key) {
                         my %hash = $hash->elements->%*;
-                        delete $hash{ $key };
+                        delete $hash{ $key->value };
                         $terms->Hash( %hash );
                     },
                 },
@@ -567,12 +571,12 @@ class MXCL::Runtime::Primitives {
                     kind      => 'applicative',
                     signature => [
                         { name => 'hash' },
-                        { name => 'key', coerce => 'stringify' },
+                        { name => 'key' },
                         { name => 'value' },
                     ],
                     impl      => sub ($hash, $key, $value) {
                         my %hash = $hash->elements->%*;
-                        $hash{ $key } = $value;
+                        $hash{ $key->value } = $value;
                         $terms->Hash( %hash );
                     },
                 },
@@ -580,7 +584,7 @@ class MXCL::Runtime::Primitives {
                     kind      => 'applicative',
                     signature => [ { name => 'hash' } ],
                     impl      => sub ($hash) {
-                        $terms->List( map $terms->Str($_), keys $hash->elements->%* )
+                        $terms->List( map $terms->Tag($_), keys $hash->elements->%* )
                     },
                 },
                 'values' => +{

@@ -1,6 +1,7 @@
 
 use v5.42;
 use experimental qw[ class switch ];
+no warnings 'recursion';
 
 class MXCL::Parser {
     field %stash;
